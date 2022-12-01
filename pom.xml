@@ -12,7 +12,7 @@
         <version>2.5.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.justai.mpl</groupId>
+    <groupId>com.platform.mpl</groupId>
     <artifactId>mpl-java-sdk</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>sdk</name>

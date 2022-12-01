@@ -1,7 +1,7 @@
-package com.justai.caila.sdk.utils
+package com.platform.mpl.sdk.utils
 
-import com.justai.caila.sdk.CailaActionConfig
-import com.justai.caila.sdk.ActionShutdownConfig
+import com.platform.mpl.sdk.PlatformActionConfig
+import com.platform.mpl.sdk.ActionShutdownConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -57,7 +57,7 @@ class JobContainerTest {
         return job
     }
 
-    private fun config(gracefulShutdownAwaitMs: Long, gracefulShutdownActionDelayMs: Long) = CailaActionConfig(
+    private fun config(gracefulShutdownAwaitMs: Long, gracefulShutdownActionDelayMs: Long) = PlatformActionConfig(
         initialGateUrls = listOf(),
         connectionToken = "test",
         shutdownConfig = ActionShutdownConfig(

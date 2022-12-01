@@ -1,24 +1,24 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.gate.ActionToGateProto
-import com.justai.caila.gate.ClusterUpdateProto
-import com.justai.caila.gate.GateGrpc
-import com.justai.caila.gate.GateToActionProto
-import com.justai.caila.gate.GateToActionProto.BodyCase.BATCH
-import com.justai.caila.gate.GateToActionProto.BodyCase.BODY_NOT_SET
-import com.justai.caila.gate.GateToActionProto.BodyCase.CLUSTER
-import com.justai.caila.gate.GateToActionProto.BodyCase.ERROR
-import com.justai.caila.gate.GateToActionProto.BodyCase.EXT
-import com.justai.caila.gate.GateToActionProto.BodyCase.FIT
-import com.justai.caila.gate.GateToActionProto.BodyCase.HEARTBEAT
-import com.justai.caila.gate.GateToActionProto.BodyCase.PREDICT
-import com.justai.caila.gate.GateToActionProto.BodyCase.RESPONSE
-import com.justai.caila.gate.GateToActionProto.BodyCase.SERVICEINFO
-import com.justai.caila.gate.HeartBeatProto
-import com.justai.caila.gate.StartServingProto
-import com.justai.caila.gate.StopServingProto
-import com.justai.caila.sdk.ConnectorsPool.Companion.clusterDispatcher
-import com.justai.caila.sdk.utils.WithLogger
+import com.platform.mpl.gate.ActionToGateProto
+import com.platform.mpl.gate.ClusterUpdateProto
+import com.platform.mpl.gate.GateGrpc
+import com.platform.mpl.gate.GateToActionProto
+import com.platform.mpl.gate.GateToActionProto.BodyCase.BATCH
+import com.platform.mpl.gate.GateToActionProto.BodyCase.BODY_NOT_SET
+import com.platform.mpl.gate.GateToActionProto.BodyCase.CLUSTER
+import com.platform.mpl.gate.GateToActionProto.BodyCase.ERROR
+import com.platform.mpl.gate.GateToActionProto.BodyCase.EXT
+import com.platform.mpl.gate.GateToActionProto.BodyCase.FIT
+import com.platform.mpl.gate.GateToActionProto.BodyCase.HEARTBEAT
+import com.platform.mpl.gate.GateToActionProto.BodyCase.PREDICT
+import com.platform.mpl.gate.GateToActionProto.BodyCase.RESPONSE
+import com.platform.mpl.gate.GateToActionProto.BodyCase.SERVICEINFO
+import com.platform.mpl.gate.HeartBeatProto
+import com.platform.mpl.gate.StartServingProto
+import com.platform.mpl.gate.StopServingProto
+import com.platform.mpl.sdk.ConnectorsPool.Companion.clusterDispatcher
+import com.platform.mpl.sdk.utils.WithLogger
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
@@ -44,7 +44,7 @@ class Connector(
     val pool: ConnectorsPool,
     val executor: ActionTaskExecutor,
     val pipelineClient: PipelineClient,
-    val config: CailaActionConfig
+    val config: PlatformActionConfig
 ) : WithLogger, WithState(State.Condition.ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()

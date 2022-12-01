@@ -1,8 +1,8 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.gate.ActionToGateProto
-import com.justai.caila.sdk.State.Condition.ACTIVE
-import com.justai.caila.sdk.utils.WithLogger
+import com.platform.mpl.gate.ActionToGateProto
+import com.platform.mpl.sdk.State.Condition.ACTIVE
+import com.platform.mpl.sdk.utils.WithLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -18,7 +18,7 @@ class ConnectorsPool(
     val token: String,
     private val executor: ActionTaskExecutor,
     private val pipelineClient: PipelineClient,
-    private val config: CailaActionConfig
+    private val config: PlatformActionConfig
 ) : WithLogger, WithState(ACTIVE) {
 
     private var connectors = config.initialGateUrls.map {

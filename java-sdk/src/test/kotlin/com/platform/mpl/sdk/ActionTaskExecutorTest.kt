@@ -1,8 +1,8 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.gate.ExtendedRequestProto
-import com.justai.caila.gate.FitRequestProto
-import com.justai.caila.gate.PredictRequestProto.getDefaultInstance
+import com.platform.mpl.gate.ExtendedRequestProto
+import com.platform.mpl.gate.FitRequestProto
+import com.platform.mpl.gate.PredictRequestProto.getDefaultInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -15,7 +15,7 @@ class ActionTaskExecutorTest {
 
     @Test
     fun `should remove job from container after finish and dont block other connectors`() = runBlocking {
-        val config = CailaActionConfig(
+        val config = PlatformActionConfig(
             initialGateUrls =  listOf(),
             connectionToken =  "test",
             shutdownConfig = ActionShutdownConfig(
@@ -46,24 +46,24 @@ class ActionTaskExecutorTest {
         assertEquals(1, service.extNumber.get())
     }
 
-    object service: CailaAction {
+    object service: PlatformAction {
 
         val number = AtomicInteger()
         val extNumber = AtomicInteger()
 
-        override fun predict(req: Payload): CailaResponse {
+        override fun predict(req: Payload): PlatformResponse {
             Thread.sleep(100)
             number.incrementAndGet()
             return Payload("type")
         }
 
-        override fun fit(train: Payload, targets: Payload, config: Payload?): CailaResponse {
+        override fun fit(train: Payload, targets: Payload, config: Payload?): PlatformResponse {
             Thread.sleep(450)
             number.incrementAndGet()
             return Payload("type")
         }
 
-        override fun ext(methodName: String, params: Map<String, Payload>): CailaResponse {
+        override fun ext(methodName: String, params: Map<String, Payload>): PlatformResponse {
             Thread.sleep(450)
             extNumber.incrementAndGet()
             return Payload("type")

@@ -1,15 +1,15 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.gate.ActionToGateProto
-import com.justai.caila.sdk.utils.WithLogger
+import com.platform.mpl.gate.ActionToGateProto
+import com.platform.mpl.sdk.utils.WithLogger
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
 
-class CailaActionSDK(
-    action: CailaAction,
-    private val config: CailaActionConfig = loadActionConfig()
+class PlatformActionSDK(
+    action: PlatformAction,
+    private val config: PlatformActionConfig = loadActionConfig()
 ) : WithLogger, WithState() {
 
     private val taskExecutor: ActionTaskExecutor = ActionTaskExecutor(action, config)
@@ -87,7 +87,7 @@ class CailaActionSDK(
     override fun toString() = SDK_COMPONENT_NAME
 
     companion object {
-        const val SDK_COMPONENT_NAME = "CailaActionSDK"
+        const val SDK_COMPONENT_NAME = "PlatformActionSDK"
         const val STARTUP_PROBE_FILE_PATH = "/tmp/startup-probe"
     }
 }

@@ -38,7 +38,6 @@ local.properties
 LOG_FILE_IS_UNDEFINED
 
 *.whl
-**/caila_gate/proto/gate*.py
 **/*.egg-info
 application-local.yml
 __pycache__

@@ -1,4 +1,4 @@
-package com.justai.caila.sdk.utils
+package com.platform.mpl.sdk.utils
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -1,11 +1,11 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.gate.ClientRequestProto
-import com.justai.caila.gate.ClientResponseProto
-import com.justai.caila.gate.GateGrpc
-import com.justai.caila.gate.PayloadProto
-import com.justai.caila.gate.PredictRequestProto
-import com.justai.caila.sdk.utils.WithLogger
+import com.platform.mpl.gate.ClientRequestProto
+import com.platform.mpl.gate.ClientResponseProto
+import com.platform.mpl.gate.GateGrpc
+import com.platform.mpl.gate.PayloadProto
+import com.platform.mpl.gate.PredictRequestProto
+import com.platform.mpl.sdk.utils.WithLogger
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Status.Code.UNAVAILABLE
@@ -17,7 +17,7 @@ import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.TimeUnit
 
-class CailaClientSDK(private val config: CailaClientConfig = loadClientConfig()) : WithLogger {
+class PlatformClientSDK(private val config: PlatformClientConfig = loadClientConfig()) : WithLogger {
 
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateGrpc.GateBlockingStub
@@ -25,9 +25,9 @@ class CailaClientSDK(private val config: CailaClientConfig = loadClientConfig())
     private var token: String? = null
 
     fun init() {
-        gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not CAILA_URL")
+        gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MPL_URL")
         token = config.connectionToken
-        logger.debug("Starting caila client for url $gateUrl")
+        logger.debug("Starting mpl client for url $gateUrl")
         connect()
     }
 
@@ -90,7 +90,7 @@ class CailaClientSDK(private val config: CailaClientConfig = loadClientConfig())
 
         val timeout = ofMillis(config.clientPredictTimeoutMs)
         val response = executePredictRequest(request, timeout)
-            ?: throw CailaClientException("UNAVAILABLE", "Cannot connect after ${timeout.seconds} seconds", emptyMap())
+            ?: throw PlatformClientException("UNAVAILABLE", "Cannot connect after ${timeout.seconds} seconds", emptyMap())
 
         when {
             response.hasPredict() ->
@@ -98,11 +98,11 @@ class CailaClientSDK(private val config: CailaClientConfig = loadClientConfig())
 
             response.hasError() -> {
                 logger.error("Error from gate. Error \n${response.error}")
-                throw CailaClientException(response.error.code, response.error.message, response.error.argsMap)
+                throw PlatformClientException(response.error.code, response.error.message, response.error.argsMap)
             }
 
             else ->
-                throw CailaClientException("wrong-response", "Wrong response type: $response", emptyMap())
+                throw PlatformClientException("wrong-response", "Wrong response type: $response", emptyMap())
         }
     }
 
@@ -132,10 +132,10 @@ class CailaClientSDK(private val config: CailaClientConfig = loadClientConfig())
                 && exception.status.code == UNAVAILABLE -> connect()
 
         exception is StatusRuntimeException ->
-            throw CailaClientException(exception.status.code.name, exception.message ?: "$exception", emptyMap())
+            throw PlatformClientException(exception.status.code.name, exception.message ?: "$exception", emptyMap())
 
         else ->
-            throw CailaClientException("wrong-response", exception.message ?: "$exception", emptyMap())
+            throw PlatformClientException("wrong-response", exception.message ?: "$exception", emptyMap())
     }
 
     fun shutdown() {

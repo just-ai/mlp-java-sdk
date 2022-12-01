@@ -1,22 +1,22 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.gate.ActionToGateProto
-import com.justai.caila.gate.ActionToGateProto.Builder
-import com.justai.caila.gate.ApiErrorProto
-import com.justai.caila.gate.BatchRequestProto
-import com.justai.caila.gate.BatchResponseProto
-import com.justai.caila.gate.ExtendedRequestProto
-import com.justai.caila.gate.ExtendedResponseProto
-import com.justai.caila.gate.FitRequestProto
-import com.justai.caila.gate.FitResponseProto
-import com.justai.caila.gate.GateToActionProto
-import com.justai.caila.gate.PayloadProto
-import com.justai.caila.gate.PredictRequestProto
-import com.justai.caila.gate.PredictResponseProto
-import com.justai.caila.sdk.CommonErrorCode.PROCESSING_EXCEPTION
-import com.justai.caila.sdk.State.Condition.ACTIVE
-import com.justai.caila.sdk.utils.JobsContainer
-import com.justai.caila.sdk.utils.WithLogger
+import com.platform.mpl.gate.ActionToGateProto
+import com.platform.mpl.gate.ActionToGateProto.Builder
+import com.platform.mpl.gate.ApiErrorProto
+import com.platform.mpl.gate.BatchRequestProto
+import com.platform.mpl.gate.BatchResponseProto
+import com.platform.mpl.gate.ExtendedRequestProto
+import com.platform.mpl.gate.ExtendedResponseProto
+import com.platform.mpl.gate.FitRequestProto
+import com.platform.mpl.gate.FitResponseProto
+import com.platform.mpl.gate.GateToActionProto
+import com.platform.mpl.gate.PayloadProto
+import com.platform.mpl.gate.PredictRequestProto
+import com.platform.mpl.gate.PredictResponseProto
+import com.platform.mpl.sdk.CommonErrorCode.PROCESSING_EXCEPTION
+import com.platform.mpl.sdk.State.Condition.ACTIVE
+import com.platform.mpl.sdk.utils.JobsContainer
+import com.platform.mpl.sdk.utils.WithLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -24,8 +24,8 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.Executors.newFixedThreadPool
 
 class ActionTaskExecutor(
-    val action: CailaAction,
-    val config: CailaActionConfig
+    val action: PlatformAction,
+    val config: PlatformActionConfig
 ) : WithLogger, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config)
@@ -40,7 +40,7 @@ class ActionTaskExecutor(
             runCatching {
                 when (val responsePayload = action.predict(dataPayload, request.config.asPayload)) {
                     is Payload -> responseBuilder.setPredict(responsePayload)
-                    is CailaResponseException -> throw responsePayload.exception
+                    is PlatformResponseException -> throw responsePayload.exception
                 }
             }.onFailure {
                 logger.error("Error while processing predict request", it)
@@ -84,7 +84,7 @@ class ActionTaskExecutor(
             runCatching {
                 when (val responsePayload = action.ext(methodName, params)) {
                     is Payload -> responseBuilder.setExt(responsePayload)
-                    is CailaResponseException -> throw responsePayload.exception
+                    is PlatformResponseException -> throw responsePayload.exception
                 }
             }.onFailure {
                 logger.error("Error while processing ext request", it)
@@ -205,14 +205,14 @@ private fun Builder.setFit() =
 private fun Builder.setExt(extResult: Payload) =
     setExt(ExtendedResponseProto.newBuilder().setData(extResult.asProto))
 
-private fun Builder.setBatch(batchResult: List<CailaResponse>, requestsIdes: List<Long>): Builder {
+private fun Builder.setBatch(batchResult: List<PlatformResponse>, requestsIdes: List<Long>): Builder {
     require(batchResult.size == requestsIdes.size) { "Batch responses size must be equal to requests size" }
     val actionToGateProtos = batchResult.zip(requestsIdes)
         .map { (data, requestId) ->
             val builder = ActionToGateProto.newBuilder().setRequestId(requestId)
             when (data) {
                 is Payload -> builder.setPredict(data)
-                is CailaResponseException -> builder.setError(data.exception)
+                is PlatformResponseException -> builder.setError(data.exception)
             }
             builder.build()
         }
@@ -221,7 +221,7 @@ private fun Builder.setBatch(batchResult: List<CailaResponse>, requestsIdes: Lis
 }
 
 private fun Builder.setError(throwable: Throwable) = when (throwable) {
-    is CailaException -> setError(
+    is PlatformException -> setError(
         ApiErrorProto.newBuilder()
             .setCode(throwable.error.errorCode.code)
             .setMessage(throwable.error.errorCode.message)

@@ -1,6 +1,6 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-class CailaClientException(
+class PlatformClientException(
         val errorCode: String,
         val errorMessage: String,
         val args: Map<String, String>,

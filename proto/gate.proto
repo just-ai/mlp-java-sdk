@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.justai.caila.gate;
+package com.platform.mpl.gate;
 
 option java_multiple_files = true;
 

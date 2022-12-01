@@ -1,12 +1,12 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.sdk.CailaActionConfig.Companion.DEFAULT_THREAD_POOL_SIZE
-import com.justai.caila.sdk.CailaActionConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_MS
-import com.justai.caila.sdk.CailaActionConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
-import com.justai.caila.sdk.CailaActionConfig.Companion.GRPC_CONNECT_TIMEOUT_MS
-import com.justai.caila.sdk.utils.ConfigHelper
+import com.platform.mpl.sdk.PlatformActionConfig.Companion.DEFAULT_THREAD_POOL_SIZE
+import com.platform.mpl.sdk.PlatformActionConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_MS
+import com.platform.mpl.sdk.PlatformActionConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
+import com.platform.mpl.sdk.PlatformActionConfig.Companion.GRPC_CONNECT_TIMEOUT_MS
+import com.platform.mpl.sdk.utils.ConfigHelper
 
-class CailaActionConfig(
+class PlatformActionConfig(
     val initialGateUrls: List<String>,
     val connectionToken: String,
     val threadPoolSize: Int = DEFAULT_THREAD_POOL_SIZE,
@@ -30,22 +30,22 @@ data class ActionShutdownConfig(
     val actionConnectorRequestDelayMs: Long = GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
 )
 
-fun loadActionConfig(configPath: String? = null): CailaActionConfig {
+fun loadActionConfig(configPath: String? = null): PlatformActionConfig {
     val props = ConfigHelper.loadProperties(configPath)
-    return CailaActionConfig(
-        initialGateUrls = props["CAILA_URL"]!!.split(",:"),
-        connectionToken = props["CAILA_TOKEN"]!!,
-        threadPoolSize = props["CAILA_THREAD_POOL_SIZE"]?.toInt()
+    return PlatformActionConfig(
+        initialGateUrls = props["MPL_URL"]!!.split(",:"),
+        connectionToken = props["MPL_TOKEN"]!!,
+        threadPoolSize = props["MPL_THREAD_POOL_SIZE"]?.toInt()
             ?: DEFAULT_THREAD_POOL_SIZE,
         shutdownConfig = ActionShutdownConfig(
-            actionConnectorMs = props["CAILA_GRACEFUL_SHUTDOWN_CONNECTOR_MS"]?.toLong()
+            actionConnectorMs = props["MPL_GRACEFUL_SHUTDOWN_CONNECTOR_MS"]?.toLong()
                 ?: GRACEFUL_SHUTDOWN_CONNECTOR_MS,
-            actionConnectorRequestDelayMs = props["CAILA_GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS"]?.toLong()
+            actionConnectorRequestDelayMs = props["MPL_GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS"]?.toLong()
                 ?: GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
         ),
-        grpcConnectTimeoutMs = props["CAILA_GRPC_CONNECT_TIMEOUT_MS"]?.toLong()
+        grpcConnectTimeoutMs = props["MPL_GRPC_CONNECT_TIMEOUT_MS"]?.toLong()
             ?: GRPC_CONNECT_TIMEOUT_MS,
-        pipeFutureTimeoutMs = props["CAILA_PIPE_FUTURE_TIMEOUT_MS"]?.toLong()
+        pipeFutureTimeoutMs = props["MPL_PIPE_FUTURE_TIMEOUT_MS"]?.toLong()
             ?: GRPC_CONNECT_TIMEOUT_MS
     )
 }

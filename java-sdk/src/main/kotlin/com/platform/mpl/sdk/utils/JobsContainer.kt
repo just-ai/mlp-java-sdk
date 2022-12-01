@@ -1,6 +1,6 @@
-package com.justai.caila.sdk.utils
+package com.platform.mpl.sdk.utils
 
-import com.justai.caila.sdk.CailaActionConfig
+import com.platform.mpl.sdk.PlatformActionConfig
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
@@ -10,7 +10,7 @@ import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 
 class JobsContainer(
-    private val config: CailaActionConfig,
+    private val config: PlatformActionConfig,
 ) : WithLogger {
 
     private val container = ConcurrentHashMap<Long, ConnectorContainer>()

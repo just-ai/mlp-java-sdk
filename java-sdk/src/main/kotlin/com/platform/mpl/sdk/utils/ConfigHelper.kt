@@ -1,4 +1,4 @@
-package com.justai.caila.sdk.utils
+package com.platform.mpl.sdk.utils
 
 import java.io.File
 import java.io.FileInputStream

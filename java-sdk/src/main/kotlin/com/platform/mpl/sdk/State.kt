@@ -1,12 +1,12 @@
-package com.justai.caila.sdk
+package com.platform.mpl.sdk
 
-import com.justai.caila.sdk.State.Condition
-import com.justai.caila.sdk.State.Condition.ACTIVE
-import com.justai.caila.sdk.State.Condition.NOT_STARTED
-import com.justai.caila.sdk.State.Condition.SHUTTING_DOWN
-import com.justai.caila.sdk.State.Condition.SHUT_DOWN
-import com.justai.caila.sdk.State.Condition.STARTING
-import com.justai.caila.sdk.utils.WithLogger
+import com.platform.mpl.sdk.State.Condition
+import com.platform.mpl.sdk.State.Condition.ACTIVE
+import com.platform.mpl.sdk.State.Condition.NOT_STARTED
+import com.platform.mpl.sdk.State.Condition.SHUTTING_DOWN
+import com.platform.mpl.sdk.State.Condition.SHUT_DOWN
+import com.platform.mpl.sdk.State.Condition.STARTING
+import com.platform.mpl.sdk.utils.WithLogger
 import java.util.concurrent.CountDownLatch
 
 abstract class WithState(condition: Condition = NOT_STARTED) {
