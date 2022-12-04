@@ -5,6 +5,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>java-sdk</module>
+        <module>rest-client-sdk</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
