@@ -8,6 +8,7 @@ import com.platform.mpl.sdk.Payload.Companion.emptyPayload
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.concurrent.schedule
@@ -29,7 +30,7 @@ class PipelineClient(private val sdk: PlatformActionSDK, private val platformCon
 
         val requestId = lastId.getAndDecrement()
         val future = CompletableFuture<ClientResponseProto>()
-            .orTimeout(platformConfig.pipeFutureTimeoutMs, SECONDS)
+            .orTimeout(platformConfig.pipeFutureTimeoutMs, MILLISECONDS)
         requests[requestId] = future
 
         val toGateProto = buildToGateProto(requestId, account, model, data, config)
