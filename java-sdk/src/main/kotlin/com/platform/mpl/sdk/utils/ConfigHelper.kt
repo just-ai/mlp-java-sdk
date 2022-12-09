@@ -15,7 +15,7 @@ object ConfigHelper {
         p.putAll(loadFromResource("/default.properties"))
         p.putAll(loadFromResource("/local.properties"))
         configPath?.let {
-            p.putAll(loadFromResource(it))
+            p.putAll(loadFromPropsFile(it))
         }
         p.putAll(loadFromPropsFile(System.getProperties().getProperty("config")))
         p.putAll(loadFromEnv())
