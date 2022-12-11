@@ -6,6 +6,7 @@
     <modules>
         <module>java-sdk</module>
         <module>rest-client-sdk</module>
+        <module>examples</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
