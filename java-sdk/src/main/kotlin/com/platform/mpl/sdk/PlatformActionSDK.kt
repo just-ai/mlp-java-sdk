@@ -68,7 +68,7 @@ class PlatformActionSDK(
         state.shutdown()
     }
 
-    fun sendToAnyGate(gateProto: ActionToGateProto) {
+    internal fun sendToAnyGate(gateProto: ActionToGateProto) {
         check(state.active) { "Action is not started" }
         runBlocking {
             taskExecutor.connectorsPool

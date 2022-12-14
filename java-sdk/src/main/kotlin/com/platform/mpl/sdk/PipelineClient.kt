@@ -21,7 +21,7 @@ class PipelineClient(private val sdk: PlatformActionSDK, private val platformCon
     fun predict(model: String, data: Payload, config: Payload = emptyPayload) =
         predict(null, model, data, config)
 
-    private fun predict(
+    fun predict(
         account: String?,
         model: String,
         data: Payload,
@@ -40,7 +40,7 @@ class PipelineClient(private val sdk: PlatformActionSDK, private val platformCon
         return future
     }
 
-    fun registerResponse(requestId: Long, toActionProto: ClientResponseProto) {
+    internal fun registerResponse(requestId: Long, toActionProto: ClientResponseProto) {
         requests[requestId]
             ?.complete(toActionProto)
     }

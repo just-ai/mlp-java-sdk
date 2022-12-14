@@ -1,52 +1,47 @@
 package com.platform.mpl.simple
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.platform.mpl.gate.ClientResponseProto
 import com.platform.mpl.sdk.Payload
 import com.platform.mpl.sdk.PlatformAction
 import com.platform.mpl.sdk.PlatformActionSDK
 import com.platform.mpl.sdk.PlatformResponse
 
-object CompositeModelExample {
+const val ACCOUNT = "your_account"
+const val TEXT_MODEL = "your_text_model"
+const val PUNCTUATION_MODEL = "your_punctuation_model"
 
-    val objectMapper = ObjectMapper()
+fun main() {
+    val action = CompositeTestAction()
+    val actionSDK = PlatformActionSDK(action)
 
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val action = CompositeTestAction()
-        val actionSDK = PlatformActionSDK(action)
-
-        actionSDK.start()
-
-        actionSDK.gracefulShutdown()
-    }
-
-    class CompositeTestAction : PlatformAction() {
-        override fun predict(req: Payload): PlatformResponse {
-            val request = objectMapper.readValue(req.data, CompositeTestActionRequest::class.java)
-            return when (request.action) {
-                "pipeline" -> executePipelineRequest(request)
-                else -> throw RuntimeException("actionUnknownException")
-            }
-        }
-
-        private fun executePipelineRequest(request: CompositeTestActionRequest): PlatformResponse {
-            val pipelineResponse = pipelineClient.predict(request.targetModel, Payload("text/plain", request.data))
-                .get()
-            if (pipelineResponse.bodyCase == ClientResponseProto.BodyCase.ERROR) {
-                throw RuntimeException("error")
-            }
-            return Payload(
-                dataType = "text/plain",
-                data = pipelineResponse.predict.data.json
-            )
-        }
-    }
-
-    data class CompositeTestActionRequest(
-        val action: String,
-        val targetModel: String,
-        val data: String
-    )
-
+    actionSDK.start()
+    actionSDK.blockUntilShutdown()
 }
+
+class CompositeTestAction : PlatformAction() {
+    override fun predict(req: Payload): PlatformResponse {
+        val objectMapper = ObjectMapper()
+
+        val request = objectMapper.readValue(req.data, CompositeTestActionRequest::class.java)
+
+        val textModelResponse = pipelineClient.predict(ACCOUNT, TEXT_MODEL, Payload("text/plain", request.data))
+            .get().predict.data.json
+        val punctuationModelResponse =
+            pipelineClient.predict(ACCOUNT, PUNCTUATION_MODEL, Payload("text/plain", textModelResponse))
+                .get().predict.data.json
+
+        val finalResult = objectMapper.readValue(punctuationModelResponse, PunctuationPayload::class.java)
+        return Payload(
+            "text/plain",
+            finalResult.text
+        )
+    }
+}
+
+data class CompositeTestActionRequest(
+    val data: String
+)
+
+data class PunctuationPayload(
+    var text: String
+)
