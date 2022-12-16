@@ -6,8 +6,6 @@
     <modules>
         <module>mpl-client-generator</module>
         <module>mpl-sdk</module>
-        <module>mpl-examples/dummy-action</module>
-        <module>mpl-examples/dummy-client</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

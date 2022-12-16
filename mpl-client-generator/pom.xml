@@ -32,7 +32,7 @@
                             <inputSpec>${project.basedir}/../mpl-specs/mpl-rest-api.yml</inputSpec>
                             <generatorName>java</generatorName>
                             <groupId>${project.groupId}</groupId>
-                            <artifactId>mpl-rest-client</artifactId>
+                            <artifactId>mpl-rest-client-generated</artifactId>
                             <artifactVersion>${project.version}</artifactVersion>
                             <output>${project.build.directory}/api-client</output>
                             <templateDirectory>${project.basedir}/src/main/resources/Java/libraries/resttemplate</templateDirectory>
