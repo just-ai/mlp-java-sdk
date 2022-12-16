@@ -4,8 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>java-sdk</module>
-        <module>rest-client-sdk</module>
+        <module>mpl-client-generator</module>
+        <module>mpl-sdk</module>
+        <module>mpl-examples/dummy-action</module>
+        <module>mpl-examples/dummy-client</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -13,10 +15,11 @@
         <version>2.5.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.platform.mpl</groupId>
+
+    <groupId>com.mpl</groupId>
     <artifactId>mpl-java-sdk</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>sdk</name>
+    <name>mpl-java-sdk</name>
     <description>MPL Java SDK</description>
 
     <properties>
