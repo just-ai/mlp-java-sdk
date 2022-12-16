@@ -5,6 +5,7 @@ import com.platform.mpl.sdk.Payload
 import com.platform.mpl.sdk.PlatformAction
 import com.platform.mpl.sdk.PlatformActionSDK
 import com.platform.mpl.sdk.PlatformResponse
+import com.platform.mpl.sdk.utils.S3Factory
 
 fun main() {
     val action = FitTestAction()
@@ -16,7 +17,11 @@ fun main() {
 }
 
 class FitTestAction: PlatformAction() {
-    override fun fit(train: Payload, targets: Payload, config: Payload?): PlatformResponse {
+
+    private val minioClient = S3Factory.createMinioClient()
+    private val bucketName = S3Factory.getPlatformBucket()
+
+    override fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String): PlatformResponse {
         val objectMapper = ObjectMapper()
 
         val trainData = objectMapper.readValue(train.data, TrainData::class.java)

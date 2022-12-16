@@ -19,7 +19,7 @@ abstract class PlatformAction {
         throw PlatformException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
     }
 
-    open fun fit(train: Payload, targets: Payload, config: Payload?): PlatformResponse {
+    open fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String): PlatformResponse {
         throw PlatformException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "fit"))
     }
 
