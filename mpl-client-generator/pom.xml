@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mpl-rest-client</artifactId>
+    <artifactId>mpl-rest-client-generator</artifactId>
 
     <properties>
         <openapi-generator-maven.version>5.4.0</openapi-generator-maven.version>
@@ -32,7 +32,7 @@
                             <inputSpec>${project.basedir}/../mpl-specs/mpl-rest-api.yml</inputSpec>
                             <generatorName>java</generatorName>
                             <groupId>${project.groupId}</groupId>
-                            <artifactId>mpl-rest-client-generated</artifactId>
+                            <artifactId>mpl-rest-client</artifactId>
                             <artifactVersion>${project.version}</artifactVersion>
                             <output>${project.build.directory}/api-client</output>
                             <templateDirectory>${project.basedir}/src/main/resources/Java/libraries/resttemplate</templateDirectory>

@@ -21,7 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>com.mpl</groupId>
-            <artifactId>mpl-rest-client-generated</artifactId>
+            <artifactId>mpl-rest-client</artifactId>
             <version>${project.version}</version>
         </dependency>
 
