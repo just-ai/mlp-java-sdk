@@ -6,7 +6,7 @@
     <modules>
         <module>mpl-client-generator</module>
         <module>mpl-sdk</module>
-        <module>mpl-examples/dummy-action</module>
+        <module>mpl-examples/mpl-dummy-action</module>
     </modules>
 
     <groupId>com.mpl</groupId>
