@@ -23,13 +23,13 @@ pipeline {
         stage('Build with maven') {
             steps {
                 script {
-                    manager.addShortText(params.BRANCH_NAME)
+                    manager.addShortText(params.BRANCH)
                 }
 
                 updateGitlabCommitStatus name: "build", state: "running"
 
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
-                    sh """mvn versions:set -DnewVersion=${BRANCH_NAME}-SNAPSHOT"""
+                    sh """mvn versions:set -DnewVersion=${params.BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
                 }
             }
