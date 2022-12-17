@@ -19,6 +19,10 @@ pipeline {
         }
         stage('Build with maven') {
             steps {
+                script {
+                    manager.addShortText(env.BRANCH_NAME)
+                }
+
                 updateGitlabCommitStatus name: "build", state: "running"
 
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
