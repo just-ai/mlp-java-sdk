@@ -9,12 +9,15 @@ pipeline {
     agent {
         label 'caila-dev-cloud-agent'
     }
+    parameters {
+        string(name: "BRANCH", defaultValue: "dev", description: "")
+    }
     stages {
-        stage('Versions set') {
+        stage('Prepare') {
             steps {
-                withMaven(maven: 'Maven 3.5', jdk: '11') {
-                    sh """mvn versions:set -DnewVersion=${BRANCH_NAME}-SNAPSHOT"""
-                }
+                git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
+                        branch: "${params.BRANCH}",
+                        credentialsId: 'bitbucket_key'
             }
         }
         stage('Build with maven') {
@@ -26,6 +29,7 @@ pipeline {
                 updateGitlabCommitStatus name: "build", state: "running"
 
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
+                    sh """mvn versions:set -DnewVersion=${BRANCH_NAME}-SNAPSHOT"""
                     sh """mvn clean deploy"""
                 }
             }
