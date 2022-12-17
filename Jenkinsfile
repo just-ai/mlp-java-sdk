@@ -23,7 +23,7 @@ pipeline {
         stage('Build with maven') {
             steps {
                 script {
-                    manager.addShortText(env.BRANCH_NAME)
+                    manager.addShortText(params.BRANCH_NAME)
                 }
 
                 updateGitlabCommitStatus name: "build", state: "running"
