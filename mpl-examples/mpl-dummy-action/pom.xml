@@ -47,9 +47,6 @@
             <artifactId>ktor-serialization</artifactId>
             <version>1.6.8</version>
         </dependency>
-
-
-
     </dependencies>
 
     <build>
@@ -105,75 +102,6 @@
                     </descriptors>
                 </configuration>
             </plugin>
-
-            <!-- TODO:  move this out from maven build -->
-            <plugin>
-                <artifactId>exec-maven-plugin</artifactId>
-                <groupId>org.codehaus.mojo</groupId>
-                <version>1.6.0</version>
-                <executions>
-                    <execution>
-                        <id>docker build</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>docker</executable>
-                            <arguments>
-                                <argument>build</argument>
-                                <argument>.</argument>
-                                <argument>-t</argument>
-                                <argument>docker-hub.just-ai.com/mpl-actions/${artifactId}:${branch.name.lower}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>docker push1</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>docker</executable>
-                            <arguments>
-                                <argument>push</argument>
-                                <argument>docker-hub.just-ai.com/mpl-actions/${artifactId}:${branch.name.lower}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>docker tag</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>docker</executable>
-                            <arguments>
-                                <argument>tag</argument>
-                                <argument>docker-hub.just-ai.com/mpl-actions/${artifactId}:${branch.name.lower}</argument>
-                                <argument>docker-hub.just-ai.com/mpl-actions/${artifactId}:${branch.name.lower}-${build.number}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>docker push2</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>docker</executable>
-                            <arguments>
-                                <argument>push</argument>
-                                <argument>docker-hub.just-ai.com/mpl-actions/${artifactId}:${branch.name.lower}-${build.number}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
 
