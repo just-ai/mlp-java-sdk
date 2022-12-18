@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>com.mpl</groupId>
+        <artifactId>mpl-java-sdk</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>mpl-client-generator</artifactId>
+
+    <properties>
+        <openapi-generator-maven.version>5.4.0</openapi-generator-maven.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-maven.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/../mpl-specs/mpl-rest-api.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>mpl-rest-client</artifactId>
+                            <artifactVersion>${project.version}</artifactVersion>
+                            <output>${project.build.directory}/api-client</output>
+                            <templateDirectory>${project.basedir}/src/main/resources/Java/libraries/resttemplate</templateDirectory>
+                            <configOptions>
+                                <java8>true</java8>
+                                <dateLibrary>java8</dateLibrary>
+                                <fullJavaUtil>false</fullJavaUtil>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <library>resttemplate</library>
+                            </configOptions>
+                            <modelPackage>com.mpl.api.client.model</modelPackage>
+                            <apiPackage>com.mpl.api.client</apiPackage>
+                            <addCompileSourceRoot>false</addCompileSourceRoot>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>install-api-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>mvn</executable>
+                            <workingDirectory>${project.build.directory}/api-client</workingDirectory>
+                            <arguments>
+                                <argument>install</argument>
+                                <argument>-DskipTests</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>deploy-client</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>mvn</executable>
+                            <workingDirectory>${project.build.directory}/api-client</workingDirectory>
+                            <arguments>
+                                <argument>deploy</argument>
+                                <argument>-DskipTests</argument>
+                                <argument>
+                                    -DaltDeploymentRepository=nexus-snapshots::default::https://nexus.just-ai.com/repository/maven-snapshots/
+                                </argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
