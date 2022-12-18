@@ -46,7 +46,7 @@ class ActionTaskExecutorTest {
         assertEquals(1, service.extNumber.get())
     }
 
-    object service: MplAction {
+    object service: MplAction() {
 
         val number = AtomicInteger()
         val extNumber = AtomicInteger()

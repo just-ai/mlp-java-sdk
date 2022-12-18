@@ -11,7 +11,6 @@ service Gate {
 
   rpc process(ClientRequestProto) returns (ClientResponseProto) {}
 
-  //rpc audioStreamAsync(stream ServiceRequestProto) returns (stream ServiceResponseProto) {}
 }
 
 message ActionDescriptorProto {
@@ -92,12 +91,8 @@ message HeartBeatProto {
 }
 
 message StartServingProto {
-  // Чтобы зарегистрироваться, сервис должен указать секретный ключ. Этот ключ генерирует Кайла
-  // и передаёт в Cloud через env-переменные
   string connectionToken = 1;
 
-  // Контент протобаф-спеки для специфических типов данных, используемых данных экшеном.
-  // пока что это поле предназначено для экспериментов
   map<string, string> schemaFiles = 2;
   ActionDescriptorProto actionDescriptor = 3;
 }
@@ -172,7 +167,6 @@ message StatusResponseProto {
 }
 
 message PayloadProto {
-  // имя класса, закодированного в text или bytes
   optional string dataType = 1;
 
   oneof body {
@@ -196,18 +190,13 @@ message ApiErrorProto {
 }
 
 message ClientRequestProto {
-  string account = 1; // тут можно передавать либо id либо shortName аккаунта и модели соответственно
-  string model = 2;   // обработка будет происходить так: если только цифры - значит id, иначе name
+  string account = 1;
+  string model = 2;
 
-  // Чтобы обратиться к экшену, клиент должен указать секретный токен.
-  // Это может быть либо id-сессии в AA, либо отдельный токен доступа, который можно сгенерировать и получить
-  // через MPL API. Внутри системы, токен будет ассоциирован с конкретным аккаунтом в АА.
   string authToken = 3;
 
   oneof body {
     PredictRequestProto predict = 101;
-    // структуру запроса и логику обработки для метода fit надо будет доработать.
-    // Нужно как-то передавать имя целевой модели, которая будет создана или обновлена после обучения
     ExtendedRequestProto ext = 103;
   }
 }

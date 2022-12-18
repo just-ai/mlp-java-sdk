@@ -7,6 +7,10 @@
         <module>mpl-client-generator</module>
         <module>mpl-sdk</module>
         <module>mpl-examples/mpl-dummy-action</module>
+        <module>mpl-examples/mpl-fit-action</module>
+        <module>mpl-examples/mpl-simple-action</module>
+        <module>mpl-examples/mpl-composit-action</module>
+        <module>mpl-examples/mpl-client-app</module>
     </modules>
 
     <groupId>com.mpl</groupId>

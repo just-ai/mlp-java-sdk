@@ -6,7 +6,7 @@ import com.mpl.sdk.MplActionSDK
 import com.mpl.sdk.Payload
 import org.slf4j.LoggerFactory
 
-object MyService : MplAction {
+object MyService : MplAction() {
     override fun getDescriptor(): ActionDescriptorProto {
         return ActionDescriptorProto.newBuilder().build()
     }

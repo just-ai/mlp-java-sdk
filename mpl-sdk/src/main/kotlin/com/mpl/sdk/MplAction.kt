@@ -3,29 +3,31 @@ package com.mpl.sdk
 import com.mpl.gate.ActionDescriptorProto
 import com.mpl.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
 
-interface MplAction {
+abstract class MplAction {
 
-    fun getDescriptor(): ActionDescriptorProto {
+    lateinit var pipelineClient: PipelineClient
+
+    open fun getDescriptor(): ActionDescriptorProto {
         throw NotImplementedError()
     }
 
-    fun predict(req: Payload, config: Payload?): MplResponse {
+    open fun predict(req: Payload, config: Payload?): MplResponse {
         return predict(req)
     }
 
-    fun predict(req: Payload): MplResponse {
+    open fun predict(req: Payload): MplResponse {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
     }
 
-    fun fit(train: Payload, targets: Payload, config: Payload?): MplResponse {
+    open fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String): MplResponse {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "fit"))
     }
 
-    fun ext(methodName: String, params: Map<String, Payload>): MplResponse {
+    open fun ext(methodName: String, params: Map<String, Payload>): MplResponse {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "ext"))
     }
 
-    fun batch(req: List<BatchPayload>): List<MplResponse> {
+    open fun batch(req: List<BatchPayload>): List<MplResponse> {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "batch"))
     }
 }
