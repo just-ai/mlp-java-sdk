@@ -11,7 +11,7 @@ object S3Factory {
             .build()
     }
 
-    fun getPlatformBucket(): String = fromSystemProperties("CAILA_S3_BUCKET")
+    fun getPlatformBucket(): String = fromSystemProperties("MPL_S3_BUCKET")
 
     private fun fromSystemProperties(s: String) = System.getProperty(s)
 
