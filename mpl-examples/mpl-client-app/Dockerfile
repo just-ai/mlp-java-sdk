@@ -2,7 +2,7 @@ FROM openjdk:17
 
 WORKDIR /app
 
-ADD target/mpl-dummy-action/lib    /app/lib
-ADD target/mpl-dummy-action        /app
+ADD target/mpl-client-app/lib    /app/lib
+ADD target/mpl-client-app        /app
 
-ENTRYPOINT ["java", "-cp", "*:lib/*", "fit_action.MainKt"]
+ENTRYPOINT ["java", "-cp", "*:lib/*", "client.ClientSdkExampleKt"]

@@ -21,7 +21,7 @@ class SimpleTestAction: MplAction() {
 
         val request = objectMapper.readValue(req.data, SimpleTestActionRequest::class.java)
         return when(request.action) {
-            "hello" -> Payload("text/plain", "\"response from action\"")
+            "hello" -> Payload("text/plain", "\"Hello, ${request.name}\"")
             else -> throw RuntimeException("actionUnknownException")
         }
     }
@@ -38,5 +38,6 @@ class SimpleTestAction: MplAction() {
 }
 
 data class SimpleTestActionRequest(
-    val action: String
+    val action: String,
+    val name: String
 )
