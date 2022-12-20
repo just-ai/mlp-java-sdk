@@ -19,7 +19,7 @@ abstract class MplAction {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
     }
 
-    open fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String): MplResponse {
+    open fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String?): MplResponse {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "fit"))
     }
 

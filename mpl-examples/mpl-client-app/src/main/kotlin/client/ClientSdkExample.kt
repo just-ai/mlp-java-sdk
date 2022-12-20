@@ -14,7 +14,7 @@ fun main() {
     val dataToPredict = getDataToPredict()
     val results = dataToPredict.map { data ->
         val payload = objectMapper.writeValueAsString(ClientPayloadData(data))
-        clientSDK.predict("your_account", "your_model", payload)
+        clientSDK.predict(ACCOUNT, MODEL, payload)
     }
 
     /* process results */

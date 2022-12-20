@@ -7,7 +7,7 @@ import com.mpl.sdk.MplResponse
 import com.mpl.sdk.Payload
 
 const val ACCOUNT = "your_account"
-const val TEXT_MODEL = "your_text_model"
+const val GRAMMAR_MODEL = "your_text_model"
 const val PUNCTUATION_MODEL = "your_punctuation_model"
 
 fun main() {
@@ -19,12 +19,13 @@ fun main() {
 }
 
 class CompositeTestAction : MplAction() {
-    override fun predict(req: Payload): MplResponse {
-        val objectMapper = ObjectMapper()
 
+    private val objectMapper = ObjectMapper()
+
+    override fun predict(req: Payload): MplResponse {
         val request = objectMapper.readValue(req.data, CompositeTestActionRequest::class.java)
 
-        val textModelResponse = pipelineClient.predict(ACCOUNT, TEXT_MODEL, Payload("text/plain", request.data))
+        val textModelResponse = pipelineClient.predict(ACCOUNT, GRAMMAR_MODEL, Payload("text/plain", request.data))
             .get().predict.data.json
         val punctuationModelResponse =
             pipelineClient.predict(ACCOUNT, PUNCTUATION_MODEL, Payload("text/plain", textModelResponse))

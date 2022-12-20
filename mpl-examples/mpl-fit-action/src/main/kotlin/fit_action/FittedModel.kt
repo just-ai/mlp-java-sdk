@@ -4,7 +4,7 @@ import com.mpl.sdk.MplResponse
 import com.mpl.sdk.MplResponseException
 import com.mpl.sdk.Payload
 
-class MyModel(
+class FittedModel(
     private val data: FitProcessData
 ) {
 

@@ -13,6 +13,8 @@ object S3Factory {
 
     fun getPlatformBucket(): String = fromSystemProperties("MPL_S3_BUCKET")
 
+    fun getDefaultStorageDir(): String = fromSystemProperties("MPL_STORAGE_DIR")
+
     private fun fromSystemProperties(s: String) = System.getProperty(s)
 
 }

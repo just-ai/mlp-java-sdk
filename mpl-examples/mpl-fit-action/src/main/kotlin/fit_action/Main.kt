@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.mpl.sdk.MplAction
 import com.mpl.sdk.MplActionSDK
 import com.mpl.sdk.MplResponse
+import com.mpl.sdk.MplResponseException
 import com.mpl.sdk.Payload
 import com.mpl.sdk.utils.S3Factory
 import io.minio.GetObjectArgs
@@ -15,7 +16,6 @@ fun main() {
     val actionSDK = MplActionSDK(action)
 
     actionSDK.start()
-
     actionSDK.blockUntilShutdown()
 }
 
@@ -24,30 +24,33 @@ class FitTestAction: MplAction() {
     private val objectMapper = ObjectMapper()
     private val minioClient = S3Factory.createMinioClient()
     private val bucketName = S3Factory.getPlatformBucket()
+    private val defaultStorageDir = S3Factory.getDefaultStorageDir()
     private val modelFileName = "model_file_name"
-    private val defaultStorageDir = System.getProperty("MPL_STORAGE_DIR")
 
-    private var model: MyModel? = loadState()
+    private var model: FittedModel? = loadState()
     private lateinit var modelFilePath: String
 
-    override fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String): MplResponse {
+    override fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String?): MplResponse {
 
         val trainData = objectMapper.readValue(train.data, TrainData::class.java)
         val targetData = objectMapper.readValue(targets.data, TargetData::class.java)
         val configData = objectMapper.readValue(config?.data, ConfigData::class.java)
 
-        val storageDir = if (previousModelDir.isNotBlank() && modelDir.isNotBlank()) {
+        val previousDirIsBlanked = previousModelDir?.isNotBlank() == true
+        val storageDir = if (previousDirIsBlanked && modelDir.isNotBlank()) {
             throw RuntimeException("You try load another state, for this task it is unacceptable.")
-        } else if (previousModelDir.isNotBlank() && modelDir.isBlank()) {
+        } else if (previousDirIsBlanked && modelDir.isBlank()) {
             previousModelDir
-        } else if(previousModelDir.isBlank() && modelDir.isNotBlank()) {
+        } else if(previousModelDir.isNullOrEmpty() && modelDir.isNotBlank()) {
             modelDir
         } else {
             defaultStorageDir
         }
 
         if (trainData.texts.size != targetData.items.size) {
-            throw RuntimeException("Inconsistent data sizes: ${trainData.texts.size} texts and ${targetData.items.size} items lists")
+            return MplResponseException(
+                RuntimeException("Inconsistent data sizes: ${trainData.texts.size} texts and ${targetData.items.size} items lists")
+            )
         }
 
         val result = processFitData(trainData, targetData, configData)
@@ -62,7 +65,7 @@ class FitTestAction: MplAction() {
 
     override fun predict(req: Payload, config: Payload?): MplResponse {
         val requestData = objectMapper.readValue(req.data, PredictRequestData::class.java)
-        return model!!.predict(requestData.itemId, requestData.text)
+        return requireNotNull(model).predict(requestData.itemId, requestData.text)
     }
 
     private fun saveState(content: FitProcessData, storageDir: String?) {
@@ -77,10 +80,10 @@ class FitTestAction: MplAction() {
                 .build()
         )
         this.modelFilePath = modelFilePath
-        this.model = MyModel(content)
+        this.model = FittedModel(content)
     }
 
-    private fun loadState(): MyModel? {
+    private fun loadState(): FittedModel? {
         val modelResponseBytes = minioClient.getObject(
             GetObjectArgs.builder()
                 .bucket(bucketName)
@@ -90,11 +93,9 @@ class FitTestAction: MplAction() {
         if (modelResponseBytes.isEmpty()) {
             return null
         }
-        val modelData = modelResponseBytes.let {
-            objectMapper.readValue(it, FitProcessData::class.java)
-        }
+        val modelData = objectMapper.readValue(modelResponseBytes, FitProcessData::class.java)
 
-        return MyModel(modelData)
+        return FittedModel(modelData)
     }
 
     private fun processFitData(trainData: TrainData?, targetData: TargetData?, config: ConfigData): FitProcessData {
