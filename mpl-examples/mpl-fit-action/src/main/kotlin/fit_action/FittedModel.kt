@@ -8,14 +8,10 @@ class FittedModel(
     private val data: FitProcessData
 ) {
 
-    fun predict(itemId: String, text: String): MplResponse {
-        val value = data.processedData[itemId]?.value
+    fun predict(number: String): MplResponse {
+        val value = data.processedData[number]
             ?: return MplResponseException(RuntimeException("No element found"))
-        return value
-            .count { it.contains(text) }
-            .let {
-                Payload(it.toString())
-            }
+        return Payload(value)
     }
 
 }

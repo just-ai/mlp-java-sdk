@@ -57,7 +57,7 @@ class ActionTaskExecutorTest {
             return Payload("type")
         }
 
-        override fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String): MplResponse {
+        override fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String?): MplResponse {
             Thread.sleep(450)
             number.incrementAndGet()
             return Payload("type")

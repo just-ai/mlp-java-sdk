@@ -1,15 +1,14 @@
-package com.mpl.sdk.utils
+package com.mpl.sdk.storage
 
 import io.minio.GetObjectArgs
 import io.minio.MinioClient
 import io.minio.PutObjectArgs
 
-class MinioStateWrapper(
+class S3Storage(
     val minioClient: MinioClient,
     val bucketName: String
-) {
-
-    fun saveState(content: String, path: String) {
+): Storage {
+    override fun saveState(content: String, path: String) {
         val inputStream = content.byteInputStream()
         minioClient.putObject(
             PutObjectArgs.builder()
@@ -20,7 +19,7 @@ class MinioStateWrapper(
         )
     }
 
-    fun loadState(path: String): String? {
+    override fun loadState(path: String): String? {
         val modelResponseBytes = minioClient.getObject(
             GetObjectArgs.builder()
                 .bucket(bucketName)
@@ -33,4 +32,7 @@ class MinioStateWrapper(
         return String(modelResponseBytes)
     }
 
+    companion object {
+        const val STORAGE_NAME = "s3"
+    }
 }

@@ -6,9 +6,10 @@ import com.mpl.sdk.MplActionSDK
 import com.mpl.sdk.MplResponse
 import com.mpl.sdk.MplResponseException
 import com.mpl.sdk.Payload
-import com.mpl.sdk.utils.S3Factory
+import com.mpl.sdk.storage.StorageFactory
 
 fun main() {
+    println(System.getenv().toString())
     val action = FitTestAction()
     val actionSDK = MplActionSDK(action)
 
@@ -19,8 +20,8 @@ fun main() {
 class FitTestAction : MplAction() {
 
     private val objectMapper = ObjectMapper()
-    private val minioClient = S3Factory.getS3Service()
-    private val defaultStorageDir = S3Factory.getDefaultStorageDir()
+    private val storage = StorageFactory.getStorage()
+    private val defaultStorageDir = StorageFactory.getDefaultStorageDir()
     private val modelFileName = "model_fit_result.json"
 
     private var model: FittedModel? = loadState()
@@ -32,16 +33,19 @@ class FitTestAction : MplAction() {
         modelDir: String,
         previousModelDir: String?
     ): MplResponse {
-        val trainData = objectMapper.readValue(train.data, TrainData::class.java)
-        val targetData = objectMapper.readValue(targets.data, TargetData::class.java)
-        val configData = objectMapper.readValue(config?.data, ConfigData::class.java)
-        if (trainData.texts.size != targetData.items.size) {
+        val trainData = objectMapper.readValue(train.data, TransformerFitTrainData::class.java)
+            .texts
+        val targetData = objectMapper.readValue(targets.data, TransformerFitTargets::class.java)
+            .items_list
+            .map { it.items.first() }
+            .map { it.value }
+        if (trainData.size != targetData.size) {
             return MplResponseException(
-                RuntimeException("Inconsistent data sizes: ${trainData.texts.size} texts and ${targetData.items.size} items lists")
+                RuntimeException("Inconsistent data sizes: ${trainData.size} texts and ${targetData.size} items lists")
             )
         }
-        val result = processFitData(trainData, targetData, configData)
-        minioClient.saveState(objectMapper.writeValueAsString(result), "$modelDir/$modelFileName")
+        val result = processFitData(trainData, targetData)
+        storage.saveState(objectMapper.writeValueAsString(result), "$modelDir/$modelFileName")
 
         this.model = FittedModel(result)
 
@@ -53,18 +57,21 @@ class FitTestAction : MplAction() {
 
     override fun predict(req: Payload, config: Payload?): MplResponse {
         val requestData = objectMapper.readValue(req.data, PredictRequestData::class.java)
-        return requireNotNull(model).predict(requestData.itemId, requestData.text)
+        return requireNotNull(model).predict(requestData.number)
     }
 
     private fun loadState(): FittedModel? {
-        return minioClient.loadState("$defaultStorageDir/$modelFileName")
+        if (defaultStorageDir.isNullOrEmpty()) {
+            return null
+        }
+        return storage.loadState("$defaultStorageDir/$modelFileName")
             ?.let { objectMapper.readValue(it, FitProcessData::class.java) }
             ?.let { FittedModel(it) }
     }
 
-    private fun processFitData(trainData: TrainData?, targetData: TargetData?, config: ConfigData): FitProcessData {
-        return trainData!!.texts.mapIndexed { i, data ->
-            data to targetData!!.items[i]
+    private fun processFitData(trainData: List<String>, targetData: List<String>): FitProcessData {
+        return targetData.mapIndexed { i, data ->
+            data to trainData[i]
         }.toMap().let {
             FitProcessData(it)
         }
@@ -72,30 +79,11 @@ class FitTestAction : MplAction() {
 }
 
 data class PredictRequestData(
-    val itemId: String,
-    val text: String
+    val number: String
 )
 
-data class FitProcessData(
-    val processedData: Map<String, Item?>
-)
-
-data class TrainData(
-    val texts: List<String>
-)
-
-data class TargetData(
-    val items: List<Item>
-)
-
-data class ConfigData(
-    val accountId: String,
-    val modelName: String,
-    val apiToken: String,
-    val batchSize: Int,
-    val searchIndex: String
-)
-
-data class Item(
-    val value: List<String>
-)
+data class FitProcessData(val processedData: Map<String, String>)
+data class TransformerFitTrainData(val texts: List<String>)
+data class TransformerFitTargetItem(val value: String)
+data class TransformerFitTargetItems(val items: List<TransformerFitTargetItem>)
+data class TransformerFitTargets(val items_list: List<TransformerFitTargetItems>, val extra_items_list: List<TransformerFitTargetItems>)
