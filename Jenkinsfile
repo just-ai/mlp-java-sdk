@@ -37,7 +37,7 @@ pipeline {
                     def hasChanges = !sh(returnStdout: true, script: 'git status -s').trim().isEmpty()
 
                     if (hasChanges) {
-                        sh("git commit -m "Update API spec" mpl-specs")
+                        sh("git commit -m 'Automatic update API spec from CI' mpl-specs")
                         sh("git push")
                     }
 
