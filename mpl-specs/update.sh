@@ -1,4 +1,5 @@
 set -e
+set -v
 
 BASEDIR=$(dirname "$0")
 cd $BASEDIR
