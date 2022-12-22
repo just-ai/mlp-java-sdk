@@ -15,19 +15,27 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
-                        branch: "${params.BRANCH}",
-                        credentialsId: 'bitbucket_key'
-            }
-        }
-        stage('Build with maven') {
-            steps {
                 script {
                     manager.addShortText(params.BRANCH)
                 }
 
                 updateGitlabCommitStatus name: "build", state: "running"
 
+                git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
+                        branch: "${params.BRANCH}",
+                        credentialsId: 'bitbucket_key'
+            }
+        }
+
+        stage('Update spec') {
+            steps {
+                sh "./mpl-specs/update.sh"
+                sh "./mpl-specs/check_and_commit.sh"
+            }
+        }
+
+        stage('Build with maven') {
+            steps {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
                     sh """mvn versions:set -DnewVersion=${params.BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
