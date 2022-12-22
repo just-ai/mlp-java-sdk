@@ -34,7 +34,7 @@ pipeline {
                 script {
                     sh("./mpl-specs/update.sh")
 
-                    def hasChanges = !sh(returnStdout: true, script: 'git status -s').trim().isEmpty()
+                    def hasChanges = !sh(returnStdout: true, script: 'git status -s mpl-specs').trim().isEmpty()
 
                     if (hasChanges) {
                         sh("git commit -m 'Automatic update API spec from CI' mpl-specs")
