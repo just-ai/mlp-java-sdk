@@ -11,6 +11,8 @@ object StorageFactory {
         else -> throw RuntimeException("Could not create storage")
     }
 
+    fun getDefaultStorageDir(): String? = System.getenv("MPL_STORAGE_DIR")
+
     private fun getS3Service() = S3Storage(
         minioClient = createMinioClient(),
         bucketName = getPlatformBucket()
@@ -18,7 +20,6 @@ object StorageFactory {
 
     private fun getLocalStorage() = LocalStorage()
 
-    fun getDefaultStorageDir(): String? = System.getenv("MPL_STORAGE_DIR")
 
     private fun createMinioClient(): MinioClient {
         return MinioClient.builder()

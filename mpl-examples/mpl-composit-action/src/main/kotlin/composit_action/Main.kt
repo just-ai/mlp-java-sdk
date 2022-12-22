@@ -1,6 +1,7 @@
 package composit_action
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.mpl.gate.ActionDescriptorProto
 import com.mpl.sdk.MplAction
 import com.mpl.sdk.MplActionSDK
 import com.mpl.sdk.MplResponse
@@ -21,6 +22,13 @@ fun main() {
 class CompositeTestAction : MplAction() {
 
     private val objectMapper = ObjectMapper()
+
+    override fun getDescriptor(): ActionDescriptorProto {
+        return ActionDescriptorProto.newBuilder()
+            .setName("my-composit")
+            .setFittable(true)
+            .build()
+    }
 
     override fun predict(req: Payload): MplResponse {
         val request = objectMapper.readValue(req.data, CompositeTestActionRequest::class.java)

@@ -1,15 +1,16 @@
 package fit_action
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.mpl.gate.ActionDescriptorProto
 import com.mpl.sdk.MplAction
 import com.mpl.sdk.MplActionSDK
 import com.mpl.sdk.MplResponse
 import com.mpl.sdk.MplResponseException
 import com.mpl.sdk.Payload
 import com.mpl.sdk.storage.StorageFactory
+import java.lang.Exception
 
 fun main() {
-    println(System.getenv().toString())
     val action = FitTestAction()
     val actionSDK = MplActionSDK(action)
 
@@ -25,6 +26,13 @@ class FitTestAction : MplAction() {
     private val modelFileName = "model_fit_result.json"
 
     private var model: FittedModel? = loadState()
+
+    override fun getDescriptor(): ActionDescriptorProto {
+        return ActionDescriptorProto.newBuilder()
+            .setName("my-fit")
+            .setFittable(true)
+            .build()
+    }
 
     override fun fit(
         train: Payload,
@@ -46,7 +54,6 @@ class FitTestAction : MplAction() {
         }
         val result = processFitData(trainData, targetData)
         storage.saveState(objectMapper.writeValueAsString(result), "$modelDir/$modelFileName")
-
         this.model = FittedModel(result)
 
         return Payload(
@@ -61,12 +68,13 @@ class FitTestAction : MplAction() {
     }
 
     private fun loadState(): FittedModel? {
-        if (defaultStorageDir.isNullOrEmpty()) {
-            return null
+        return try {
+            storage.loadState("$defaultStorageDir/$modelFileName")
+                ?.let { objectMapper.readValue(it, FitProcessData::class.java) }
+                ?.let { FittedModel(it) }
+        } catch (e: Exception) {
+            null
         }
-        return storage.loadState("$defaultStorageDir/$modelFileName")
-            ?.let { objectMapper.readValue(it, FitProcessData::class.java) }
-            ?.let { FittedModel(it) }
     }
 
     private fun processFitData(trainData: List<String>, targetData: List<String>): FitProcessData {
