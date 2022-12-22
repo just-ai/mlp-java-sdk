@@ -43,7 +43,7 @@ pipeline {
 
                     env.NEED_REBUILD = hasChanges || !params.CHECK_SCHEMAS_ONLY
                 }
-                echo $NEED_REBUILD
+                echo ${env.NEED_REBUILD}
             }
         }
 
