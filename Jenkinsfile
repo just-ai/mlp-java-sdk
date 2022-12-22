@@ -43,7 +43,6 @@ pipeline {
 
                     env.NEED_REBUILD = hasChanges || !params.CHECK_SCHEMAS_ONLY
                 }
-                echo ${env.NEED_REBUILD}
             }
         }
 
@@ -52,11 +51,10 @@ pipeline {
                 expression { env.NEED_REBUILD == 'true' }
             }
             steps {
-                echo "BUILDDDDDD"
-//                withMaven(maven: 'Maven 3.5', jdk: '11') {
-  //                  sh """mvn versions:set -DnewVersion=${params.BRANCH}-SNAPSHOT"""
-    //                sh """mvn clean deploy"""
-      //          }
+                withMaven(maven: 'Maven 3.5', jdk: '11') {
+                    sh """mvn versions:set -DnewVersion=${params.BRANCH}-SNAPSHOT"""
+                    sh """mvn clean deploy"""
+                }
             }
         }
     }
