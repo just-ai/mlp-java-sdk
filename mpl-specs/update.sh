@@ -13,8 +13,7 @@ if [ $BRANCH == 'stable' ]; then
   SERVER=https://caila.stable.caila-x-sls.test-ai.net
 fi
 if [ $BRANCH == 'separate-sdk' ]; then
-  SERVER=https://caila.caila-ci-dev.lo.test-ai.net
-  #SERVER=https://caila.separate-sdk.caila-ci-feature.lo.test-ai.net
+  SERVER=https://caila.separate-sdk.caila-ci-feature.lo.test-ai.net
 fi
 
 
