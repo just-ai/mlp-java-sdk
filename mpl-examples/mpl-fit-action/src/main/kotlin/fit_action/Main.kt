@@ -95,3 +95,15 @@ data class TransformerFitTrainData(val texts: List<String>)
 data class TransformerFitTargetItem(val value: String)
 data class TransformerFitTargetItems(val items: List<TransformerFitTargetItem>)
 data class TransformerFitTargets(val items_list: List<TransformerFitTargetItems>, val extra_items_list: List<TransformerFitTargetItems>)
+
+class FittedModel(
+    private val data: FitProcessData
+) {
+
+    fun predict(number: String): MplResponse {
+        val value = data.processedData[number]
+            ?: return MplResponseException(RuntimeException("No element found"))
+        return Payload(value)
+    }
+
+}
