@@ -3957,6 +3957,10 @@ components:
           format: int32
         externalUrl:
           type: string
+        grpcSecure:
+          type: boolean
+        restApiURL:
+          type: string
     ExtendedRequestData:
       required:
       - methodName
@@ -4199,12 +4203,12 @@ components:
     PageModelInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4405,12 +4409,12 @@ components:
     PageImageInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4437,12 +4441,12 @@ components:
     PageDataImageInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
