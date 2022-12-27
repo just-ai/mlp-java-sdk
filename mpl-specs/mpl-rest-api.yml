@@ -1196,6 +1196,42 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/mplgate/account/{accountId}/model/{modelId}/derived:
+    post:
+      tags:
+      - model-endpoint
+      operationId: createDerivedModel
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: MPL-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInfoData'
   /api/mplgate/account/{accountId}/model/{modelId}/cross-validation:
     post:
       tags:
@@ -4203,12 +4239,12 @@ components:
     PageModelInfoData:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
         totalElements:
           type: integer
           format: int64
+        totalPages:
+          type: integer
+          format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4409,12 +4445,12 @@ components:
     PageImageInfoData:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
         totalElements:
           type: integer
           format: int64
+        totalPages:
+          type: integer
+          format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4441,12 +4477,12 @@ components:
     PageDataImageInfoData:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
         totalElements:
           type: integer
           format: int64
+        totalPages:
+          type: integer
+          format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
