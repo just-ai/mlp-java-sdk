@@ -2975,6 +2975,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InstanceEnvironmentData'
+  /api/mplgate/account/{accountId}/model/{modelId}/action-descriptor:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getActionDescriptor
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MPL-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionDescriptorData'
   /api/mplgate/account/{accountId}/metric:
     get:
       tags:
@@ -4442,6 +4473,61 @@ components:
           type: object
           additionalProperties:
             type: string
+    ActionDescriptorData:
+      required:
+      - fittable
+      - methods
+      - name
+      - schemaFiles
+      type: object
+      properties:
+        name:
+          type: string
+        schemaFiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaFileData'
+        fittable:
+          type: boolean
+        methods:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MethodDescriptorData'
+    MethodDescriptorData:
+      required:
+      - fitted
+      - name
+      - output
+      - params
+      type: object
+      properties:
+        name:
+          type: string
+        params:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ParamTypeData'
+        output:
+          $ref: '#/components/schemas/ParamTypeData'
+        fitted:
+          type: boolean
+    ParamTypeData:
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+    SchemaFileData:
+      required:
+      - content
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
     PageImageInfoData:
       type: object
       properties:
