@@ -25,12 +25,7 @@ interface MplAction {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "ext"))
     }
 
-    fun batch(req: List<BatchPayload>): List<MplResponse> {
+    fun batch(requests: List<Payload>, config: Payload?): List<MplResponse> {
         throw MplException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "batch"))
     }
 }
-
-data class BatchPayload(
-    val request: Payload,
-    val config: Payload? = null
-)

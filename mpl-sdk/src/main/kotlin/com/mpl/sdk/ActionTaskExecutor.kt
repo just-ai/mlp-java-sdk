@@ -3,6 +3,7 @@ package com.mpl.sdk
 import com.mpl.gate.ActionToGateProto
 import com.mpl.gate.ActionToGateProto.Builder
 import com.mpl.gate.ApiErrorProto
+import com.mpl.gate.BatchPayloadResponseProto
 import com.mpl.gate.BatchRequestProto
 import com.mpl.gate.BatchResponseProto
 import com.mpl.gate.ExtendedRequestProto
@@ -12,7 +13,6 @@ import com.mpl.gate.FitResponseProto
 import com.mpl.gate.PayloadProto
 import com.mpl.gate.PredictRequestProto
 import com.mpl.gate.PredictResponseProto
-import com.mpl.gate.SingleBatchPredictResponseProto
 import com.mpl.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mpl.sdk.State.Condition.ACTIVE
 import com.mpl.sdk.utils.JobsContainer
@@ -102,14 +102,11 @@ class ActionTaskExecutor(
 
             val data = request.dataList
 
-            val payloadData = data.map {
-                BatchPayload(it.predict.data.asPayload, it.predict.config.asPayload)
-            }
-
+            val payloadData = data.map { it.data.asPayload }
             val requestsIdes = data.map { it.requestId }
 
             runCatching {
-                val responses = action.batch(payloadData.map(::requireNotNull))
+                val responses = action.batch(payloadData, request.config.asPayload)
                 responseBuilder.setBatch(responses, requestsIdes)
             }.onFailure {
                 logger.error("Error while processing batch request", it)
@@ -191,7 +188,7 @@ private fun Builder.setBatch(batchResult: List<MplResponse>, requestsIdes: List<
     require(batchResult.size == requestsIdes.size) { "Batch responses size must be equal to requests size" }
     val actionToGateProtos = batchResult.zip(requestsIdes)
         .map { (data, requestId) ->
-            val builder = SingleBatchPredictResponseProto.newBuilder().setRequestId(requestId)
+            val builder = BatchPayloadResponseProto.newBuilder().setRequestId(requestId)
             when (data) {
                 is Payload -> builder.setPredict(PredictResponseProto.newBuilder().setData(data.asProto))
                 is MplResponseException -> builder.setError(data.exception.asErrorProto)
