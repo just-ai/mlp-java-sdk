@@ -4,16 +4,16 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>mpl-client-generator</module>
-        <module>mpl-sdk</module>
-        <module>mpl-examples/mpl-dummy-action</module>
+        <module>mlp-client-generator</module>
+        <module>mlp-sdk</module>
+        <module>mlp-examples/mlp-dummy-action</module>
     </modules>
 
-    <groupId>com.mpl</groupId>
-    <artifactId>mpl-java-sdk</artifactId>
+    <groupId>com.mlp</groupId>
+    <artifactId>mlp-java-sdk</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>mpl-java-sdk</name>
-    <description>MPL Java SDK</description>
+    <name>mlp-java-sdk</name>
+    <description>MLP Java SDK</description>
 
     <properties>
         <branch.name.lower>local</branch.name.lower>

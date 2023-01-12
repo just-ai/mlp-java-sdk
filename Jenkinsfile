@@ -32,12 +32,12 @@ pipeline {
         stage('Update spec') {
             steps {
                 script {
-                    sh("./mpl-specs/update.sh")
+                    sh("./mlp-specs/update.sh")
 
-                    def hasChanges = !sh(returnStdout: true, script: 'git status -s mpl-specs').trim().isEmpty()
+                    def hasChanges = !sh(returnStdout: true, script: 'git status -s mlp-specs').trim().isEmpty()
 
                     if (hasChanges) {
-                        sh("git commit -m 'Automatic update API spec from CI' mpl-specs")
+                        sh("git commit -m 'Automatic update API spec from CI' mlp-specs")
                         sh("git push")
                     }
 
