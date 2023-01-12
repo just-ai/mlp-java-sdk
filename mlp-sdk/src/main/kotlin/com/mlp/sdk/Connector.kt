@@ -162,7 +162,7 @@ class Connector(
         .setStartServing(
             StartServingProto.newBuilder()
                 .setConnectionToken(pool.token)
-                .setServiceDescriptor(executor.action.getDescriptor())
+                .setActionDescriptor(executor.action.getDescriptor())
                 .build()
         )
         .build()
