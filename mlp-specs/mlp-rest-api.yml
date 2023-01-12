@@ -2979,7 +2979,7 @@ paths:
     get:
       tags:
       - model-endpoint
-      operationId: getActionDescriptor
+      operationId: getServiceDescriptor
       parameters:
       - name: accountId
         in: path
@@ -3005,7 +3005,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActionDescriptorData'
+                $ref: '#/components/schemas/ServiceDescriptorData'
   /api/mlpgate/account/{accountId}/metric:
     get:
       tags:
@@ -4270,12 +4270,12 @@ components:
     PageModelInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4473,26 +4473,6 @@ components:
           type: object
           additionalProperties:
             type: string
-    ActionDescriptorData:
-      required:
-      - fittable
-      - methods
-      - name
-      - schemaFiles
-      type: object
-      properties:
-        name:
-          type: string
-        schemaFiles:
-          type: array
-          items:
-            $ref: '#/components/schemas/SchemaFileData'
-        fittable:
-          type: boolean
-        methods:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/MethodDescriptorData'
     MethodDescriptorData:
       required:
       - fitted
@@ -4528,15 +4508,35 @@ components:
           type: string
         content:
           type: string
+    ServiceDescriptorData:
+      required:
+      - fittable
+      - methods
+      - name
+      - schemaFiles
+      type: object
+      properties:
+        name:
+          type: string
+        schemaFiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaFileData'
+        fittable:
+          type: boolean
+        methods:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MethodDescriptorData'
     PageImageInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4563,12 +4563,12 @@ components:
     PageDataImageInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
