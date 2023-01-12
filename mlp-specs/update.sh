@@ -22,7 +22,7 @@ echo $SERVER
 if [ $SERVER ]; then
 
   echo go
-  curl --silent $SERVER/static/cailagate/api-docs.yaml -o mlp-rest-api.yml
+  curl --silent $SERVER/static/mlpgate/api-docs.yaml -o mlp-rest-api.yml
   sed "s/- url:.*/- url: https:\/\/app.caila.io/g" -i mlp-rest-api.yml
 
   curl --silent $SERVER/static/mlpgate/mlp-grpc.proto -o mlp-grpc.proto
