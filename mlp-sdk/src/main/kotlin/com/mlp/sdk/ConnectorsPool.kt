@@ -1,6 +1,6 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ActionToGateProto
+import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.WithLogger
 import kotlinx.coroutines.CoroutineScope
@@ -29,17 +29,17 @@ class ConnectorsPool(
         launchConnectorsMonitor()
     }
 
-    suspend fun send(connectorId: Long, toGateProto: ActionToGateProto) {
+    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto) {
         connectors[connectorId]
-            ?.sendActionToGate(toGateProto)
+            ?.sendServiceToGate(toGateProto)
             ?: throw NoSuchElementException("There is no connector $connectorId")
     }
 
-    suspend fun sendToAnyGate(toGateProto: ActionToGateProto) {
+    suspend fun sendToAnyGate(toGateProto: ServiceToGateProto) {
         connectors.values
             .filter { it.isAvailableToSendGrpc() }
             .randomOrNull()
-            ?.sendActionToGate(toGateProto)
+            ?.sendServiceToGate(toGateProto)
             ?: throw NoSuchElementException("There is no connected to send connector")
     }
 

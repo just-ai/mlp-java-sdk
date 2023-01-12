@@ -1,6 +1,6 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ActionToGateProto
+import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.utils.WithLogger
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -65,7 +65,7 @@ class MlpServiceSDK(
         state.shutdown()
     }
 
-    internal fun sendToAnyGate(gateProto: ActionToGateProto) {
+    internal fun sendToAnyGate(gateProto: ServiceToGateProto) {
         check(state.active) { "Action is not started" }
         runBlocking {
             taskExecutor.connectorsPool

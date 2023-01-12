@@ -1,19 +1,19 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ActionToGateProto
+import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.ClusterUpdateProto
 import com.mlp.gate.GateGrpc
-import com.mlp.gate.GateToActionProto
-import com.mlp.gate.GateToActionProto.BodyCase.BATCH
-import com.mlp.gate.GateToActionProto.BodyCase.BODY_NOT_SET
-import com.mlp.gate.GateToActionProto.BodyCase.CLUSTER
-import com.mlp.gate.GateToActionProto.BodyCase.ERROR
-import com.mlp.gate.GateToActionProto.BodyCase.EXT
-import com.mlp.gate.GateToActionProto.BodyCase.FIT
-import com.mlp.gate.GateToActionProto.BodyCase.HEARTBEAT
-import com.mlp.gate.GateToActionProto.BodyCase.PREDICT
-import com.mlp.gate.GateToActionProto.BodyCase.RESPONSE
-import com.mlp.gate.GateToActionProto.BodyCase.SERVICEINFO
+import com.mlp.gate.GateToServiceProto
+import com.mlp.gate.GateToServiceProto.BodyCase.BATCH
+import com.mlp.gate.GateToServiceProto.BodyCase.BODY_NOT_SET
+import com.mlp.gate.GateToServiceProto.BodyCase.CLUSTER
+import com.mlp.gate.GateToServiceProto.BodyCase.ERROR
+import com.mlp.gate.GateToServiceProto.BodyCase.EXT
+import com.mlp.gate.GateToServiceProto.BodyCase.FIT
+import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
+import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
+import com.mlp.gate.GateToServiceProto.BodyCase.RESPONSE
+import com.mlp.gate.GateToServiceProto.BodyCase.SERVICEINFO
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.StartServingProto
@@ -53,7 +53,7 @@ class Connector(
     private val grpcChannel = AtomicReference<GrpcChannel?>(null)
     private val keepConnectionJob = launchKeepConnectionJob()
 
-    suspend fun sendActionToGate(grpcResponse: ActionToGateProto) {
+    suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto) {
         check(isAvailableToSendGrpc()) { "$this: cannot send message because it is not connected. Current grpcChannel state ${grpcChannel.get()?.state}" }
 
         grpcChannel.get()
@@ -158,11 +158,11 @@ class Connector(
 
     override fun toString() = "Connector(id='$id', url='$targetUrl')"
 
-    private val startServingProto = ActionToGateProto.newBuilder()
+    private val startServingProto = ServiceToGateProto.newBuilder()
         .setStartServing(
             StartServingProto.newBuilder()
                 .setConnectionToken(pool.token)
-                .setActionDescriptor(executor.action.getDescriptor())
+                .setServiceDescriptor(executor.action.getDescriptor())
                 .build()
         )
         .build()
@@ -172,10 +172,10 @@ class Connector(
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
     }
 
-    private inner class GrpcChannel : StreamObserver<GateToActionProto>, WithLogger, WithState() {
+    private inner class GrpcChannel : StreamObserver<GateToServiceProto>, WithLogger, WithState() {
 
         private lateinit var managedChannel: ManagedChannel
-        private lateinit var stream: StreamObserver<ActionToGateProto>
+        private lateinit var stream: StreamObserver<ServiceToGateProto>
 
         private val lastServerHeartbeat = AtomicReference(now())
         private val heartbeatInterval = AtomicReference<Duration>(null)
@@ -209,7 +209,7 @@ class Connector(
             sendStartServingProto()
         }
 
-        suspend fun send(grpcResponse: ActionToGateProto) {
+        suspend fun send(grpcResponse: ServiceToGateProto) {
             if (grpcResponse.hasHeartBeat())
                 logger.trace("$this: send message ${grpcResponse.bodyCase} to $targetUrl")
             else
@@ -224,7 +224,7 @@ class Connector(
             }
         }
 
-        override fun onNext(request: GateToActionProto) {
+        override fun onNext(request: GateToServiceProto) {
             if (request.hasHeartBeat())
                 logger.trace("Connector $id: received request ${request.bodyCase} with id ${request.requestId}")
             else
@@ -419,8 +419,8 @@ private val ServiceInfoProto.asModelInfo
         modelName
     )
 
-private val stopServingProto: ActionToGateProto =
-    ActionToGateProto.newBuilder().setStopServing(StopServingProto.getDefaultInstance()).build()
+private val stopServingProto: ServiceToGateProto =
+    ServiceToGateProto.newBuilder().setStopServing(StopServingProto.getDefaultInstance()).build()
 
-private val heartbeatProto: ActionToGateProto =
-    ActionToGateProto.newBuilder().setHeartBeat(HeartBeatProto.getDefaultInstance()).build()
+private val heartbeatProto: ServiceToGateProto =
+    ServiceToGateProto.newBuilder().setHeartBeat(HeartBeatProto.getDefaultInstance()).build()
