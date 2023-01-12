@@ -37,9 +37,9 @@ data class ActionShutdownConfig(
 fun loadActionConfig(configPath: String? = null): MlpServiceConfig {
     val props = ConfigHelper.loadProperties(configPath)
     return MlpServiceConfig(
-        initialGateUrls = props["MLP_URL"]!!.split(",:"),
-        connectionToken = props["MLP_TOKEN"]!!,
-        clientApiGateUrl = props["MLP_CLIENT_API_GATE_URL"],
+        initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
+        connectionToken = props["MLP_SERVICE_TOKEN"]!!,
+        clientApiGateUrl = props["MLP_REST_URL"],
         threadPoolSize = props["MLP_THREAD_POOL_SIZE"]?.toInt()
             ?: DEFAULT_THREAD_POOL_SIZE,
         shutdownConfig = ActionShutdownConfig(

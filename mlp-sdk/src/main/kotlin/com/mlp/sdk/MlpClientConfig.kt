@@ -23,7 +23,7 @@ class MlpClientConfig(
 fun loadClientConfig(configPath: String? = null): MlpClientConfig {
     val props = ConfigHelper.loadProperties(configPath)
     return MlpClientConfig(
-        initialGateUrls = props["MLP_URL"]!!.split(",:"),
+        initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
         connectionToken = props["MLP_CLIENT_TOKEN"]!!,
         clientPredictTimeoutMs = props["MLP_CLIENT_PREDICT_TIMEOUT_MS"]?.toLong()
             ?: CLIENT_PREDICT_TIMEOUT_MS,

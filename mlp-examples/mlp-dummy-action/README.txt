@@ -7,5 +7,5 @@ Run as:
 or
 
  docker run \
-    --env MLP_URL=mlp-gate:10601 --env MLP_TOKEN=8974598357943 \
+    --env MLP_GRPC_HOST=mlp-gate:10601 --env MLP_SERVICE_TOKEN=8974598357943 \
     mlp-dummy-action
