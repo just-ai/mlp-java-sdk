@@ -1,11 +1,11 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ActionDescriptorProto
+import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
 
 interface MlpService {
 
-    fun getDescriptor(): ActionDescriptorProto {
+    fun getDescriptor(): ServiceDescriptorProto {
         throw NotImplementedError()
     }
 

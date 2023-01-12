@@ -14,7 +14,7 @@ service Gate {
   //rpc audioStreamAsync(stream ServiceRequestProto) returns (stream ServiceResponseProto) {}
 }
 
-message ActionDescriptorProto {
+message ServiceDescriptorProto {
   string name = 1;
 
   bool fittable = 10;
@@ -100,7 +100,7 @@ message StartServingProto {
   // и передаёт в Cloud через env-переменные
   string connectionToken = 1;
 
-  ActionDescriptorProto actionDescriptor = 3;
+  ServiceDescriptorProto actionDescriptor = 3;
 }
 
 message StopServingProto {

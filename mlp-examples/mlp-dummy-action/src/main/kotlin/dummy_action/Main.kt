@@ -1,14 +1,14 @@
 package dummy_action
 
-import com.mlp.gate.ActionDescriptorProto
+import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.sdk.MlpService
 import com.mlp.sdk.MlpServiceSDK
 import com.mlp.sdk.Payload
 import org.slf4j.LoggerFactory
 
 object MyService : MlpService {
-    override fun getDescriptor(): ActionDescriptorProto {
-        return ActionDescriptorProto.newBuilder().build()
+    override fun getDescriptor(): ServiceDescriptorProto {
+        return ServiceDescriptorProto.newBuilder().build()
     }
 
     override fun predict(req: Payload): Payload {
