@@ -8,12 +8,12 @@ import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
 
 
-class MplActionSDK(
-    action: MplAction,
-    private val config: MplActionConfig = loadActionConfig()
+class MlpServiceSDK(
+    action: MlpService,
+    private val config: MlpServiceConfig = loadActionConfig()
 ) : WithLogger, WithState() {
 
-    private val taskExecutor: ActionTaskExecutor = ActionTaskExecutor(action, config)
+    private val taskExecutor: TaskExecutor = TaskExecutor(action, config)
     val pipelineClient: PipelineClient = PipelineClient(this, config)
 
     fun start() {
@@ -88,7 +88,7 @@ class MplActionSDK(
     override fun toString() = SDK_COMPONENT_NAME
 
     companion object {
-        const val SDK_COMPONENT_NAME = "MplActionSDK"
+        const val SDK_COMPONENT_NAME = "MlpServiceSDK"
         const val STARTUP_PROBE_FILE_PATH = "/tmp/startup-probe"
     }
 }

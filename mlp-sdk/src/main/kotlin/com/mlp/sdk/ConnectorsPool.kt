@@ -16,9 +16,9 @@ import java.time.Instant.now
 
 class ConnectorsPool(
     val token: String,
-    private val executor: ActionTaskExecutor,
+    private val executor: TaskExecutor,
     private val pipelineClient: PipelineClient,
-    private val config: MplActionConfig
+    private val config: MlpServiceConfig
 ) : WithLogger, WithState(ACTIVE) {
 
     private var connectors = config.initialGateUrls.map {

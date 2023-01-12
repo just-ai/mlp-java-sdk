@@ -43,9 +43,9 @@ import java.util.concurrent.atomic.AtomicReference
 class Connector(
     var targetUrl: String,
     val pool: ConnectorsPool,
-    val executor: ActionTaskExecutor,
+    val executor: TaskExecutor,
     val pipelineClient: PipelineClient,
-    val config: MplActionConfig
+    val config: MlpServiceConfig
 ) : WithLogger, WithState(State.Condition.ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()

@@ -1,6 +1,6 @@
 package com.mlp.sdk.utils
 
-import com.mlp.sdk.MplActionConfig
+import com.mlp.sdk.MlpServiceConfig
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
@@ -10,7 +10,7 @@ import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 
 class JobsContainer(
-    private val config: MplActionConfig,
+    private val config: MlpServiceConfig,
 ) : WithLogger {
 
     private val container = ConcurrentHashMap<Long, ConnectorContainer>()

@@ -23,9 +23,9 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors.newFixedThreadPool
 
-class ActionTaskExecutor(
-    val action: MplAction,
-    val config: MplActionConfig
+class TaskExecutor(
+    val action: MlpService,
+    val config: MlpServiceConfig
 ) : WithLogger, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config)
@@ -40,7 +40,7 @@ class ActionTaskExecutor(
             runCatching {
                 when (val responsePayload = action.predict(dataPayload, request.config.asPayload)) {
                     is Payload -> responseBuilder.setPredict(responsePayload)
-                    is MplResponseException -> throw responsePayload.exception
+                    is MlpResponseException -> throw responsePayload.exception
                 }
             }.onFailure {
                 logger.error("Error while processing predict request", it)
@@ -84,7 +84,7 @@ class ActionTaskExecutor(
             runCatching {
                 when (val responsePayload = action.ext(methodName, params)) {
                     is Payload -> responseBuilder.setExt(responsePayload)
-                    is MplResponseException -> throw responsePayload.exception
+                    is MlpResponseException -> throw responsePayload.exception
                 }
             }.onFailure {
                 logger.error("Error while processing ext request", it)
@@ -184,14 +184,14 @@ private fun Builder.setFit() =
 private fun Builder.setExt(extResult: Payload) =
     setExt(ExtendedResponseProto.newBuilder().setData(extResult.asProto))
 
-private fun Builder.setBatch(batchResult: List<MplResponse>, requestsIdes: List<Long>): Builder {
+private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<Long>): Builder {
     require(batchResult.size == requestsIdes.size) { "Batch responses size must be equal to requests size" }
     val actionToGateProtos = batchResult.zip(requestsIdes)
         .map { (data, requestId) ->
             val builder = BatchPayloadResponseProto.newBuilder().setRequestId(requestId)
             when (data) {
                 is Payload -> builder.setPredict(PredictResponseProto.newBuilder().setData(data.asProto))
-                is MplResponseException -> builder.setError(data.exception.asErrorProto)
+                is MlpResponseException -> builder.setError(data.exception.asErrorProto)
             }
             builder.build()
         }
@@ -201,7 +201,7 @@ private fun Builder.setBatch(batchResult: List<MplResponse>, requestsIdes: List<
 
 private val Throwable.asErrorProto
     get() = when (this) {
-        is MplException ->
+        is MlpException ->
             ApiErrorProto.newBuilder()
                 .setCode(error.errorCode.code)
                 .setMessage(error.errorCode.message)

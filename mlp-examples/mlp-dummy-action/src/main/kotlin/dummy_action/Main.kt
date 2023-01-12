@@ -1,12 +1,12 @@
 package dummy_action
 
 import com.mlp.gate.ActionDescriptorProto
-import com.mlp.sdk.MplAction
-import com.mlp.sdk.MplActionSDK
+import com.mlp.sdk.MlpService
+import com.mlp.sdk.MlpServiceSDK
 import com.mlp.sdk.Payload
 import org.slf4j.LoggerFactory
 
-object MyService : MplAction {
+object MyService : MlpService {
     override fun getDescriptor(): ActionDescriptorProto {
         return ActionDescriptorProto.newBuilder().build()
     }
@@ -21,7 +21,7 @@ fun main() {
 
     log.info("Starting dummy-action module")
 
-    val mlp = MplActionSDK(MyService)
+    val mlp = MlpServiceSDK(MyService)
     mlp.start()
     mlp.blockUntilShutdown()
 }

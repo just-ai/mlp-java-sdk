@@ -1,8 +1,8 @@
 package com.mlp.sdk
 
-sealed interface MplResponse
+sealed interface MlpResponse
 
-data class Payload(val dataType: String?, val data: String): MplResponse {
+data class Payload(val dataType: String?, val data: String): MlpResponse {
     constructor(data: String) : this(null, data)
 
     companion object {
@@ -10,4 +10,4 @@ data class Payload(val dataType: String?, val data: String): MplResponse {
     }
 }
 
-data class MplResponseException(val exception: Throwable): MplResponse
+data class MlpResponseException(val exception: Throwable): MlpResponse

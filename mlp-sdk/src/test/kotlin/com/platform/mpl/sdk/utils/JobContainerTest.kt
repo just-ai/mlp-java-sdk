@@ -1,8 +1,7 @@
 package com.mlp.sdk.utils
 
 import com.mlp.sdk.ActionShutdownConfig
-import com.mlp.sdk.MplActionConfig
-import com.mlp.sdk.utils.JobsContainer
+import com.mlp.sdk.MlpServiceConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -58,7 +57,7 @@ class JobContainerTest {
         return job
     }
 
-    private fun config(gracefulShutdownAwaitMs: Long, gracefulShutdownActionDelayMs: Long) = MplActionConfig(
+    private fun config(gracefulShutdownAwaitMs: Long, gracefulShutdownActionDelayMs: Long) = MlpServiceConfig(
         initialGateUrls = listOf(),
         connectionToken = "test",
         shutdownConfig = ActionShutdownConfig(

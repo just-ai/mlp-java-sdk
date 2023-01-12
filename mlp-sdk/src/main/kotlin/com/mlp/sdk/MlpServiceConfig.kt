@@ -1,13 +1,13 @@
 package com.mlp.sdk
 
-import com.mlp.sdk.MplActionConfig.Companion.DEFAULT_THREAD_POOL_SIZE
-import com.mlp.sdk.MplActionConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_MS
-import com.mlp.sdk.MplActionConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
-import com.mlp.sdk.MplActionConfig.Companion.GRPC_CONNECT_TIMEOUT_MS
-import com.mlp.sdk.MplActionConfig.Companion.GRPC_SECURE
+import com.mlp.sdk.MlpServiceConfig.Companion.DEFAULT_THREAD_POOL_SIZE
+import com.mlp.sdk.MlpServiceConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_MS
+import com.mlp.sdk.MlpServiceConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
+import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_CONNECT_TIMEOUT_MS
+import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_SECURE
 import com.mlp.sdk.utils.ConfigHelper
 
-class MplActionConfig(
+class MlpServiceConfig(
     val initialGateUrls: List<String>,
     val connectionToken: String,
     val clientApiGateUrl: String? = null,
@@ -34,24 +34,24 @@ data class ActionShutdownConfig(
     val actionConnectorRequestDelayMs: Long = GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
 )
 
-fun loadActionConfig(configPath: String? = null): MplActionConfig {
+fun loadActionConfig(configPath: String? = null): MlpServiceConfig {
     val props = ConfigHelper.loadProperties(configPath)
-    return MplActionConfig(
-        initialGateUrls = props["MPL_URL"]!!.split(",:"),
-        connectionToken = props["MPL_TOKEN"]!!,
-        clientApiGateUrl = props["MPL_CLIENT_API_GATE_URL"],
-        threadPoolSize = props["MPL_THREAD_POOL_SIZE"]?.toInt()
+    return MlpServiceConfig(
+        initialGateUrls = props["MLP_URL"]!!.split(",:"),
+        connectionToken = props["MLP_TOKEN"]!!,
+        clientApiGateUrl = props["MLP_CLIENT_API_GATE_URL"],
+        threadPoolSize = props["MLP_THREAD_POOL_SIZE"]?.toInt()
             ?: DEFAULT_THREAD_POOL_SIZE,
         shutdownConfig = ActionShutdownConfig(
-            actionConnectorMs = props["MPL_GRACEFUL_SHUTDOWN_CONNECTOR_MS"]?.toLong()
+            actionConnectorMs = props["MLP_GRACEFUL_SHUTDOWN_CONNECTOR_MS"]?.toLong()
                 ?: GRACEFUL_SHUTDOWN_CONNECTOR_MS,
-            actionConnectorRequestDelayMs = props["MPL_GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS"]?.toLong()
+            actionConnectorRequestDelayMs = props["MLP_GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS"]?.toLong()
                 ?: GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
         ),
-        grpcConnectTimeoutMs = props["MPL_GRPC_CONNECT_TIMEOUT_MS"]?.toLong()
+        grpcConnectTimeoutMs = props["MLP_GRPC_CONNECT_TIMEOUT_MS"]?.toLong()
             ?: GRPC_CONNECT_TIMEOUT_MS,
-        pipeFutureTimeoutMs = props["MPL_PIPE_FUTURE_TIMEOUT_MS"]?.toLong()
+        pipeFutureTimeoutMs = props["MLP_PIPE_FUTURE_TIMEOUT_MS"]?.toLong()
             ?: GRPC_CONNECT_TIMEOUT_MS,
-        grpcSecure = props["MPL_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE
+        grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE
     )
 }

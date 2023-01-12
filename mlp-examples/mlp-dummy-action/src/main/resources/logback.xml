@@ -12,6 +12,6 @@
         <appender-ref ref="CONSOLE"/>
     </root>
 
-    <logger name="com.mpl" level="DEBUG" additivity="true"/>
+    <logger name="com.mlp" level="DEBUG" additivity="true"/>
 </configuration>
 

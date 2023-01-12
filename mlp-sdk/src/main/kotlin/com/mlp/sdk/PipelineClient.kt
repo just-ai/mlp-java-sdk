@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 
 class PipelineClient(
-    private val sdk: MplActionSDK,
-    private val mplConfig: MplActionConfig,
+    private val sdk: MlpServiceSDK,
+    private val mplConfig: MlpServiceConfig,
     private val restTemplate: RestTemplate = getRestTemplate()
 ) {
 
@@ -36,7 +36,7 @@ class PipelineClient(
     val apiClient: ApiClient by lazy {
         ApiClient(restTemplate).apply {
             basePath = mplConfig.clientApiGateUrl
-            addDefaultHeader("MPL-API-KEY", clientApiToken.token)
+            addDefaultHeader("MLP-API-KEY", clientApiToken.token)
         }
     }
 

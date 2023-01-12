@@ -1,11 +1,11 @@
 package com.mlp.sdk
 
-import com.mlp.sdk.MplClientConfig.Companion.CLIENT_PREDICT_TIMEOUT_MS
-import com.mlp.sdk.MplClientConfig.Companion.GRACEFUL_SHUTDOWN_CLIENT_MS
-import com.mlp.sdk.MplClientConfig.Companion.GRPC_SECURE
+import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_PREDICT_TIMEOUT_MS
+import com.mlp.sdk.MlpClientConfig.Companion.GRACEFUL_SHUTDOWN_CLIENT_MS
+import com.mlp.sdk.MlpClientConfig.Companion.GRPC_SECURE
 import com.mlp.sdk.utils.ConfigHelper
 
-class MplClientConfig(
+class MlpClientConfig(
     val initialGateUrls: List<String>,
     val connectionToken: String,
     val clientPredictTimeoutMs: Long = CLIENT_PREDICT_TIMEOUT_MS,
@@ -20,18 +20,18 @@ class MplClientConfig(
     }
 }
 
-fun loadClientConfig(configPath: String? = null): MplClientConfig {
+fun loadClientConfig(configPath: String? = null): MlpClientConfig {
     val props = ConfigHelper.loadProperties(configPath)
-    return MplClientConfig(
-        initialGateUrls = props["MPL_URL"]!!.split(",:"),
-        connectionToken = props["MPL_CLIENT_TOKEN"]!!,
-        clientPredictTimeoutMs = props["MPL_CLIENT_PREDICT_TIMEOUT_MS"]?.toLong()
+    return MlpClientConfig(
+        initialGateUrls = props["MLP_URL"]!!.split(",:"),
+        connectionToken = props["MLP_CLIENT_TOKEN"]!!,
+        clientPredictTimeoutMs = props["MLP_CLIENT_PREDICT_TIMEOUT_MS"]?.toLong()
             ?: CLIENT_PREDICT_TIMEOUT_MS,
         shutdownConfig = ClientShutdownConfig(
-            clientMs = props["MPL_GRACEFUL_SHUTDOWN_CLIENT_MS"]?.toLong()
+            clientMs = props["MLP_GRACEFUL_SHUTDOWN_CLIENT_MS"]?.toLong()
                 ?: GRACEFUL_SHUTDOWN_CLIENT_MS
         ),
-        grpcSecure = props["MPL_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE
+        grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE
     )
 }
 

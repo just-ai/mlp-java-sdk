@@ -2,10 +2,10 @@ Run as:
 
  docker run \
     --network host \
-    mpl-dummy-action
+    mlp-dummy-action
 
 or
 
  docker run \
-    --env MPL_URL=mpl-gate:10601 --env MPL_TOKEN=8974598357943 \
-    mpl-dummy-action
+    --env MLP_URL=mlp-gate:10601 --env MLP_TOKEN=8974598357943 \
+    mlp-dummy-action

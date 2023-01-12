@@ -18,7 +18,7 @@ import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.TimeUnit
 
-class MplClientSDK(private val config: MplClientConfig = loadClientConfig()) : WithLogger {
+class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : WithLogger {
 
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateGrpc.GateBlockingStub
@@ -26,9 +26,9 @@ class MplClientSDK(private val config: MplClientConfig = loadClientConfig()) : W
     private var token: String? = null
 
     fun init() {
-        gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MPL_URL")
+        gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_URL")
         token = config.connectionToken
-        logger.debug("Starting mpl client for url $gateUrl")
+        logger.debug("Starting mlp client for url $gateUrl")
         connect()
     }
 
@@ -156,7 +156,7 @@ class MplClientSDK(private val config: MplClientConfig = loadClientConfig()) : W
         val end = now() + timeout
 
         val response = executePredictRequest(request, timeout)
-            ?: throw MplClientException("UNAVAILABLE", "Cannot connect after ${timeout.seconds} seconds", emptyMap())
+            ?: throw MlpClientException("UNAVAILABLE", "Cannot connect after ${timeout.seconds} seconds", emptyMap())
 
         when {
             response.hasPredict() ->
@@ -167,11 +167,11 @@ class MplClientSDK(private val config: MplClientConfig = loadClientConfig()) : W
 
             response.hasError() -> {
                 logger.error("Error from gate. Error \n${response.error}")
-                throw MplClientException(response.error.code, response.error.message, response.error.argsMap)
+                throw MlpClientException(response.error.code, response.error.message, response.error.argsMap)
             }
 
             else ->
-                throw MplClientException("wrong-response", "Wrong response type: $response", emptyMap())
+                throw MlpClientException("wrong-response", "Wrong response type: $response", emptyMap())
         }
     }
 
@@ -201,10 +201,10 @@ class MplClientSDK(private val config: MplClientConfig = loadClientConfig()) : W
                 && exception.status.code == UNAVAILABLE -> connect()
 
         exception is StatusRuntimeException ->
-            throw MplClientException(exception.status.code.name, exception.message ?: "$exception", emptyMap())
+            throw MlpClientException(exception.status.code.name, exception.message ?: "$exception", emptyMap())
 
         else ->
-            throw MplClientException("wrong-response", exception.message ?: "$exception", emptyMap())
+            throw MlpClientException("wrong-response", exception.message ?: "$exception", emptyMap())
     }
 
     fun shutdown() {
