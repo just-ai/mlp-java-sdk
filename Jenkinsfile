@@ -11,16 +11,11 @@ pipeline {
     }
     parameters {
         string(name: "BRANCH", defaultValue: "dev", description: "")
+
+        booleanParam(name: "CHECK_SCHEMAS_ONLY", defaultValue: false, description: '')
     }
     stages {
         stage('Prepare') {
-            steps {
-                git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
-                        branch: "${params.BRANCH}",
-                        credentialsId: 'bitbucket_key'
-            }
-        }
-        stage('Build with maven') {
             steps {
                 script {
                     manager.addShortText(params.BRANCH)
@@ -28,6 +23,34 @@ pipeline {
 
                 updateGitlabCommitStatus name: "build", state: "running"
 
+                git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
+                        branch: "${params.BRANCH}",
+                        credentialsId: 'bitbucket_key'
+            }
+        }
+
+        stage('Update spec') {
+            steps {
+                script {
+                    sh("./mlp-specs/update.sh")
+
+                    def hasChanges = !sh(returnStdout: true, script: 'git status -s mlp-specs').trim().isEmpty()
+
+                    if (hasChanges) {
+                        sh("git commit -m 'Automatic update API spec from CI' mlp-specs")
+                        sh("git push")
+                    }
+
+                    env.NEED_REBUILD = hasChanges || !params.CHECK_SCHEMAS_ONLY
+                }
+            }
+        }
+
+        stage('Build with maven') {
+            when {
+                expression { env.NEED_REBUILD == 'true' }
+            }
+            steps {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
                     sh """mvn versions:set -DnewVersion=${params.BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
