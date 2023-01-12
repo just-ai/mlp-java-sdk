@@ -6,7 +6,7 @@ servers:
 - url: https://app.caila.io
   description: Generated server url
 paths:
-  /api/mplgate/admin/account/{accountId}/limits:
+  /api/mlpgate/admin/account/{accountId}/limits:
     post:
       tags:
       - admin-endpoint
@@ -18,7 +18,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -37,7 +37,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountInfoData'
-  /api/mplgate/admin/account/{accountId}/features:
+  /api/mlpgate/admin/account/{accountId}/features:
     get:
       tags:
       - admin-endpoint
@@ -49,7 +49,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -73,7 +73,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -88,13 +88,13 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account:
+  /api/mlpgate/account:
     get:
       tags:
       - account-endpoint
       operationId: ensureAccount
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -112,7 +112,7 @@ paths:
       - account-endpoint
       operationId: updateAccountData
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -131,7 +131,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountInfoData'
-  /api/mplgate/account/{accountId}/token:
+  /api/mlpgate/account/{accountId}/token:
     get:
       tags:
       - access-token-endpoint
@@ -143,7 +143,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -174,7 +174,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -187,7 +187,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccessTokenData'
-  /api/mplgate/account/{accountId}/model:
+  /api/mlpgate/account/{accountId}/model:
     get:
       tags:
       - model-endpoint
@@ -231,7 +231,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -255,7 +255,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -274,7 +274,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInfoData'
-  /api/mplgate/account/{accountId}/model/{modelId}:
+  /api/mlpgate/account/{accountId}/model/{modelId}:
     get:
       tags:
       - model-endpoint
@@ -292,7 +292,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -322,7 +322,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -358,7 +358,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -367,7 +367,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/simple-doc:
+  /api/mlpgate/account/{accountId}/model/{modelId}/simple-doc:
     get:
       tags:
       - model-endpoint
@@ -385,7 +385,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -415,7 +415,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -434,7 +434,7 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mplgate/account/{accountId}/model/{modelId}/predict:
+  /api/mlpgate/account/{accountId}/model/{modelId}/predict:
     post:
       tags:
       - process-endpoint
@@ -458,7 +458,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -477,7 +477,7 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mplgate/account/{accountId}/model/{modelId}/predict-with-config:
+  /api/mlpgate/account/{accountId}/model/{modelId}/predict-with-config:
     post:
       tags:
       - process-endpoint
@@ -495,7 +495,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -514,7 +514,7 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mplgate/account/{accountId}/model/{modelId}/predict-config:
+  /api/mlpgate/account/{accountId}/model/{modelId}/predict-config:
     get:
       tags:
       - predict-config-endpoint
@@ -532,7 +532,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -564,7 +564,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -583,7 +583,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PredictConfigData'
-  /api/mplgate/account/{accountId}/model/{modelId}/predict-config/{configId}:
+  /api/mlpgate/account/{accountId}/model/{modelId}/predict-config/{configId}:
     get:
       tags:
       - predict-config-endpoint
@@ -607,7 +607,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -643,7 +643,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -685,7 +685,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -694,7 +694,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/instances:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instances:
     get:
       tags:
       - model-endpoint
@@ -712,7 +712,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -742,7 +742,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -760,7 +760,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/terminate:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/terminate:
     post:
       tags:
       - model-instance-endpoint
@@ -784,7 +784,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -793,7 +793,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/stop:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/stop:
     post:
       tags:
       - model-instance-endpoint
@@ -817,7 +817,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -826,7 +826,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/start:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/start:
     post:
       tags:
       - model-endpoint
@@ -844,7 +844,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -853,7 +853,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/fit:
+  /api/mlpgate/account/{accountId}/model/{modelId}/fit:
     post:
       tags:
       - process-endpoint
@@ -871,7 +871,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -890,7 +890,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobStatusData'
-  /api/mplgate/account/{accountId}/model/{modelId}/fit-config:
+  /api/mlpgate/account/{accountId}/model/{modelId}/fit-config:
     get:
       tags:
       - fit-config-endpoint
@@ -908,7 +908,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -940,7 +940,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -959,7 +959,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FitConfigData'
-  /api/mplgate/account/{accountId}/model/{modelId}/fit-config/{configId}:
+  /api/mlpgate/account/{accountId}/model/{modelId}/fit-config/{configId}:
     get:
       tags:
       - fit-config-endpoint
@@ -983,7 +983,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1019,7 +1019,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1061,7 +1061,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1070,7 +1070,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/external:
+  /api/mlpgate/account/{accountId}/model/{modelId}/external:
     get:
       tags:
       - model-endpoint
@@ -1088,7 +1088,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1120,7 +1120,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1150,7 +1150,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1159,7 +1159,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/model/{modelId}/ext:
+  /api/mlpgate/account/{accountId}/model/{modelId}/ext:
     post:
       tags:
       - process-endpoint
@@ -1177,7 +1177,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1196,7 +1196,7 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mplgate/account/{accountId}/model/{modelId}/derived:
+  /api/mlpgate/account/{accountId}/model/{modelId}/derived:
     post:
       tags:
       - model-endpoint
@@ -1219,7 +1219,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1232,7 +1232,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInfoData'
-  /api/mplgate/account/{accountId}/model/{modelId}/cross-validation:
+  /api/mlpgate/account/{accountId}/model/{modelId}/cross-validation:
     post:
       tags:
       - process-endpoint
@@ -1250,7 +1250,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1269,7 +1269,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobStatusData'
-  /api/mplgate/account/{accountId}/management/{featureName}:
+  /api/mlpgate/account/{accountId}/management/{featureName}:
     post:
       tags:
       - manual-management-endpoint
@@ -1286,7 +1286,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1301,7 +1301,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/image:
+  /api/mlpgate/account/{accountId}/image:
     get:
       tags:
       - image-endpoint
@@ -1335,7 +1335,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1359,7 +1359,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1378,7 +1378,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImageInfoData'
-  /api/mplgate/account/{accountId}/image/{imageId}:
+  /api/mlpgate/account/{accountId}/image/{imageId}:
     get:
       tags:
       - image-endpoint
@@ -1396,7 +1396,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1426,7 +1426,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1462,7 +1462,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1471,7 +1471,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/dataset:
+  /api/mlpgate/account/{accountId}/dataset:
     get:
       tags:
       - dataset-endpoint
@@ -1483,7 +1483,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1509,7 +1509,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1528,7 +1528,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DatasetInfoData'
-  /api/mplgate/account/{accountId}/dataset/{datasetId}:
+  /api/mlpgate/account/{accountId}/dataset/{datasetId}:
     get:
       tags:
       - dataset-endpoint
@@ -1546,7 +1546,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1576,7 +1576,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1612,7 +1612,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1621,7 +1621,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/dataset/{datasetId}/content:
+  /api/mlpgate/account/{accountId}/dataset/{datasetId}/content:
     get:
       tags:
       - dataset-endpoint
@@ -1644,7 +1644,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1674,7 +1674,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1698,7 +1698,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DatasetInfoData'
-  /api/mplgate/account/{accountId}/data-image:
+  /api/mlpgate/account/{accountId}/data-image:
     get:
       tags:
       - data-image-endpoint
@@ -1732,7 +1732,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1756,7 +1756,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1775,7 +1775,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DataImageInfoData'
-  /api/mplgate/account/{accountId}/data-image/{imageId}:
+  /api/mlpgate/account/{accountId}/data-image/{imageId}:
     get:
       tags:
       - data-image-endpoint
@@ -1793,7 +1793,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1823,7 +1823,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1859,7 +1859,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1868,7 +1868,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/dump/{accountId}:
+  /api/mlpgate/account/dump/{accountId}:
     get:
       tags:
       - account-endpoint
@@ -1880,7 +1880,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1904,7 +1904,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1919,7 +1919,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/account/{accountId}/update-limits:
+  /api/mlpgate-internal/account/{accountId}/update-limits:
     post:
       tags:
       - internal-endpoint
@@ -1931,7 +1931,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1946,7 +1946,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/account/{accountId}/namespace/ensure:
+  /api/mlpgate-internal/account/{accountId}/namespace/ensure:
     post:
       tags:
       - internal-endpoint
@@ -1958,7 +1958,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -1967,7 +1967,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/account/{accountId}/model/{modelId}/path:
+  /api/mlpgate-internal/account/{accountId}/model/{modelId}/path:
     post:
       tags:
       - internal-endpoint
@@ -1985,7 +1985,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2000,7 +2000,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/account/{accountId}/model/{modelId}/instance/deactivate:
+  /api/mlpgate-internal/account/{accountId}/model/{modelId}/instance/deactivate:
     post:
       tags:
       - internal-endpoint
@@ -2018,7 +2018,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2027,7 +2027,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/account/{accountId}/features:
+  /api/mlpgate-internal/account/{accountId}/features:
     get:
       tags:
       - internal-endpoint
@@ -2039,7 +2039,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2063,7 +2063,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2078,13 +2078,13 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/account/deactivate:
+  /api/mlpgate-internal/account/deactivate:
     post:
       tags:
       - internal-endpoint
       operationId: deactivateAccount
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2093,13 +2093,13 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/admin/resource-groups:
+  /api/mlpgate/admin/resource-groups:
     get:
       tags:
       - admin-endpoint
       operationId: getResourceGroups
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2117,7 +2117,7 @@ paths:
       - admin-endpoint
       operationId: updateResourceGroups
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2136,13 +2136,13 @@ paths:
             application/json:
               schema:
                 type: object
-  /api/mplgate-internal/resource-groups:
+  /api/mlpgate-internal/resource-groups:
     get:
       tags:
       - internal-endpoint
       operationId: getResourceGroups_1
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2162,7 +2162,7 @@ paths:
       - internal-endpoint
       operationId: updateResourceGroups_1
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2181,13 +2181,13 @@ paths:
             application/json:
               schema:
                 type: object
-  /api/mplgate/version:
+  /api/mlpgate/version:
     get:
       tags:
       - system-endpoint
       operationId: version
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2200,13 +2200,13 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mplgate/system-config/task-types:
+  /api/mlpgate/system-config/task-types:
     get:
       tags:
       - system-config-endpoint
       operationId: getTaskTypes
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2221,13 +2221,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TaskTypeInfo'
-  /api/mplgate/system-config/resource-groups:
+  /api/mlpgate/system-config/resource-groups:
     get:
       tags:
       - system-config-endpoint
       operationId: getResourceGroupsForAccount
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2242,13 +2242,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ResourceGroupData'
-  /api/mplgate/system-config/model-defaults:
+  /api/mlpgate/system-config/model-defaults:
     get:
       tags:
       - system-config-endpoint
       operationId: getModelDefaults
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2261,13 +2261,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelDefaults'
-  /api/mplgate/system-config/dataset-data-type:
+  /api/mlpgate/system-config/dataset-data-type:
     get:
       tags:
       - system-config-endpoint
       operationId: getDatasetDataTypes
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2282,13 +2282,13 @@ paths:
                 type: array
                 items:
                   type: string
-  /api/mplgate/health:
+  /api/mlpgate/health:
     get:
       tags:
       - system-endpoint
       operationId: healthCheck
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2301,13 +2301,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheckResult'
-  /api/mplgate/health/test:
+  /api/mlpgate/health/test:
     get:
       tags:
       - system-endpoint
       operationId: healthCheckForTests
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2320,7 +2320,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheckResult'
-  /api/mplgate/admin/account:
+  /api/mlpgate/admin/account:
     get:
       tags:
       - admin-endpoint
@@ -2331,7 +2331,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2346,7 +2346,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AccountInfoData'
-  /api/mplgate/admin/account/{accountId}:
+  /api/mlpgate/admin/account/{accountId}:
     get:
       tags:
       - admin-endpoint
@@ -2358,7 +2358,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2371,7 +2371,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountInfoData'
-  /api/mplgate/account/{accountId}/token/{token}:
+  /api/mlpgate/account/{accountId}/token/{token}:
     get:
       tags:
       - access-token-endpoint
@@ -2388,7 +2388,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2417,7 +2417,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2426,7 +2426,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate/account/{accountId}/stat-log:
+  /api/mlpgate/account/{accountId}/stat-log:
     get:
       tags:
       - stat-log-endpoint
@@ -2438,7 +2438,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2453,7 +2453,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatLogData'
-  /api/mplgate/account/{accountId}/model/{modelId}/status:
+  /api/mlpgate/account/{accountId}/model/{modelId}/status:
     get:
       tags:
       - model-endpoint
@@ -2471,7 +2471,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2484,7 +2484,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelShortStatusData'
-  /api/mplgate/account/{accountId}/model/{modelId}/metric:
+  /api/mlpgate/account/{accountId}/model/{modelId}/metric:
     get:
       tags:
       - metric-endpoint
@@ -2524,7 +2524,7 @@ paths:
             - MODEL_MIN_REQUEST_TIME
             - MODEL_MAX_REQUEST_TIME
             - MODEL_INSTANT_REQUEST_TIME
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2540,7 +2540,7 @@ paths:
                 additionalProperties:
                   type: number
                   format: double
-  /api/mplgate/account/{accountId}/model/{modelId}/metric-range:
+  /api/mlpgate/account/{accountId}/model/{modelId}/metric-range:
     get:
       tags:
       - metric-endpoint
@@ -2586,7 +2586,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2603,7 +2603,7 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/Measurement'
-  /api/mplgate/account/{accountId}/model/{modelId}/logs:
+  /api/mlpgate/account/{accountId}/model/{modelId}/logs:
     get:
       tags:
       - model-endpoint
@@ -2621,7 +2621,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2636,7 +2636,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatLogData'
-  /api/mplgate/account/{accountId}/model/{modelId}/last-job:
+  /api/mlpgate/account/{accountId}/model/{modelId}/last-job:
     get:
       tags:
       - model-endpoint
@@ -2654,7 +2654,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2667,7 +2667,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobStatusData'
-  /api/mplgate/account/{accountId}/model/{modelId}/instance:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance:
     get:
       tags:
       - model-instance-endpoint
@@ -2685,7 +2685,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2698,7 +2698,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInstanceListData'
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/metric:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/metric:
     get:
       tags:
       - metric-endpoint
@@ -2737,7 +2737,7 @@ paths:
             - INSTANCE_RAM_REQUESTED
             - INSTANCE_RAM_LIMIT
             - INSTANCE_RECONNECTS_COUNT
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2753,7 +2753,7 @@ paths:
                 additionalProperties:
                   type: number
                   format: double
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/metric-range:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/metric-range:
     get:
       tags:
       - metric-endpoint
@@ -2798,7 +2798,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2815,7 +2815,7 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/Measurement'
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/file:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/file:
     get:
       tags:
       - model-instance-endpoint
@@ -2844,7 +2844,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2858,7 +2858,7 @@ paths:
               schema:
                 type: string
                 format: binary
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/file/logs:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/file/logs:
     get:
       tags:
       - model-instance-endpoint
@@ -2887,7 +2887,7 @@ paths:
         required: false
         schema:
           type: boolean
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2901,7 +2901,7 @@ paths:
               schema:
                 type: string
                 format: binary
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/events:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/events:
     get:
       tags:
       - model-instance-endpoint
@@ -2925,7 +2925,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2938,7 +2938,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InstanceEventData'
-  /api/mplgate/account/{accountId}/model/{modelId}/instance/{instanceId}/environment:
+  /api/mlpgate/account/{accountId}/model/{modelId}/instance/{instanceId}/environment:
     get:
       tags:
       - model-instance-endpoint
@@ -2962,7 +2962,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -2975,7 +2975,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InstanceEnvironmentData'
-  /api/mplgate/account/{accountId}/model/{modelId}/action-descriptor:
+  /api/mlpgate/account/{accountId}/model/{modelId}/action-descriptor:
     get:
       tags:
       - model-endpoint
@@ -2993,7 +2993,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3006,7 +3006,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionDescriptorData'
-  /api/mplgate/account/{accountId}/metric:
+  /api/mlpgate/account/{accountId}/metric:
     get:
       tags:
       - metric-endpoint
@@ -3040,7 +3040,7 @@ paths:
             - ACCOUNT_PREDICTS_COUNT_PER_MINUTE_EXCEEDED
             - ACCOUNT_FITS_COUNT_PER_MINUTE_TOTAL
             - ACCOUNT_FITS_COUNT_PER_MINUTE_EXCEEDED
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3056,7 +3056,7 @@ paths:
                 additionalProperties:
                   type: number
                   format: double
-  /api/mplgate/account/{accountId}/metric-range:
+  /api/mlpgate/account/{accountId}/metric-range:
     get:
       tags:
       - metric-endpoint
@@ -3096,7 +3096,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3113,7 +3113,7 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/Measurement'
-  /api/mplgate/account/{accountId}/job:
+  /api/mlpgate/account/{accountId}/job:
     get:
       tags:
       - job-endpoint
@@ -3125,7 +3125,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3140,7 +3140,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/JobStatusData'
-  /api/mplgate/account/{accountId}/job/{jobId}:
+  /api/mlpgate/account/{accountId}/job/{jobId}:
     get:
       tags:
       - job-endpoint
@@ -3158,7 +3158,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3171,7 +3171,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobStatusData'
-  /api/mplgate/account/{accountId}/image/{imageId}/logs:
+  /api/mlpgate/account/{accountId}/image/{imageId}/logs:
     get:
       tags:
       - image-endpoint
@@ -3189,7 +3189,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3204,7 +3204,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatLogData'
-  /api/mplgate/account/s3/{accountId}:
+  /api/mlpgate/account/s3/{accountId}:
     get:
       tags:
       - account-endpoint
@@ -3216,7 +3216,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3229,13 +3229,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/S3CredentialsData'
-  /api/mplgate-internal/test-mail:
+  /api/mlpgate-internal/test-mail:
     get:
       tags:
       - internal-endpoint
       operationId: sendTestEMail
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3244,13 +3244,13 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/services:
+  /api/mlpgate-internal/services:
     get:
       tags:
       - internal-endpoint
       operationId: listRegisteredServices
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3265,7 +3265,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ModelInstance'
-  /api/mplgate-internal/notify/{accountId}/user/{userId}:
+  /api/mlpgate-internal/notify/{accountId}/user/{userId}:
     get:
       tags:
       - internal-endpoint
@@ -3282,7 +3282,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3291,13 +3291,13 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mplgate-internal/cluster:
+  /api/mlpgate-internal/cluster:
     get:
       tags:
       - internal-endpoint
       operationId: cluster
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3312,13 +3312,13 @@ paths:
                 type: array
                 items:
                   type: string
-  /api/mplgate-internal/actions:
+  /api/mlpgate-internal/actions:
     get:
       tags:
       - internal-endpoint
       operationId: listAllConnectedActions
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3333,7 +3333,7 @@ paths:
                 type: array
                 items:
                   type: string
-  /api/mplgate-internal/account:
+  /api/mlpgate-internal/account:
     get:
       tags:
       - internal-endpoint
@@ -3344,7 +3344,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3357,7 +3357,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountInfoData'
-  /api/mplgate-internal/account/{accountId}/model/{modelId}/instances:
+  /api/mlpgate-internal/account/{accountId}/model/{modelId}/instances:
     get:
       tags:
       - internal-endpoint
@@ -3375,7 +3375,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3390,7 +3390,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ModelInstance'
-  /api/mplgate-internal/account/{accountId}/model/{modelId}/actions:
+  /api/mlpgate-internal/account/{accountId}/model/{modelId}/actions:
     get:
       tags:
       - internal-endpoint
@@ -3408,7 +3408,7 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3423,13 +3423,13 @@ paths:
                 type: array
                 items:
                   type: string
-  /api/mplgate-internal/instances/deleteByTimestamp:
+  /api/mlpgate-internal/instances/deleteByTimestamp:
     delete:
       tags:
       - internal-endpoint
       operationId: deleteMarkedInstances
       parameters:
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3457,7 +3457,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
@@ -3488,7 +3488,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: MPL-API-KEY
+      - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
         required: false
