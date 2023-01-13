@@ -1,9 +1,12 @@
 package client
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.mlp.sdk.MlpClientSDK
 
-val objectMapper = ObjectMapper()
+val objectMapper = ObjectMapper().apply {
+    registerModule(KotlinModule())
+}
 const val ACCOUNT = "your_account"
 const val MODEL = "your_model"
 

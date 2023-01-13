@@ -1,6 +1,7 @@
 package composit_action
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.mlp.gate.ActionDescriptorProto
 import com.mlp.sdk.MlpResponse
 import com.mlp.sdk.MlpService
@@ -21,7 +22,9 @@ fun main() {
 
 class CompositeTestAction : MlpService() {
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = ObjectMapper().apply {
+        registerModule(KotlinModule())
+    }
 
     override fun getDescriptor(): ActionDescriptorProto {
         return ActionDescriptorProto.newBuilder()

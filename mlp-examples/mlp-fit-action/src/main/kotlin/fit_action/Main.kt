@@ -1,6 +1,7 @@
 package fit_action
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.mlp.gate.ActionDescriptorProto
 import com.mlp.sdk.MlpResponse
 import com.mlp.sdk.MlpResponseException
@@ -19,7 +20,9 @@ fun main() {
 
 class FitTestAction : MlpService() {
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = ObjectMapper().apply {
+        registerModule(KotlinModule())
+    }
     private val storage = StorageFactory.getStorage()
     private val defaultStorageDir = StorageFactory.getDefaultStorageDir()
     private val modelFileName = "model_fit_result.json"
@@ -52,7 +55,8 @@ class FitTestAction : MlpService() {
             )
         }
         val result = processFitData(trainData, targetData)
-        storage.saveState(objectMapper.writeValueAsString(result), "$modelDir/$modelFileName")
+        val storageDir = modelDir.ifBlank { defaultStorageDir }
+        storage.saveState(objectMapper.writeValueAsString(result), "$storageDir/$modelFileName")
         this.model = FittedModel(result)
 
         return Payload(
@@ -93,7 +97,10 @@ data class FitProcessData(val processedData: Map<String, String>)
 data class TransformerFitTrainData(val texts: List<String>)
 data class TransformerFitTargetItem(val value: String)
 data class TransformerFitTargetItems(val items: List<TransformerFitTargetItem>)
-data class TransformerFitTargets(val items_list: List<TransformerFitTargetItems>, val extra_items_list: List<TransformerFitTargetItems>)
+data class TransformerFitTargets(
+    val items_list: List<TransformerFitTargetItems>,
+    val extra_items_list: List<TransformerFitTargetItems>
+)
 
 class FittedModel(
     private val data: FitProcessData
