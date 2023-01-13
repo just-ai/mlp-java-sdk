@@ -1,7 +1,7 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ActionToGateProto
-import com.mlp.gate.ActionToGateProto.Builder
+import com.mlp.gate.ServiceToGateProto
+import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.gate.ApiErrorProto
 import com.mlp.gate.BatchPayloadResponseProto
 import com.mlp.gate.BatchRequestProto
@@ -34,7 +34,7 @@ class TaskExecutor(
 
     fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long) {
         launchAndStore(requestId, connectorId) {
-            val responseBuilder = ActionToGateProto.newBuilder().setRequestId(requestId)
+            val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
             val dataPayload = requireNotNull(request.data.asPayload) { "Payload data" }
 
             runCatching {
@@ -54,7 +54,7 @@ class TaskExecutor(
 
     fun fit(request: FitRequestProto, requestId: Long, connectorId: Long) {
         launchAndStore(requestId, connectorId) {
-            val responseBuilder = ActionToGateProto.newBuilder().setRequestId(requestId)
+            val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val trainPayload = requireNotNull(request.trainData.asPayload) { "trainData" }
             val targetsPayload = requireNotNull(request.targetsData.asPayload) { "targetsData" }
@@ -76,7 +76,7 @@ class TaskExecutor(
 
     fun ext(request: ExtendedRequestProto, requestId: Long, connectorId: Long) {
         launchAndStore(requestId, connectorId) {
-            val responseBuilder = ActionToGateProto.newBuilder().setRequestId(requestId)
+            val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val methodName = requireNotNull(request.methodName) { "methodName" }
             val params =
@@ -99,7 +99,7 @@ class TaskExecutor(
 
     fun batch(request: BatchRequestProto, requestId: Long, connectorId: Long) {
         launchAndStore(requestId, connectorId) {
-            val responseBuilder = ActionToGateProto.newBuilder().setRequestId(requestId)
+            val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val data = request.dataList
 

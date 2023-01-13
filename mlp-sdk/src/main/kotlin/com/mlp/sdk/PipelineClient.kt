@@ -1,7 +1,7 @@
 package com.mlp.sdk
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mlp.gate.ActionToGateProto
+import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.ClientTokenRequestProto
 import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.PipelineRequestProto
@@ -57,7 +57,7 @@ class PipelineClient(
             .get()
             .token
 
-    private fun sendRequest(protoBuilder: (Long) -> ActionToGateProto): CompletableFuture<PipelineResponseProto> {
+    private fun sendRequest(protoBuilder: (Long) -> ServiceToGateProto): CompletableFuture<PipelineResponseProto> {
         val requestId = lastId.getAndDecrement()
         val future = CompletableFuture<PipelineResponseProto>()
             .orTimeout(mplConfig.pipeFutureTimeoutMs, SECONDS)
@@ -80,7 +80,7 @@ class PipelineClient(
         model: String,
         data: Payload,
         config: Payload
-    ) = ActionToGateProto.newBuilder()
+    ) = ServiceToGateProto.newBuilder()
         .setRequestId(requestId)
         .setRequest(
             PipelineRequestProto.newBuilder().also {
@@ -101,7 +101,7 @@ class PipelineClient(
         model: String,
         methodName: String,
         vararg params: Pair<String, Payload>
-    ) = ActionToGateProto.newBuilder()
+    ) = ServiceToGateProto.newBuilder()
         .setRequestId(requestId)
         .setRequest(
             PipelineRequestProto.newBuilder().also {
@@ -120,7 +120,7 @@ class PipelineClient(
 
     private fun buildClientTokenProto(
         requestId: Long
-    ) = ActionToGateProto.newBuilder()
+    ) = ServiceToGateProto.newBuilder()
         .setRequestId(requestId)
         .setRequest(
             PipelineRequestProto.newBuilder().also {

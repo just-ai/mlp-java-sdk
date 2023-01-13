@@ -1,13 +1,13 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ActionDescriptorProto
+import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
 
 abstract class MlpService {
 
     lateinit var pipelineClient: PipelineClient
 
-    open fun getDescriptor(): ActionDescriptorProto {
+    open fun getDescriptor(): ServiceDescriptorProto {
         throw NotImplementedError()
     }
 
