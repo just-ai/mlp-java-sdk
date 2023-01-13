@@ -2,7 +2,7 @@ package simple_action
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.mlp.gate.ActionDescriptorProto
+import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.sdk.MlpResponse
 import com.mlp.sdk.MlpService
 import com.mlp.sdk.MlpServiceSDK
@@ -22,8 +22,8 @@ class SimpleTestAction : MlpService() {
         registerModule(KotlinModule())
     }
 
-    override fun getDescriptor(): ActionDescriptorProto {
-        return ActionDescriptorProto.newBuilder()
+    override fun getDescriptor(): ServiceDescriptorProto {
+        return ServiceDescriptorProto.newBuilder()
             .setName("simple model")
             .setFittable(false)
             .build()

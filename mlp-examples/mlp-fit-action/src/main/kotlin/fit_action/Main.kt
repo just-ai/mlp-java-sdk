@@ -2,7 +2,7 @@ package fit_action
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.mlp.gate.ActionDescriptorProto
+import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.sdk.MlpResponse
 import com.mlp.sdk.MlpResponseException
 import com.mlp.sdk.MlpService
@@ -29,8 +29,8 @@ class FitTestAction : MlpService() {
 
     private var model: FittedModel? = loadState()
 
-    override fun getDescriptor(): ActionDescriptorProto {
-        return ActionDescriptorProto.newBuilder()
+    override fun getDescriptor(): ServiceDescriptorProto {
+        return ServiceDescriptorProto.newBuilder()
             .setName("my-fit")
             .setFittable(true)
             .build()
