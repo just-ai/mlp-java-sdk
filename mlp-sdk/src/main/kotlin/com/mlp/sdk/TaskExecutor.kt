@@ -59,9 +59,10 @@ class TaskExecutor(
             val trainPayload = requireNotNull(request.trainData.asPayload) { "trainData" }
             val targetsPayload = requireNotNull(request.targetsData.asPayload) { "targetsData" }
             val configPayload = requireNotNull(request.config.asPayload) { "config" }
+            val modelDir = requireNotNull(request.modelDir) { "modelDir" }
 
             runCatching {
-                action.fit(trainPayload, targetsPayload, configPayload)
+                action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir)
                 responseBuilder.setFit()
             }.onFailure {
                 logger.error("Error while processing fit request", it)

@@ -1,7 +1,8 @@
-package com.mlp.sdk.utils
+package com.platform.mpl.sdk.utils
 
 import com.mlp.sdk.ActionShutdownConfig
 import com.mlp.sdk.MlpServiceConfig
+import com.mlp.sdk.utils.JobsContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher

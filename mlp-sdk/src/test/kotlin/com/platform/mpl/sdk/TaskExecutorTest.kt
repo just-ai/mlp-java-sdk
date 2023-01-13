@@ -1,8 +1,14 @@
-package com.mlp.sdk
+package com.platform.mpl.sdk
 
 import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.FitRequestProto
 import com.mlp.gate.PredictRequestProto.getDefaultInstance
+import com.mlp.sdk.ActionShutdownConfig
+import com.mlp.sdk.MlpResponse
+import com.mlp.sdk.MlpService
+import com.mlp.sdk.MlpServiceConfig
+import com.mlp.sdk.Payload
+import com.mlp.sdk.TaskExecutor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -46,7 +52,7 @@ class TaskExecutorTest {
         assertEquals(1, service.extNumber.get())
     }
 
-    object service: MlpService {
+    object service: MlpService() {
 
         val number = AtomicInteger()
         val extNumber = AtomicInteger()
@@ -57,7 +63,7 @@ class TaskExecutorTest {
             return Payload("type")
         }
 
-        override fun fit(train: Payload, targets: Payload, config: Payload?): MlpResponse {
+        override fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String?): MlpResponse {
             Thread.sleep(450)
             number.incrementAndGet()
             return Payload("type")

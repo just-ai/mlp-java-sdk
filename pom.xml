@@ -6,7 +6,10 @@
     <modules>
         <module>mlp-client-generator</module>
         <module>mlp-sdk</module>
-        <module>mlp-examples/mlp-dummy-action</module>
+        <module>mlp-examples/mlp-fit-action</module>
+        <module>mlp-examples/mlp-simple-action</module>
+        <module>mlp-examples/mlp-composit-action</module>
+        <module>mlp-examples/mlp-client-app</module>
     </modules>
 
     <groupId>com.mlp</groupId>
