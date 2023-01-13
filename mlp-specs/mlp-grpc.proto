@@ -96,6 +96,8 @@ message HeartBeatProto {
 }
 
 message StartServingProto {
+  // Чтобы зарегистрироваться, сервис должен указать секретный ключ. Этот ключ генерирует Кайла
+  // и передаёт в Cloud через env-переменные
   string connectionToken = 1;
 
   ServiceDescriptorProto serviceDescriptor = 3;
