@@ -1269,6 +1269,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobStatusData'
+  /api/mlpgate/account/{accountId}/model/{modelId}/availability:
+    post:
+      tags:
+      - model-endpoint
+      operationId: updateModelAvailability
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateModelJaicpData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInfo'
   /api/mlpgate/account/{accountId}/management/{featureName}:
     post:
       tags:
@@ -3565,6 +3602,8 @@ components:
           type: object
           additionalProperties:
             type: string
+        displayName:
+          type: string
     AccountFeatureData:
       required:
       - features
@@ -3682,6 +3721,15 @@ components:
           $ref: '#/components/schemas/ModelRetriesData'
         batchesConfig:
           $ref: '#/components/schemas/ModelBatchesData'
+        shortDescription:
+          type: string
+        languages:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        availableInJaicp:
+          type: boolean
     ModelLimitsData:
       required:
       - cpuLimit
@@ -3850,6 +3898,8 @@ components:
           $ref: '#/components/schemas/ModelInfoPK'
         modelAccountName:
           type: string
+        modelAccountDisplayName:
+          type: string
         modelName:
           type: string
         imageId:
@@ -3906,6 +3956,15 @@ components:
           $ref: '#/components/schemas/ModelRetriesData'
         batchesConfig:
           $ref: '#/components/schemas/ModelBatchesData'
+        shortDescription:
+          type: string
+        languages:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        availableInJaicp:
+          type: boolean
     ModelInfoPK:
       required:
       - accountId
@@ -4077,6 +4136,111 @@ components:
         minIntentSizeToDivide:
           type: integer
           format: int32
+    UpdateModelJaicpData:
+      required:
+      - availableInJaicp
+      - public
+      type: object
+      properties:
+        public:
+          type: boolean
+        availableInJaicp:
+          type: boolean
+    ModelInfo:
+      required:
+      - config
+      - env
+      - fitCounter
+      - fittable
+      - id
+      - instanceStatus
+      - lastStatusUpdate
+      - name
+      - podStartTimeoutSec
+      - predictTimeoutSec
+      - predictable
+      - public
+      - shortName
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ModelInfoPK'
+        imageId:
+          type: integer
+          format: int64
+        taskType:
+          type: string
+        trainingModelAccountId:
+          type: integer
+          format: int64
+        trainingModelId:
+          type: integer
+          format: int64
+        trainingType:
+          type: string
+          enum:
+          - singleContainer
+          - multipleFit
+        trainingDatasetId:
+          type: integer
+          format: int64
+        trainingFitConfigId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        public:
+          type: boolean
+        config:
+          type: string
+        env:
+          type: string
+        modelDir:
+          type: string
+        instanceStatus:
+          type: string
+          enum:
+          - initial
+          - instanceStarted
+          - instanceIsReady
+          - instanceFailed
+          - instanceUnloaded
+        lastStatusUpdate:
+          type: string
+          format: date-time
+        fittable:
+          type: boolean
+        predictable:
+          type: boolean
+        fitCounter:
+          type: integer
+          format: int32
+        timeouts:
+          type: string
+        resourceGroup:
+          type: string
+        limits:
+          type: string
+        retries:
+          type: string
+        batches:
+          type: string
+        shortDescription:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+        availableInJaicp:
+          type: boolean
+        shortName:
+          type: string
+        predictTimeoutSec:
+          type: integer
+          format: int64
+        podStartTimeoutSec:
+          type: integer
+          format: int64
     ManagementRequestData:
       required:
       - contacts
@@ -4167,6 +4331,10 @@ components:
         name:
           type: string
         displayName:
+          type: string
+        icon:
+          type: string
+        color:
           type: string
     ModelDefaults:
       required:
@@ -4270,12 +4438,12 @@ components:
     PageModelInfoData:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
         totalElements:
           type: integer
           format: int64
+        totalPages:
+          type: integer
+          format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4531,12 +4699,12 @@ components:
     PageImageInfoData:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
         totalElements:
           type: integer
           format: int64
+        totalPages:
+          type: integer
+          format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
@@ -4563,12 +4731,12 @@ components:
     PageDataImageInfoData:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
         totalElements:
           type: integer
           format: int64
+        totalPages:
+          type: integer
+          format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
         first:
