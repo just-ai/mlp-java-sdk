@@ -470,7 +470,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModelInfo'
+                $ref: '#/components/schemas/ModelInfoData'
   /api/mlpgate/account/{accountId}/model/{modelId}/predict:
     post:
       tags:
@@ -3241,6 +3241,33 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatLogData'
+  /api/mlpgate/account/{accountId}/featured-services:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getFeaturedServices
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelInfoData'
   /api/mlpgate/account/s3/{accountId}:
     get:
       tags:
@@ -3695,8 +3722,6 @@ components:
         trainingFitConfigId:
           type: integer
           format: int64
-        public:
-          type: boolean
         config:
           type: string
         env:
@@ -3728,8 +3753,15 @@ components:
           type: array
           items:
             type: string
+        public:
+          type: boolean
         availableInJaicp:
           type: boolean
+        featured:
+          type: boolean
+        featuredListOrder:
+          type: integer
+          format: int32
     ModelLimitsData:
       required:
       - cpuLimit
@@ -3885,6 +3917,7 @@ components:
       required:
       - batchesConfig
       - dataImageMounts
+      - featured
       - fittable
       - id
       - modelName
@@ -3930,8 +3963,6 @@ components:
           enum:
           - singleContainer
           - multipleFit
-        public:
-          type: boolean
         config:
           type: string
         env:
@@ -3963,8 +3994,15 @@ components:
           type: array
           items:
             type: string
+        public:
+          type: boolean
         availableInJaicp:
           type: boolean
+        featured:
+          type: boolean
+        featuredListOrder:
+          type: integer
+          format: int32
     ModelInfoPK:
       required:
       - accountId
@@ -3980,6 +4018,7 @@ components:
     UpdateModelPublicityData:
       required:
       - availableInJaicp
+      - featured
       - public
       type: object
       properties:
@@ -3987,101 +4026,11 @@ components:
           type: boolean
         availableInJaicp:
           type: boolean
-    ModelInfo:
-      required:
-      - config
-      - env
-      - fitCounter
-      - fittable
-      - id
-      - instanceStatus
-      - lastStatusUpdate
-      - name
-      - podStartTimeoutSec
-      - predictTimeoutSec
-      - predictable
-      - public
-      - shortName
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/ModelInfoPK'
-        imageId:
-          type: integer
-          format: int64
-        taskType:
-          type: string
-        trainingModelAccountId:
-          type: integer
-          format: int64
-        trainingModelId:
-          type: integer
-          format: int64
-        trainingType:
-          type: string
-          enum:
-          - singleContainer
-          - multipleFit
-        trainingDatasetId:
-          type: integer
-          format: int64
-        trainingFitConfigId:
-          type: integer
-          format: int64
-        name:
-          type: string
-        public:
+        featured:
           type: boolean
-        config:
-          type: string
-        env:
-          type: string
-        modelDir:
-          type: string
-        instanceStatus:
-          type: string
-          enum:
-          - initial
-          - instanceStarted
-          - instanceIsReady
-          - instanceFailed
-          - instanceUnloaded
-        lastStatusUpdate:
-          type: string
-          format: date-time
-        fittable:
-          type: boolean
-        predictable:
-          type: boolean
-        fitCounter:
+        featuredListOrder:
           type: integer
           format: int32
-        timeouts:
-          type: string
-        resourceGroup:
-          type: string
-        limits:
-          type: string
-        retries:
-          type: string
-        batches:
-          type: string
-        shortDescription:
-          type: string
-        languages:
-          type: array
-          items:
-            type: string
-        availableInJaicp:
-          type: boolean
-        shortName:
-          type: string
-        predictTimeoutSec:
-          type: integer
-          format: int64
-        podStartTimeoutSec:
-          type: integer
-          format: int64
     PredictRequestData:
       required:
       - data
