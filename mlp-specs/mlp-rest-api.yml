@@ -434,11 +434,41 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mlpgate/account/{accountId}/model/{modelId}/publicity:
+  /api/mlpgate/account/{accountId}/model/{modelId}/public-settings:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getModelPublicSettings
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelPublicSettingsData'
     post:
       tags:
       - model-endpoint
-      operationId: updateModelPublicity
+      operationId: updateModelPublicSettings
       parameters:
       - name: accountId
         in: path
@@ -462,7 +492,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateModelPublicityData'
+              $ref: '#/components/schemas/ModelPublicSettingsData'
         required: true
       responses:
         "200":
@@ -470,7 +500,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModelInfoData'
+                $ref: '#/components/schemas/ModelPublicSettingsData'
   /api/mlpgate/account/{accountId}/model/{modelId}/predict:
     post:
       tags:
@@ -3753,15 +3783,6 @@ components:
           type: array
           items:
             type: string
-        public:
-          type: boolean
-        availableInJaicp:
-          type: boolean
-        featured:
-          type: boolean
-        featuredListOrder:
-          type: integer
-          format: int32
     ModelLimitsData:
       required:
       - cpuLimit
@@ -3917,11 +3938,11 @@ components:
       required:
       - batchesConfig
       - dataImageMounts
-      - featured
       - fittable
       - id
       - modelName
       - persistentVolumes
+      - publicSettings
       - resourceLimits
       - retriesConfig
       - timeouts
@@ -3994,15 +4015,8 @@ components:
           type: array
           items:
             type: string
-        public:
-          type: boolean
-        availableInJaicp:
-          type: boolean
-        featured:
-          type: boolean
-        featuredListOrder:
-          type: integer
-          format: int32
+        publicSettings:
+          $ref: '#/components/schemas/ModelPublicSettingsData'
     ModelInfoPK:
       required:
       - accountId
@@ -4015,11 +4029,7 @@ components:
         modelId:
           type: integer
           format: int64
-    UpdateModelPublicityData:
-      required:
-      - availableInJaicp
-      - featured
-      - public
+    ModelPublicSettingsData:
       type: object
       properties:
         public:
