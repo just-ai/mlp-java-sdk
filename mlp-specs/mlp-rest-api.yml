@@ -3073,6 +3073,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceDescriptorData'
+  /api/mlpgate/account/{accountId}/model/featured:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getFeaturedModels
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelInfoData'
   /api/mlpgate/account/{accountId}/metric:
     get:
       tags:
@@ -3271,33 +3298,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatLogData'
-  /api/mlpgate/account/{accountId}/featured-services:
-    get:
-      tags:
-      - model-endpoint
-      operationId: getFeaturedServices
-      parameters:
-      - name: accountId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ModelInfoData'
   /api/mlpgate/account/s3/{accountId}:
     get:
       tags:
