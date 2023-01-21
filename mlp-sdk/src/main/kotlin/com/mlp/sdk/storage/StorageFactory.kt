@@ -24,7 +24,7 @@ object StorageFactory {
 
 
     private fun createMinioClient(): MinioClient {
-        val region = System.getenv("MPL_S3_REGION")
+        val region = System.getenv("MLP_S3_REGION")
         return MinioClient.builder()
             .endpoint(System.getenv("MLP_S3_ENDPOINT"))
             .credentials(System.getenv("MLP_S3_ACCESS_KEY"), System.getenv("MLP_S3_SECRET_KEY"))

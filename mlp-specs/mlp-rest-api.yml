@@ -434,6 +434,73 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/mlpgate/account/{accountId}/model/{modelId}/public-settings:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getModelPublicSettings
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelPublicSettingsData'
+    post:
+      tags:
+      - model-endpoint
+      operationId: updateModelPublicSettings
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelPublicSettingsData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelPublicSettingsData'
   /api/mlpgate/account/{accountId}/model/{modelId}/predict:
     post:
       tags:
@@ -1471,6 +1538,57 @@ paths:
       responses:
         "200":
           description: OK
+  /api/mlpgate/account/{accountId}/dump:
+    get:
+      tags:
+      - account-endpoint
+      operationId: dumpConfig
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+    post:
+      tags:
+      - account-endpoint
+      operationId: restoreConfig
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
   /api/mlpgate/account/{accountId}/dataset:
     get:
       tags:
@@ -1865,57 +1983,6 @@ paths:
         required: false
         schema:
           type: string
-      responses:
-        "200":
-          description: OK
-  /api/mlpgate/account/dump/{accountId}:
-    get:
-      tags:
-      - account-endpoint
-      operationId: dumpConfig
-      parameters:
-      - name: accountId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: string
-    post:
-      tags:
-      - account-endpoint
-      operationId: restoreConfig
-      parameters:
-      - name: accountId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-        required: true
       responses:
         "200":
           description: OK
@@ -2453,6 +2520,31 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatLogData'
+  /api/mlpgate/account/{accountId}/s3:
+    get:
+      tags:
+      - account-endpoint
+      operationId: getS3Credentials
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/S3CredentialsData'
   /api/mlpgate/account/{accountId}/model/{modelId}/status:
     get:
       tags:
@@ -3006,6 +3098,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceDescriptorData'
+  /api/mlpgate/account/{accountId}/model/featured:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getFeaturedModels
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelInfoData'
   /api/mlpgate/account/{accountId}/metric:
     get:
       tags:
@@ -3204,31 +3323,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatLogData'
-  /api/mlpgate/account/s3/{accountId}:
-    get:
-      tags:
-      - account-endpoint
-      operationId: getS3Credentials
-      parameters:
-      - name: accountId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/S3CredentialsData'
   /api/mlpgate-internal/test-mail:
     get:
       tags:
@@ -3565,6 +3659,8 @@ components:
           type: object
           additionalProperties:
             type: string
+        displayName:
+          type: string
     AccountFeatureData:
       required:
       - features
@@ -3599,11 +3695,15 @@ components:
           type: string
     DataImageMountData:
       required:
+      - dataImageAccountId
       - dataImageId
       - targetPath
       type: object
       properties:
         dmId:
+          type: integer
+          format: int64
+        dataImageAccountId:
           type: integer
           format: int64
         dataImageId:
@@ -3631,11 +3731,16 @@ components:
           format: int64
     ModelCreateUpdateData:
       required:
+      - imageAccountId
+      - imageId
       - modelName
       type: object
       properties:
         modelName:
           type: string
+        imageAccountId:
+          type: integer
+          format: int64
         imageId:
           type: integer
           format: int64
@@ -3650,14 +3755,15 @@ components:
           enum:
           - singleContainer
           - multipleFit
+        trainingDatasetAccountId:
+          type: integer
+          format: int64
         trainingDatasetId:
           type: integer
           format: int64
         trainingFitConfigId:
           type: integer
           format: int64
-        public:
-          type: boolean
         config:
           type: string
         env:
@@ -3682,6 +3788,13 @@ components:
           $ref: '#/components/schemas/ModelRetriesData'
         batchesConfig:
           $ref: '#/components/schemas/ModelBatchesData'
+        shortDescription:
+          type: string
+        languages:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
     ModelLimitsData:
       required:
       - cpuLimit
@@ -3763,6 +3876,12 @@ components:
           type: string
         dataType:
           type: string
+        accessMode:
+          type: string
+          enum:
+          - private
+          - public
+          - restricted
     DatasetPK:
       required:
       - accountId
@@ -3821,6 +3940,12 @@ components:
           type: string
         taskType:
           type: string
+        accessMode:
+          type: string
+          enum:
+          - private
+          - public
+          - restricted
     ImageInfoPK:
       required:
       - accountId
@@ -3839,9 +3964,12 @@ components:
       - dataImageMounts
       - fittable
       - id
+      - imageAccountId
       - modelName
       - persistentVolumes
+      - publicSettings
       - resourceLimits
+      - restrictedImageAccess
       - retriesConfig
       - timeouts
       type: object
@@ -3850,13 +3978,21 @@ components:
           $ref: '#/components/schemas/ModelInfoPK'
         modelAccountName:
           type: string
+        modelAccountDisplayName:
+          type: string
         modelName:
           type: string
+        imageAccountId:
+          type: integer
+          format: int64
         imageId:
           type: integer
           format: int64
         image:
           $ref: '#/components/schemas/ImageInfoData'
+        trainingDatasetAccountId:
+          type: integer
+          format: int64
         trainingDatasetId:
           type: integer
           format: int64
@@ -3880,8 +4016,6 @@ components:
           enum:
           - singleContainer
           - multipleFit
-        public:
-          type: boolean
         config:
           type: string
         env:
@@ -3906,6 +4040,17 @@ components:
           $ref: '#/components/schemas/ModelRetriesData'
         batchesConfig:
           $ref: '#/components/schemas/ModelBatchesData'
+        shortDescription:
+          type: string
+        languages:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        publicSettings:
+          $ref: '#/components/schemas/ModelPublicSettingsData'
+        restrictedImageAccess:
+          type: boolean
     ModelInfoPK:
       required:
       - accountId
@@ -3918,6 +4063,20 @@ components:
         modelId:
           type: integer
           format: int64
+    ModelPublicSettingsData:
+      type: object
+      properties:
+        public:
+          type: boolean
+        availableInJaicp:
+          type: boolean
+        featured:
+          type: boolean
+        featuredListOrder:
+          type: integer
+          format: int32
+        hidden:
+          type: boolean
     PredictRequestData:
       required:
       - data
@@ -4101,6 +4260,12 @@ components:
           type: string
         content:
           type: string
+        accessMode:
+          type: string
+          enum:
+          - private
+          - public
+          - restricted
     DataImageInfoData:
       required:
       - image
@@ -4116,6 +4281,12 @@ components:
           type: string
         sourcePath:
           type: string
+        accessMode:
+          type: string
+          enum:
+          - private
+          - public
+          - restricted
     DataImageInfoPK:
       required:
       - accountId
@@ -4167,6 +4338,10 @@ components:
         name:
           type: string
         displayName:
+          type: string
+        icon:
+          type: string
+        color:
           type: string
     ModelDefaults:
       required:
@@ -4267,6 +4442,22 @@ components:
           type: object
         message:
           type: string
+    S3CredentialsData:
+      required:
+      - accessKey
+      - bucketName
+      - s3Url
+      - secretKey
+      type: object
+      properties:
+        s3Url:
+          type: string
+        accessKey:
+          type: string
+        secretKey:
+          type: string
+        bucketName:
+          type: string
     PageModelInfoData:
       type: object
       properties:
@@ -4276,17 +4467,6 @@ components:
         totalElements:
           type: integer
           format: int64
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
-        first:
-          type: boolean
-        sort:
-          $ref: '#/components/schemas/Sort'
-        numberOfElements:
-          type: integer
-          format: int32
-        last:
-          type: boolean
         size:
           type: integer
           format: int32
@@ -4297,34 +4477,45 @@ components:
         number:
           type: integer
           format: int32
+        sort:
+          $ref: '#/components/schemas/Sort'
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
         empty:
           type: boolean
     PageableObject:
       type: object
       properties:
+        offset:
+          type: integer
+          format: int64
+        sort:
+          $ref: '#/components/schemas/Sort'
         pageNumber:
           type: integer
           format: int32
         pageSize:
           type: integer
           format: int32
-        sort:
-          $ref: '#/components/schemas/Sort'
         paged:
           type: boolean
         unpaged:
           type: boolean
-        offset:
-          type: integer
-          format: int64
     Sort:
       type: object
       properties:
+        empty:
+          type: boolean
         sorted:
           type: boolean
         unsorted:
-          type: boolean
-        empty:
           type: boolean
     InstancesStatusData:
       required:
@@ -4537,17 +4728,6 @@ components:
         totalElements:
           type: integer
           format: int64
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
-        first:
-          type: boolean
-        sort:
-          $ref: '#/components/schemas/Sort'
-        numberOfElements:
-          type: integer
-          format: int32
-        last:
-          type: boolean
         size:
           type: integer
           format: int32
@@ -4556,6 +4736,17 @@ components:
           items:
             $ref: '#/components/schemas/ImageInfoData'
         number:
+          type: integer
+          format: int32
+        sort:
+          $ref: '#/components/schemas/Sort'
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
           type: integer
           format: int32
         empty:
@@ -4569,17 +4760,6 @@ components:
         totalElements:
           type: integer
           format: int64
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
-        first:
-          type: boolean
-        sort:
-          $ref: '#/components/schemas/Sort'
-        numberOfElements:
-          type: integer
-          format: int32
-        last:
-          type: boolean
         size:
           type: integer
           format: int32
@@ -4590,24 +4770,19 @@ components:
         number:
           type: integer
           format: int32
+        sort:
+          $ref: '#/components/schemas/Sort'
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
         empty:
           type: boolean
-    S3CredentialsData:
-      required:
-      - accessKey
-      - bucketName
-      - s3Url
-      - secretKey
-      type: object
-      properties:
-        s3Url:
-          type: string
-        accessKey:
-          type: string
-        secretKey:
-          type: string
-        bucketName:
-          type: string
     ModelInstance:
       required:
       - connectionToken

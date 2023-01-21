@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.mlp</groupId>
         <artifactId>mlp-java-sdk</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>fit-improvements-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

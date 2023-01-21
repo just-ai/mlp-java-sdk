@@ -38,14 +38,14 @@ class FitTestAction : MlpService() {
 
     override fun fit(
         train: Payload,
-        targets: Payload,
+        targets: Payload?,
         config: Payload?,
         modelDir: String,
         previousModelDir: String?
     ): MlpResponse {
         val trainData = objectMapper.readValue(train.data, TransformerFitTrainData::class.java)
             .texts
-        val targetData = objectMapper.readValue(targets.data, TransformerFitTargets::class.java)
+        val targetData = objectMapper.readValue(targets!!.data, TransformerFitTargets::class.java)
             .items_list
             .map { it.items.first() }
             .map { it.value }
