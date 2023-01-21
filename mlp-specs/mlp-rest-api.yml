@@ -243,7 +243,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageModelInfoData'
+                $ref: '#/components/schemas/PagedModelInfoData'
     post:
       tags:
       - model-endpoint
@@ -1336,6 +1336,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobStatusData'
+  /api/mlpgate/account/{accountId}/model/{modelId}/clone:
+    post:
+      tags:
+      - model-endpoint
+      operationId: createClonedModel
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInfoData'
   /api/mlpgate/account/{accountId}/management/{featureName}:
     post:
       tags:
@@ -1414,7 +1450,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageImageInfoData'
+                $ref: '#/components/schemas/PagedImageInfoData'
     post:
       tags:
       - image-endpoint
@@ -1862,7 +1898,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageDataImageInfoData'
+                $ref: '#/components/schemas/PagedDataImageInfoData'
     post:
       tags:
       - data-image-endpoint
@@ -3764,6 +3800,11 @@ components:
         trainingFitConfigId:
           type: integer
           format: int64
+        fitTemplateModelId:
+          type: integer
+          format: int64
+        composite:
+          type: boolean
         config:
           type: string
         env:
@@ -3961,6 +4002,7 @@ components:
     ModelInfoData:
       required:
       - batchesConfig
+      - composite
       - dataImageMounts
       - fittable
       - id
@@ -4003,6 +4045,11 @@ components:
           format: int64
         trainingFitConfig:
           $ref: '#/components/schemas/FitConfigData'
+        fitTemplateModelId:
+          type: integer
+          format: int64
+        composite:
+          type: boolean
         taskType:
           type: string
         trainingModelAccountId:
@@ -4066,7 +4113,7 @@ components:
     ModelPublicSettingsData:
       type: object
       properties:
-        public:
+        isPublic:
           type: boolean
         availableInJaicp:
           type: boolean
@@ -4186,6 +4233,8 @@ components:
         grpcSecure:
           type: boolean
         restApiURL:
+          type: string
+        restClientToken:
           type: string
     ExtendedRequestData:
       required:
@@ -4458,65 +4507,38 @@ components:
           type: string
         bucketName:
           type: string
-    PageModelInfoData:
+    PagedModelInfoData:
+      required:
+      - paging
+      - records
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int64
-        size:
-          type: integer
-          format: int32
-        content:
+        paging:
+          $ref: '#/components/schemas/Pagination'
+        records:
           type: array
           items:
             $ref: '#/components/schemas/ModelInfoData'
-        number:
-          type: integer
-          format: int32
-        sort:
-          $ref: '#/components/schemas/Sort'
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
-        first:
-          type: boolean
-        last:
-          type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
-        empty:
-          type: boolean
-    PageableObject:
+    Pagination:
+      required:
+      - pageNumber
+      - pageSize
+      - totalElements
+      - totalPages
       type: object
       properties:
-        offset:
+        totalElements:
           type: integer
           format: int64
-        sort:
-          $ref: '#/components/schemas/Sort'
+        totalPages:
+          type: integer
+          format: int32
         pageNumber:
           type: integer
           format: int32
         pageSize:
           type: integer
           format: int32
-        paged:
-          type: boolean
-        unpaged:
-          type: boolean
-    Sort:
-      type: object
-      properties:
-        empty:
-          type: boolean
-        sorted:
-          type: boolean
-        unsorted:
-          type: boolean
     InstancesStatusData:
       required:
       - externalActive
@@ -4719,70 +4741,30 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/MethodDescriptorData'
-    PageImageInfoData:
+    PagedImageInfoData:
+      required:
+      - paging
+      - records
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int64
-        size:
-          type: integer
-          format: int32
-        content:
+        paging:
+          $ref: '#/components/schemas/Pagination'
+        records:
           type: array
           items:
             $ref: '#/components/schemas/ImageInfoData'
-        number:
-          type: integer
-          format: int32
-        sort:
-          $ref: '#/components/schemas/Sort'
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
-        first:
-          type: boolean
-        last:
-          type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
-        empty:
-          type: boolean
-    PageDataImageInfoData:
+    PagedDataImageInfoData:
+      required:
+      - paging
+      - records
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int64
-        size:
-          type: integer
-          format: int32
-        content:
+        paging:
+          $ref: '#/components/schemas/Pagination'
+        records:
           type: array
           items:
             $ref: '#/components/schemas/DataImageInfoData'
-        number:
-          type: integer
-          format: int32
-        sort:
-          $ref: '#/components/schemas/Sort'
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
-        first:
-          type: boolean
-        last:
-          type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
-        empty:
-          type: boolean
     ModelInstance:
       required:
       - connectionToken
