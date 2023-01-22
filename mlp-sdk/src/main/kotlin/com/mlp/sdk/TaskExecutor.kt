@@ -62,7 +62,10 @@ class TaskExecutor(
             val modelDir = request.modelDir
 
             runCatching {
-                action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir)
+                action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir,
+                    request.targetServiceInfo,
+                    request.datasetInfo
+                )
                 responseBuilder.setFit()
             }.onFailure {
                 logger.error("Error while processing fit request", it)

@@ -2,7 +2,9 @@ package fit_action
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.ServiceDescriptorProto
+import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.MlpResponse
 import com.mlp.sdk.MlpResponseException
 import com.mlp.sdk.MlpService
@@ -41,7 +43,9 @@ class FitTestAction : MlpService() {
         targets: Payload?,
         config: Payload?,
         modelDir: String,
-        previousModelDir: String?
+        previousModelDir: String?,
+        targetServiceInfo: ServiceInfoProto,
+        dataset: DatasetInfoProto
     ): MlpResponse {
         val trainData = objectMapper.readValue(train.data, TransformerFitTrainData::class.java)
             .texts
