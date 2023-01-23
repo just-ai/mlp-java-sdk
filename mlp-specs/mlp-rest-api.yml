@@ -4270,12 +4270,12 @@ components:
     PageModelInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         sort:
           $ref: '#/components/schemas/Sort'
         numberOfElements:
@@ -4283,9 +4283,9 @@ components:
           format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
-        last:
-          type: boolean
         first:
+          type: boolean
+        last:
           type: boolean
         size:
           type: integer
@@ -4531,12 +4531,12 @@ components:
     PageImageInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         sort:
           $ref: '#/components/schemas/Sort'
         numberOfElements:
@@ -4544,9 +4544,9 @@ components:
           format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
-        last:
-          type: boolean
         first:
+          type: boolean
+        last:
           type: boolean
         size:
           type: integer
@@ -4563,12 +4563,12 @@ components:
     PageDataImageInfoData:
       type: object
       properties:
-        totalElements:
-          type: integer
-          format: int64
         totalPages:
           type: integer
           format: int32
+        totalElements:
+          type: integer
+          format: int64
         sort:
           $ref: '#/components/schemas/Sort'
         numberOfElements:
@@ -4576,9 +4576,9 @@ components:
           format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
-        last:
-          type: boolean
         first:
+          type: boolean
+        last:
           type: boolean
         size:
           type: integer
