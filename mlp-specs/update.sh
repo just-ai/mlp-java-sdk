@@ -15,6 +15,9 @@ fi
 if [ $BRANCH == 'separate-sdk' ]; then
   SERVER=https://caila.separate-sdk.caila-ci-feature.lo.test-ai.net
 fi
+if [ $BRANCH == 'dummy-action' ]; then
+  SERVER=https://caila.dummy-action.caila-ci-feature.lo.test-ai.net
+fi
 
 
 echo $SERVER
