@@ -13,7 +13,8 @@ if [ $BRANCH == 'stable' ]; then
   SERVER=https://caila.stable.caila-x-sls.test-ai.net
 fi
 
-if [ -n $SERVER ]; then
+if [ -z $SERVER ]; then
+  echo 221 $SERVER
   # check parallel env exists
   SRV=https://caila.$BRANCH.caila-ci-feature.lo.test-ai.net
   CHECK=$(curl -si $SRV/api/mlpgate/version | head -n 1 | grep 200)
@@ -22,9 +23,11 @@ if [ -n $SERVER ]; then
   fi
 fi
 
+echo 11 $SERVER
+
 echo $SERVER
 
-if [ $SERVER ]; then
+if [ ! -z $SERVER ]; then
 
   echo go
   curl --silent $SERVER/static/mlpgate/api-docs.yaml -o mlp-rest-api.yml
