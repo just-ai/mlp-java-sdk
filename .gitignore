@@ -44,3 +44,5 @@ __pycache__
 
 train.csv
 validation.csv
+
+*.versionsBackup

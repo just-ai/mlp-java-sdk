@@ -1,8 +1,10 @@
 package com.platform.mpl.sdk
 
+import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.FitRequestProto
 import com.mlp.gate.PredictRequestProto.getDefaultInstance
+import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.ActionShutdownConfig
 import com.mlp.sdk.MlpResponse
 import com.mlp.sdk.MlpService
@@ -63,7 +65,10 @@ class TaskExecutorTest {
             return Payload("type")
         }
 
-        override fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String?): MlpResponse {
+        override fun fit(train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
+                         targetServiceInfo: ServiceInfoProto,
+                         dataset: DatasetInfoProto
+        ): MlpResponse {
             Thread.sleep(450)
             number.incrementAndGet()
             return Payload("type")

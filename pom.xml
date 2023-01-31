@@ -14,7 +14,7 @@
 
     <groupId>com.mlp</groupId>
     <artifactId>mlp-java-sdk</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>fit-improvements-SNAPSHOT</version>
     <name>mlp-java-sdk</name>
     <description>MLP Java SDK</description>
 

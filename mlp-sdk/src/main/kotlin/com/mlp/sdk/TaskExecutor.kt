@@ -56,13 +56,16 @@ class TaskExecutor(
         launchAndStore(requestId, connectorId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
-            val trainPayload = requireNotNull(request.trainData.asPayload) { "trainData" }
-            val targetsPayload = requireNotNull(request.targetsData.asPayload) { "targetsData" }
-            val configPayload = requireNotNull(request.config.asPayload) { "config" }
-            val modelDir = requireNotNull(request.modelDir) { "modelDir" }
+            val trainPayload = request.trainData.asPayload
+            val targetsPayload = request.targetsData?.asPayload
+            val configPayload = request.config?.asPayload
+            val modelDir = request.modelDir
 
             runCatching {
-                action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir)
+                action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir,
+                    request.targetServiceInfo,
+                    request.datasetInfo
+                )
                 responseBuilder.setFit()
             }.onFailure {
                 logger.error("Error while processing fit request", it)
