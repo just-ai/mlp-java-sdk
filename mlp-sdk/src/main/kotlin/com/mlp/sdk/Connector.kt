@@ -19,6 +19,7 @@ import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.StartServingProto
 import com.mlp.gate.StopServingProto
 import com.mlp.sdk.ConnectorsPool.Companion.clusterDispatcher
+import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.WithLogger
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -41,12 +42,13 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 class Connector(
+    @Volatile
     var targetUrl: String,
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
     val pipelineClient: PipelineClient,
     val config: MlpServiceConfig
-) : WithLogger, WithState(State.Condition.ACTIVE) {
+) : WithLogger, WithState(ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()
 
@@ -272,6 +274,11 @@ class Connector(
             logger.debug("$this: graceful shutting down grpc channel ...")
             state.shuttingDown()
 
+            if (!this::stream.isInitialized) {
+                logger.debug("$this: ... stream is not initialized, skipping stream completion ...")
+                return gracefulShutdownManagedChannel()
+            }
+
             runCatching { send(stopServingProto) }
                 .onFailure { logger.error("$this: can't send stop serving", it) }
 
@@ -292,26 +299,22 @@ class Connector(
             logger.debug("$this: force shutting down grpc channel ...")
             state.shuttingDown()
 
+            if (!this::stream.isInitialized) {
+                logger.debug("$this: stream is not initialized, skipping stream completion")
+                return shutdownNowManagedChannel()
+            }
+
             runCatching { send(stopServingProto) }
                 .onFailure { logger.error("$this: can't send stop serving", it) }
 
             executor.cancelAll(id)
 
             logger.debug("$this: completing stream to $targetUrl ...")
-            runCatching {
-                grpcMutex.withLock {
-                    stream.onCompleted()
-                }
-            }.onFailure { logger.error("$this: can't complete stream", it) }
+            runCatching { grpcMutex.withLock { stream.onCompleted() } }
+                .onFailure { logger.error("$this: can't complete stream", it) }
 
-            logger.debug("$this: force shutting down managed channel ...")
-            runCatching {
-                managedChannel.shutdownNow()
-            }.onFailure { logger.error("$this: can't shutdown managed channel", it) }
-
-            state.shutdown()
+            shutdownNowManagedChannel()
         }
-
 
         private suspend fun sendStartServingProto() {
             logger.info("Connector $id: sending start serving to $targetUrl ...")
@@ -328,6 +331,11 @@ class Connector(
             logger.debug("$this: graceful shutting down managed channel to $targetUrl ...")
 
             try {
+                if (!this::managedChannel.isInitialized) {
+                    logger.debug("$this: managed channel is not initialized, skipping managed channel shutdown")
+                    return
+                }
+
                 if (managedChannel.isShutdown) {
                     return
                 }
@@ -342,8 +350,30 @@ class Connector(
                 logger.debug("$this: ... managed channel has not been shutdown in $timeoutSeconds seconds, force shutdown ...")
                 runCatching { managedChannel.shutdownNow() }
                     .onFailure { logger.error("$this: can't shutdown managed channel", it) }
+                    .onSuccess { logger.debug("$this: ... managed channel has been successfully shutdown") }
             } catch (e: InterruptedException) {
                 logger.error("$this: ... managed channel has not been shutdown", e)
+            } finally {
+                state.shutdown()
+            }
+        }
+
+        private fun shutdownNowManagedChannel() {
+            logger.debug("$this: force shutting down managed channel ...")
+
+            try {
+                if (!this::managedChannel.isInitialized) {
+                    logger.debug("$this: managed channel is not initialized, skipping managed channel shutdown")
+                    return
+                }
+
+                if (managedChannel.isShutdown) {
+                    return
+                }
+
+                runCatching { managedChannel.shutdownNow() }
+                    .onFailure { logger.error("$this: can't shutdown managed channel", it) }
+                    .onSuccess { logger.debug("$this: ... managed channel has been successfully shutdown") }
             } finally {
                 state.shutdown()
             }
@@ -405,7 +435,7 @@ class Connector(
     }
 
     private fun AtomicReference<GrpcChannel?>.isShutdownStateOrNull() = get() == null
-            || get()?.state?.shutdown == true
+        || get()?.state?.shutdown == true
 
     private fun AtomicReference<GrpcChannel?>.isActiveState() = get()
         ?.state
