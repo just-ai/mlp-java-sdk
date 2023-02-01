@@ -10,10 +10,10 @@ import com.mlp.sdk.utils.WithLogger
 import java.util.concurrent.CountDownLatch
 
 abstract class WithState(condition: Condition = NOT_STARTED) {
-    internal val state = State("$this", condition)
+    internal val state by lazy { State(this, condition) }
 }
 
-class State(val componentName: String, startCondition: Condition = NOT_STARTED) : WithLogger {
+class State(private val component: Any, startCondition: Condition = NOT_STARTED) : WithLogger {
 
     private val shutdownLatch = CountDownLatch(1)
 
@@ -29,32 +29,32 @@ class State(val componentName: String, startCondition: Condition = NOT_STARTED) 
 
     fun starting() {
         check(condition == NOT_STARTED) {
-            "Can't starting $componentName because it's in illegal state $condition (expected: $NOT_STARTED)"
+            "Can't starting $component because it's in illegal state $condition (expected: $NOT_STARTED)"
         }
-        logger.info("$componentName is starting")
+        logger.info("$component is starting")
         condition = STARTING
     }
 
     fun active() {
         val expectedStates = listOf(NOT_STARTED, STARTING)
         check(condition in expectedStates) {
-            "Can't activate $componentName because it's in illegal state $condition (expected: $expectedStates)"
+            "Can't activate $component because it's in illegal state $condition (expected: $expectedStates)"
         }
-        logger.info("$componentName is active")
+        logger.info("$component is active")
         condition = ACTIVE
     }
 
     fun shuttingDown() {
         val expectedStates = listOf(NOT_STARTED, STARTING, ACTIVE)
         check(condition in expectedStates) {
-            "Can't start shutting down $componentName because it's in illegal state $condition (expected: $expectedStates)"
+            "Can't start shutting down $component because it's in illegal state $condition (expected: $expectedStates)"
         }
-        logger.info("$componentName is shutting down")
+        logger.info("$component is shutting down")
         condition = SHUTTING_DOWN
     }
 
     fun shutdown() {
-        logger.info("$componentName is shut down")
+        logger.info("$component is shut down")
         condition = SHUT_DOWN
         shutdownLatch.countDown()
     }
@@ -62,7 +62,7 @@ class State(val componentName: String, startCondition: Condition = NOT_STARTED) 
     fun awaitShutdown() {
         val expectedStates = listOf(STARTING, ACTIVE)
         check(condition in expectedStates) {
-            "Can't await shutdown $componentName because it's in illegal state $condition (expected: $expectedStates)"
+            "Can't await shutdown $component because it's in illegal state $condition (expected: $expectedStates)"
         }
         shutdownLatch.await()
     }
