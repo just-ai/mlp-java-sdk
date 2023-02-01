@@ -1,6 +1,8 @@
 package com.mlp.sdk
 
+import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.ServiceDescriptorProto
+import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
 
 abstract class MlpService {
@@ -19,7 +21,10 @@ abstract class MlpService {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
     }
 
-    open fun fit(train: Payload, targets: Payload, config: Payload?, modelDir: String, previousModelDir: String?): MlpResponse {
+    open fun fit(train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
+                 targetServiceInfo: ServiceInfoProto,
+                 dataset: DatasetInfoProto
+    ): MlpResponse {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "fit"))
     }
 
