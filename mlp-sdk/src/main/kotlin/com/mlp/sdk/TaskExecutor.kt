@@ -124,18 +124,18 @@ class TaskExecutor(
 
     fun cancelAll() {
         logger.info("$this: cancel all tasks")
-        jobsContainer.cancelAll()
+        runCatching { jobsContainer.cancelAll() }
     }
 
     fun cancelAll(connectorId: Long) {
         logger.info("$this: cancelling all tasks of connector $connectorId ...")
-        jobsContainer.cancel(connectorId)
+        runCatching { jobsContainer.cancel(connectorId) }
         logger.info("$this: cancelled all tasks of connector $connectorId")
     }
 
     suspend fun gracefulShutdownAll(connectorId: Long) {
         logger.info("$this: graceful shutting down all tasks of connector $connectorId ...")
-        jobsContainer.gracefulShutdownByConnector(connectorId)
+        runCatching { jobsContainer.gracefulShutdownByConnector(connectorId) }
         logger.info("$this: graceful shut down all tasks of connector $connectorId")
     }
 

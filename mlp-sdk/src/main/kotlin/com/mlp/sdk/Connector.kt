@@ -260,9 +260,7 @@ class Connector(
             state.shuttingDown()
             logger.info("$this: RECEIVED completed")
 
-            runBlocking {
-                executor.cancelAll(id)
-            }
+            executor.cancelAll(id)
             gracefulShutdownManagedChannel()
         }
 
@@ -341,6 +339,7 @@ class Connector(
                 }
 
                 managedChannel.shutdown()
+                state.shutdown()
 
                 val timeoutSeconds = 10L
                 if (managedChannel.awaitTermination(timeoutSeconds, SECONDS)) {
@@ -349,7 +348,7 @@ class Connector(
 
                 logger.debug("$this: ... managed channel has not been shutdown in $timeoutSeconds seconds, force shutdown ...")
                 runCatching { managedChannel.shutdownNow() }
-                    .onFailure { logger.error("$this: can't shutdown managed channel", it) }
+                    .onFailure { logger.error("$this: can't force shutdown managed channel", it) }
                     .onSuccess { logger.debug("$this: ... managed channel has been successfully shutdown") }
             } catch (e: InterruptedException) {
                 logger.error("$this: ... managed channel has not been shutdown", e)
@@ -414,7 +413,11 @@ class Connector(
                 runCatching { livenessProbe() }
                     .onFailure { logger.error("$this: error on liveness probe", it) }
                 runCatching { send(heartbeatProto) }
-                    .onFailure { logger.error("Connector $id: can't send heartbeat", it) }
+                    .onFailure {
+                        if (!state.shutdown) {
+                            logger.error("Connector $id: can't send heartbeat", it)
+                        }
+                    }
 
                 delay(interval.toMillis())
 
@@ -435,7 +438,7 @@ class Connector(
     }
 
     private fun AtomicReference<GrpcChannel?>.isShutdownStateOrNull() = get() == null
-        || get()?.state?.shutdown == true
+            || get()?.state?.shutdown == true
 
     private fun AtomicReference<GrpcChannel?>.isActiveState() = get()
         ?.state
