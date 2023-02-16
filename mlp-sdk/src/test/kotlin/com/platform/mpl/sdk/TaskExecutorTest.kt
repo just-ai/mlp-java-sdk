@@ -5,12 +5,7 @@ import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.FitRequestProto
 import com.mlp.gate.PredictRequestProto.getDefaultInstance
 import com.mlp.gate.ServiceInfoProto
-import com.mlp.sdk.ActionShutdownConfig
-import com.mlp.sdk.MlpResponse
-import com.mlp.sdk.MlpService
-import com.mlp.sdk.MlpServiceConfig
-import com.mlp.sdk.Payload
-import com.mlp.sdk.TaskExecutor
+import com.mlp.sdk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,8 +31,8 @@ class TaskExecutorTest {
         val connectorId_1 = 1L
         val connectorId_2 = 2L
 
-        taskExecutor.predict(getDefaultInstance(), 1, connectorId_1, tracker)
-        taskExecutor.predict(getDefaultInstance(), 2, connectorId_1, tracker)
+        taskExecutor.predict(getDefaultInstance(), 1, connectorId_1, TimeTracker())
+        taskExecutor.predict(getDefaultInstance(), 2, connectorId_1, TimeTracker())
         launch(Dispatchers.Default) {
             delay(100)
             taskExecutor.fit(FitRequestProto.getDefaultInstance(), 3, connectorId_1)
