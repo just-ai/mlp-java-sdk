@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<included>
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout>
+            <pattern>%d %5p [%8c] %thread - %m %n</pattern>
+        </layout>
+    </appender>
+
+    <appender name="GELF" class="de.appelgriepsch.logback.GelfAppender">
+        <server>${MLP_GRAYLOG_SERVER}</server>
+        <port>${MLP_GRAYLOG_PORT:-12201}</port>
+        <protocol>${GRAYLOG_PROTOCOL:-UDP}</protocol>
+        <includeSource>true</includeSource>
+        <includeMDC>true</includeMDC>
+        <queueSize>${GRAYLOG_QUEUE_SIZE:-500}</queueSize>
+        <connectTimeout>${GRAYLOG_CONNECT_TIMEOUT:-1000}</connectTimeout>
+        <reconnectDelay>${GRAYLOG_RECONNECT_DELAY:-500}</reconnectDelay>
+        <additionalFields>app=${MLP_MODEL_NAME},env=${MLP_GRAYLOG_ENV},accountId=${MLP_ACCOUNT_ID}</additionalFields>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%5p [%8c] - %m</pattern>
+        </layout>
+    </appender>
+
+    <appender name="GELF-ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="GELF"/>
+        <queueSize>${ASYNC_QUEUE_SIZE:-512}</queueSize>
+        <discardingThreshold>${ASYNC_DISCARDING_THRESHOLD:-400}</discardingThreshold>
+        <neverBlock>${ASYNC_NEVER_BLOCK:-true}</neverBlock>
+    </appender>
+
+    <appender name="CONSOLE-ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="CONSOLE"/>
+        <queueSize>${ASYNC_QUEUE_SIZE:-512}</queueSize>
+        <discardingThreshold>${ASYNC_DISCARDING_THRESHOLD:-400}</discardingThreshold>
+        <neverBlock>${ASYNC_NEVER_BLOCK:-true}</neverBlock>
+    </appender>
+
+    <logger name="com.mlp" level="DEBUG" additivity="true"/>
+</included>
+

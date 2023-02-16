@@ -153,7 +153,6 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
 
     private suspend fun sendRequest(request: ClientRequestProto): Payload {
         val timeout = ofMillis(config.clientPredictTimeoutMs)
-        val end = now() + timeout
 
         val response = executePredictRequest(request, timeout)
             ?: throw MlpClientException("UNAVAILABLE", "Cannot connect after ${timeout.seconds} seconds", emptyMap())

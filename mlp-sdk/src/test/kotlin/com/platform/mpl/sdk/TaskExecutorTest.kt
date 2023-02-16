@@ -36,8 +36,8 @@ class TaskExecutorTest {
         val connectorId_1 = 1L
         val connectorId_2 = 2L
 
-        taskExecutor.predict(getDefaultInstance(), 1, connectorId_1)
-        taskExecutor.predict(getDefaultInstance(), 2, connectorId_1)
+        taskExecutor.predict(getDefaultInstance(), 1, connectorId_1, tracker)
+        taskExecutor.predict(getDefaultInstance(), 2, connectorId_1, tracker)
         launch(Dispatchers.Default) {
             delay(100)
             taskExecutor.fit(FitRequestProto.getDefaultInstance(), 3, connectorId_1)
