@@ -13,6 +13,7 @@ import io.grpc.Status.Code.UNAVAILABLE
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.slf4j.MDC
 import java.time.Duration
 import java.time.Duration.ofMillis
 import java.time.Instant.now
@@ -102,6 +103,7 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
                     }
                 }
             )
+            .putHeaders("Z-requestId", MDC.get("requestId"))
             .build()
     )
 
