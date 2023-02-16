@@ -4785,7 +4785,7 @@ components:
     HealthInterval:
       required:
       - count
-      - firstError
+      - firstErrors
       - from
       - to
       type: object
@@ -4797,8 +4797,10 @@ components:
           format: int32
         to:
           type: string
-        firstError:
-          $ref: '#/components/schemas/HealthCheckResult'
+        firstErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Check'
     StatLogData:
       required:
       - accountId
