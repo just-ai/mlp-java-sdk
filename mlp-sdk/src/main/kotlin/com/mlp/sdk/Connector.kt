@@ -227,13 +227,13 @@ class Connector(
             MDC.setContextMap(mapOf("requestId" to requestId))
 
             try {
-                onNext2(request, tracker)
+                processRequest(request, tracker)
             } finally {
                 MDC.clear()
             }
         }
 
-        fun onNext2(request: GateToServiceProto, tracker: TimeTracker) {
+        private fun processRequest(request: GateToServiceProto, tracker: TimeTracker) {
             if (request.hasHeartBeat())
                 logger.trace("GateToService (connector $id, requestId: ${request.requestId}): heartbeat")
             else
