@@ -13,6 +13,7 @@ import io.grpc.Status.Code.UNAVAILABLE
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.slf4j.MDC
 import java.time.Duration
 import java.time.Duration.ofMillis
 import java.time.Instant.now
@@ -102,6 +103,7 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
                     }
                 }
             )
+            .putHeaders("Z-requestId", MDC.get("requestId"))
             .build()
     )
 
@@ -153,7 +155,6 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
 
     private suspend fun sendRequest(request: ClientRequestProto): Payload {
         val timeout = ofMillis(config.clientPredictTimeoutMs)
-        val end = now() + timeout
 
         val response = executePredictRequest(request, timeout)
             ?: throw MlpClientException("UNAVAILABLE", "Cannot connect after ${timeout.seconds} seconds", emptyMap())

@@ -137,17 +137,17 @@ class ConnectorsPool(
     }
 }
 
-internal fun WithLogger.logRequest(
-    request: Any,
-    messageBody: String = "SENDING request",
+internal fun WithLogger.logProto(
+    body: Any,
+    prompt: String,
 ) {
-    val minimizedRequest = request.toString()
+    val minimizedRequest = body.toString()
         .replace("\n", " ")
         .replace("  ", " ")
     val messageFitted = minimizedRequest.length <= 1000
 
     if (messageFitted)
-        logger.trace("$this: $messageBody \t$minimizedRequest")
+        logger.debug("$prompt: \t$minimizedRequest")
     else
-        logger.trace("$this: $messageBody with data length ${minimizedRequest.length}")
+        logger.debug("$prompt: data length ${minimizedRequest.length}")
 }

@@ -110,7 +110,7 @@ class PipelineClient(
                 it.model = model
                 it.ext = ExtendedRequestProto.newBuilder()
                     .setMethodName(methodName)
-                    .putAllParams(params.toMap().mapValues { (name, payload) ->
+                    .putAllParams(params.toMap().mapValues { (_, payload) ->
                         payload.asProto.build()
                     })
                     .build()

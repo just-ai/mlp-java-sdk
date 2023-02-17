@@ -24,13 +24,10 @@ import com.mlp.sdk.utils.WithLogger
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.slf4j.MDC
 import java.io.File
 import java.time.Duration
 import java.time.Duration.between
@@ -213,11 +210,9 @@ class Connector(
 
         suspend fun send(grpcResponse: ServiceToGateProto) {
             if (grpcResponse.hasHeartBeat())
-                logger.trace("$this: send message ${grpcResponse.bodyCase} to $targetUrl")
+                logger.trace("ServiceToGateProto: heartbeat")
             else
-                logger.debug("$this: send message ${grpcResponse.bodyCase} to $targetUrl")
-
-            logRequest(grpcResponse)
+                logProto(grpcResponse, prompt = "ServiceToGate")
 
             check(!state.notStarted && !state.shutdown) { "$this: can't send message in state $state" }
 
@@ -227,16 +222,28 @@ class Connector(
         }
 
         override fun onNext(request: GateToServiceProto) {
+            val tracker = TimeTracker()
+            val requestId = request.headersMap["Z-requestId"] ?: request.requestId.toString()
+            MDC.setContextMap(mapOf("requestId" to requestId))
+
+            try {
+                processRequest(request, tracker)
+            } finally {
+                MDC.clear()
+            }
+        }
+
+        private fun processRequest(request: GateToServiceProto, tracker: TimeTracker) {
             if (request.hasHeartBeat())
-                logger.trace("Connector $id: received request ${request.bodyCase} with id ${request.requestId}")
+                logger.trace("GateToService (connector $id, requestId: ${request.requestId}): heartbeat")
             else
-                logger.debug("Connector $id: received request ${request.bodyCase} with id ${request.requestId}")
+                logProto(request, prompt = "GateToService (connector $id)")
 
             when (request.bodyCase) {
                 SERVICEINFO -> pipelineClient.modelInfo = request.serviceInfo.asModelInfo
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
-                PREDICT -> executor.predict(request.predict, request.requestId, id)
+                PREDICT -> executor.predict(request.predict, request.requestId, id, tracker)
                 FIT -> executor.fit(request.fit, request.requestId, id)
                 EXT -> executor.ext(request.ext, request.requestId, id)
                 BATCH -> executor.batch(request.batch, request.requestId, id)

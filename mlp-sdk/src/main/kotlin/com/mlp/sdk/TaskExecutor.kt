@@ -17,10 +17,9 @@ import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
 import com.mlp.sdk.utils.WithLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.slf4j.MDCContext
+import org.slf4j.MDC
 import java.util.concurrent.Executors.newFixedThreadPool
 
 class TaskExecutor(
@@ -32,7 +31,7 @@ class TaskExecutor(
     private val scope = CoroutineScope(newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
     internal lateinit var connectorsPool: ConnectorsPool
 
-    fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long) {
+    fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, tracker: TimeTracker) {
         launchAndStore(requestId, connectorId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
             val dataPayload = requireNotNull(request.data.asPayload) { "Payload data" }
@@ -47,6 +46,8 @@ class TaskExecutor(
                 responseBuilder.setError(it.asErrorProto)
             }
 
+            val elapsed = System.currentTimeMillis() - tracker.startTime
+            responseBuilder.putHeaders("Z-Server-Time", elapsed.toString())
             runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                 .onFailure { logger.error("Error while sending predict response", it) }
         }
@@ -150,8 +151,11 @@ class TaskExecutor(
         connectorId: Long,
         block: suspend () -> Unit
     ) {
+        val ctx = MDC.getCopyOfContextMap()
         val job = scope.launch(start = CoroutineStart.LAZY) {
-            block.invoke()
+            withContext(MDCContext(ctx)) {
+                block.invoke()
+            }
         }
 
         job.invokeOnCompletion {
