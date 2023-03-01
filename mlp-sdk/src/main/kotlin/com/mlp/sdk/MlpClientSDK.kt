@@ -84,8 +84,8 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
         authToken: String,
         payload: Payload,
         configPayload: Payload? = null
-    ) = sendRequest(
-        ClientRequestProto.newBuilder()
+    ): Payload {
+        val requestBuilder = ClientRequestProto.newBuilder()
             .setAccount(account)
             .setModel(model)
             .setAuthToken(authToken)
@@ -103,9 +103,10 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
                     }
                 }
             )
-            .putHeaders("Z-requestId", MDC.get("requestId"))
-            .build()
-    )
+
+        MDC.get("requestId")?.let { requestBuilder.putHeaders("Z-requestId", it) }
+        return sendRequest(requestBuilder.build())
+    }
 
 
     fun ext(
