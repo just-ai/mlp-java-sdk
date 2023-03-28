@@ -21,24 +21,12 @@ import java.util.concurrent.atomic.AtomicLong
 class PipelineClient(
     private val sdk: MlpServiceSDK,
     private val mplConfig: MlpServiceConfig,
-    private val restTemplate: RestTemplate = getRestTemplate()
 ) {
 
     private val timer = Timer(true)
     private val requests = ConcurrentHashMap<Long, CompletableFuture<PipelineResponseProto>>()
 
     lateinit var modelInfo: ModelInfo
-
-    val clientApiToken by lazy {
-        requestClientApiToken()
-    }
-
-    val apiClient: ApiClient by lazy {
-        ApiClient(restTemplate).apply {
-            basePath = mplConfig.clientApiGateUrl
-            addDefaultHeader("MLP-API-KEY", clientApiToken.token)
-        }
-    }
 
     fun predict(model: String, data: Payload, config: Payload = emptyPayload) =
         predict(null, model, data, config)
@@ -51,11 +39,6 @@ class PipelineClient(
 
     fun ext(account: String?, model: String, method: String, vararg params: Pair<String, Payload>) =
         sendRequest { buildExtProto(it, account, model, method, *params) }
-
-    private fun requestClientApiToken() =
-        sendRequest { buildClientTokenProto(it) }
-            .get()
-            .token
 
     private fun sendRequest(protoBuilder: (Long) -> ServiceToGateProto): CompletableFuture<PipelineResponseProto> {
         val requestId = lastId.getAndDecrement()
@@ -118,30 +101,7 @@ class PipelineClient(
         )
         .build()
 
-    private fun buildClientTokenProto(
-        requestId: Long
-    ) = ServiceToGateProto.newBuilder()
-        .setRequestId(requestId)
-        .setRequest(
-            PipelineRequestProto.newBuilder().also {
-                it.token = ClientTokenRequestProto.newBuilder().build()
-            }
-        )
-        .build()
-
     companion object {
         private val lastId = AtomicLong(-1)
-
-        private fun getRestTemplate(): RestTemplate {
-            val restTemplate = RestTemplate()
-
-            val jacksonConverter = restTemplate.messageConverters.find {
-                it is MappingJackson2HttpMessageConverter
-            } as MappingJackson2HttpMessageConverter
-
-            jacksonConverter.objectMapper = ObjectMapper()
-
-            return restTemplate
-        }
     }
 }
