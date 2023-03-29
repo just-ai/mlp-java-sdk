@@ -13,7 +13,6 @@ class MlpClientConfig(
     val shutdownConfig: ClientShutdownConfig = ClientShutdownConfig(),
     val grpcSecure: Boolean = GRPC_SECURE,
     val maxBackoffSeconds: Long = MAX_BACKOFF_SECONDS,
-    val clientApiAuthToken: String? = null,
     val clientApiGateUrl: String? = null,
 ) {
 
@@ -37,7 +36,8 @@ fun loadClientConfig(configPath: String? = null): MlpClientConfig {
                 ?: GRACEFUL_SHUTDOWN_CLIENT_MS
         ),
         grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE,
-        maxBackoffSeconds = props["MLP_MAX_BACKOFF_SECONDS"]?.toLong() ?: MAX_BACKOFF_SECONDS
+        maxBackoffSeconds = props["MLP_MAX_BACKOFF_SECONDS"]?.toLong() ?: MAX_BACKOFF_SECONDS,
+        clientApiGateUrl = props["MLP_REST_URL"]
     )
 }
 

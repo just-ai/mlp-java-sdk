@@ -11,19 +11,26 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.StatusRuntimeException
 import kotlin.Int.Companion.MAX_VALUE
+import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import org.slf4j.MDC
 import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofSeconds
 import java.time.Instant.now
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors.defaultThreadFactory
 import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
 
@@ -33,23 +40,20 @@ class MlpClientSDK(
 
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub
-    private lateinit var gateUrl: String
     private var token: String? = null
 
-    val apiClient by lazy {
-        MlpApiClient(requireNotNull(config.clientApiAuthToken), requireNotNull(config.clientApiGateUrl))
-    }
+    val apiClient by lazy { MlpApiClient.getInstance(config.connectionToken, config.clientApiGateUrl) }
 
-    fun init() {
-        gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
+    init {
+        val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
         token = config.connectionToken
         logger.debug("Starting mlp client for url $gateUrl")
-        connect()
+        connect(gateUrl)
 
         launchBackoffJob()
     }
 
-    private fun connect() {
+    private fun connect(gateUrl: String) {
         val channelBuilder = ManagedChannelBuilder.forTarget(gateUrl)
             .enableRetry()
             .maxRetryAttempts(MAX_VALUE)
@@ -61,8 +65,27 @@ class MlpClientSDK(
         stub = GateCoroutineStub(channel)
     }
 
+    /**
+     * Connection may be IDLE because of inactivity some time ago. If you want to await for connection to be ready, use [awaitConnection] instead.
+     */
     fun isConnected() =
         channel.getState(true) == READY
+
+    /**
+     * Await for connection to be ready. If connection is already ready, returns immediately.
+     */
+    suspend fun awaitConnection() {
+        while (true) {
+            val state = channel.getState(true)
+
+            if (state == READY)
+                break
+
+            suspendCancellableCoroutine<Unit> {
+                channel.notifyWhenStateChanged(state) { it.resume(Unit) }
+            }
+        }
+    }
 
     fun predictBlocking(
         account: String,
@@ -104,10 +127,6 @@ class MlpClientSDK(
     ) =
         sendRequest(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
 
-    private fun ensureDefaultToken() = requireNotNull(token) {
-        "Set authToken in environment variables, or in init method, or directly in predict method"
-    }
-
     fun extBlocking(
         account: String,
         model: String,
@@ -128,6 +147,9 @@ class MlpClientSDK(
     ) =
         sendRequest(buildExtRequest(account, model, methodName, timeout, authToken, params), timeout)
 
+    private fun ensureDefaultToken() = requireNotNull(token) {
+        "Set authToken in environment variables, or in init method, or directly in predict method"
+    }
 
     private suspend fun sendRequest(request: ClientRequestProto, timeout: Duration?): Payload {
         val timeoutMs = timeout?.toMillis() ?: config.clientPredictTimeoutMs
@@ -159,6 +181,9 @@ class MlpClientSDK(
     private fun processResultFailure(exception: Throwable): Nothing = when (exception) {
         is StatusRuntimeException ->
             throw MlpClientException(exception.status.code.name, exception.message ?: "$exception", emptyMap())
+
+        is TimeoutCancellationException ->
+            throw MlpClientException("timeout", exception.message ?: "$exception", emptyMap())
 
         else ->
             throw MlpClientException("wrong-response", exception.message ?: "$exception", emptyMap())
@@ -266,7 +291,10 @@ class MlpClientSDK(
     }
 
     companion object {
-        private val dispatcher = newSingleThreadExecutor().asCoroutineDispatcher()
+        private val dispatcher = newDaemonSingleThreadExecutor().asCoroutineDispatcher()
         private val backoffCleanerScope = CoroutineScope(dispatcher + SupervisorJob())
+
+        private fun newDaemonSingleThreadExecutor() =
+            newSingleThreadExecutor { defaultThreadFactory().newThread(it).apply { isDaemon = true } }
     }
 }

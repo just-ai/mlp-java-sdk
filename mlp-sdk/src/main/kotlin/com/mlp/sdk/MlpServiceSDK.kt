@@ -15,9 +15,8 @@ class MlpServiceSDK(
 
     private val taskExecutor: TaskExecutor = TaskExecutor(action, config)
     val pipelineClient by lazy { PipelineClient(this, config) }
-    val apiClient by lazy {
-        MlpApiClient(requireNotNull(config.clientApiAuthToken), requireNotNull(config.clientApiGateUrl))
-    }
+    val apiClient by lazy { MlpApiClient.getInstance(config.clientApiAuthToken, config.clientApiGateUrl) }
+
 
     init {
         action.pipelineClient = pipelineClient

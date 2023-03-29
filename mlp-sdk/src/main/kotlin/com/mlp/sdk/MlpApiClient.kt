@@ -18,6 +18,13 @@ class MlpApiClient(
     }
 
     companion object {
+
+        fun getInstance(apiToken: String?, apiGateUrl: String?): MlpApiClient {
+            requireNotNull(apiToken) { "Api token is not set. Set it in environment variables, or manually in config" }
+            requireNotNull(apiGateUrl) { "Api url is not set. Set it in environment variables, or manually in config" }
+            return MlpApiClient(apiToken, apiGateUrl)
+        }
+
         private fun getRestTemplate(): RestTemplate {
             val restTemplate = RestTemplate()
 
