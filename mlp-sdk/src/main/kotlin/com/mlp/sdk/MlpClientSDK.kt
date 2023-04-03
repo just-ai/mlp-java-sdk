@@ -13,11 +13,9 @@ import io.grpc.StatusRuntimeException
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -29,7 +27,6 @@ import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofSeconds
 import java.time.Instant.now
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors.defaultThreadFactory
 import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
@@ -40,7 +37,7 @@ class MlpClientSDK(
 
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub
-    private var token: String? = null
+    private val token: String?
 
     val apiClient by lazy { MlpApiClient.getInstance(config.connectionToken, config.clientApiGateUrl) }
 
@@ -255,7 +252,7 @@ class MlpClientSDK(
             builder.putHeaders("Z-requestId", MDC.get("requestId"))
 
         if (timeout != null)
-            builder.timeoutSec = timeout.toSeconds().toInt()
+            builder.timeoutSec = timeout.seconds.toInt()
 
         return builder.build()
     }
@@ -285,7 +282,7 @@ class MlpClientSDK(
             builder.putHeaders("Z-requestId", MDC.get("requestId"))
 
         if (timeout != null)
-            builder.timeoutSec = timeout.toSeconds().toInt()
+            builder.timeoutSec = timeout.seconds.toInt()
 
         return builder.build()
     }

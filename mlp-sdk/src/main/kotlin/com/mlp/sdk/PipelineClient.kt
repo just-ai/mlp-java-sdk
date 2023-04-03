@@ -1,22 +1,17 @@
 package com.mlp.sdk
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.mlp.gate.ServiceToGateProto
-import com.mlp.gate.ClientTokenRequestProto
 import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.PipelineRequestProto
 import com.mlp.gate.PipelineResponseProto
 import com.mlp.gate.PredictRequestProto
-import com.mlp.api.ApiClient
+import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.Payload.Companion.emptyPayload
 import kotlin.concurrent.schedule
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
-import org.springframework.web.client.RestTemplate
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
+
 
 class PipelineClient(
     private val sdk: MlpServiceSDK,
@@ -43,7 +38,6 @@ class PipelineClient(
     private fun sendRequest(protoBuilder: (Long) -> ServiceToGateProto): CompletableFuture<PipelineResponseProto> {
         val requestId = lastId.getAndDecrement()
         val future = CompletableFuture<PipelineResponseProto>()
-            .orTimeout(mplConfig.pipeFutureTimeoutMs, SECONDS)
         requests[requestId] = future
 
         timer.schedule(mplConfig.pipeFutureScheduleMs) { requests.remove(requestId) }
