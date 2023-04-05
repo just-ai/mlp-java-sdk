@@ -35,15 +35,15 @@ class MlpClientSDK(
     private val config: MlpClientConfig = loadClientConfig(),
 ) : WithLogger {
 
+    var connectionToken: String?
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub
-    private val token: String?
 
     val apiClient by lazy { MlpApiClient.getInstance(config.connectionToken, config.clientApiGateUrl) }
 
     init {
         val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
-        token = config.connectionToken
+        connectionToken = config.connectionToken
         logger.debug("Starting mlp client for url $gateUrl")
         connect(gateUrl)
 
@@ -144,7 +144,7 @@ class MlpClientSDK(
     ) =
         sendRequest(buildExtRequest(account, model, methodName, timeout, authToken, params), timeout)
 
-    private fun ensureDefaultToken() = requireNotNull(token) {
+    private fun ensureDefaultToken() = requireNotNull(connectionToken) {
         "Set authToken in environment variables, or in init method, or directly in predict method"
     }
 
