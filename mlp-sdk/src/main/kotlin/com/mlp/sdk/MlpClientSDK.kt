@@ -9,6 +9,7 @@ import com.mlp.sdk.utils.WithLogger
 import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.grpc.StatusException
 import io.grpc.StatusRuntimeException
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
@@ -176,11 +177,11 @@ class MlpClientSDK(
     }
 
     private fun processResultFailure(exception: Throwable): Nothing = when (exception) {
-        is StatusRuntimeException ->
-            throw MlpClientException(exception.status.code.name, exception.message ?: "$exception", emptyMap())
-
         is TimeoutCancellationException ->
             throw MlpClientException("timeout", exception.message ?: "$exception", emptyMap())
+
+        is StatusRuntimeException, is StatusException ->
+            throw exception
 
         else ->
             throw MlpClientException("wrong-response", exception.message ?: "$exception", emptyMap())
