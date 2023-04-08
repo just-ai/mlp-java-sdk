@@ -113,7 +113,7 @@ class MlpClientSDK(
         timeout: Duration? = null,
         authToken: String = ensureDefaultToken()
     ) =
-        predict(account, model, Payload("", data), config?.let { Payload("", data) }, timeout, authToken).data
+        predict(account, model, Payload("", data), config?.let { Payload("", it) }, timeout, authToken).data
 
     suspend fun predict(
         account: String,
