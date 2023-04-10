@@ -4467,7 +4467,6 @@ components:
             format: int64
     ModelTimeoutsData:
       required:
-      - fitTimeoutSec
       - podStartTimeoutSec
       - predictTimeoutSec
       type: object
