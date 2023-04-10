@@ -6,11 +6,13 @@ import com.mlp.sdk.MlpClientConfig.Companion.GRPC_SECURE
 import com.mlp.sdk.utils.ConfigHelper
 
 class MlpClientConfig(
-    val initialGateUrls: List<String>,
-    val connectionToken: String,
-    val clientPredictTimeoutMs: Long = CLIENT_PREDICT_TIMEOUT_MS,
-    val shutdownConfig: ClientShutdownConfig = ClientShutdownConfig(),
-    val grpcSecure: Boolean = GRPC_SECURE,
+        val initialGateUrls: List<String>,
+        val restUrl: String,
+        val clientToken: String,
+
+        val clientPredictTimeoutMs: Long = CLIENT_PREDICT_TIMEOUT_MS,
+        val shutdownConfig: ClientShutdownConfig = ClientShutdownConfig(),
+        val grpcSecure: Boolean = GRPC_SECURE,
 ) {
 
     companion object {
@@ -24,7 +26,8 @@ fun loadClientConfig(configPath: String? = null): MlpClientConfig {
     val props = ConfigHelper.loadProperties(configPath)
     return MlpClientConfig(
         initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
-        connectionToken = props["MLP_CLIENT_TOKEN"]!!,
+        restUrl = props["MLP_REST_URL"]!!,
+        clientToken = props["MLP_CLIENT_TOKEN"]!!,
         clientPredictTimeoutMs = props["MLP_CLIENT_PREDICT_TIMEOUT_MS"]?.toLong()
             ?: CLIENT_PREDICT_TIMEOUT_MS,
         shutdownConfig = ClientShutdownConfig(

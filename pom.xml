@@ -8,7 +8,7 @@
         <module>mlp-sdk</module>
         <module>mlp-examples/mlp-fit-action</module>
         <module>mlp-examples/mlp-simple-action</module>
-        <module>mlp-examples/mlp-composit-action</module>
+<!--        <module>mlp-examples/mlp-composit-action</module>-->
         <module>mlp-examples/mlp-client-app</module>
     </modules>
 

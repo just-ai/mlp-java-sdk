@@ -12,8 +12,6 @@ import com.mlp.gate.GateToServiceProto.BodyCase.EXT
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
-import com.mlp.gate.GateToServiceProto.BodyCase.RESPONSE
-import com.mlp.gate.GateToServiceProto.BodyCase.SERVICEINFO
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.StartServingProto
@@ -21,8 +19,7 @@ import com.mlp.gate.StopServingProto
 import com.mlp.sdk.ConnectorsPool.Companion.clusterDispatcher
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.WithLogger
-import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
+import io.grpc.*
 import io.grpc.stub.StreamObserver
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -43,7 +40,6 @@ class Connector(
     var targetUrl: String,
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
-    val pipelineClient: PipelineClient,
     val config: MlpServiceConfig
 ) : WithLogger, WithState(ACTIVE) {
 
@@ -240,7 +236,6 @@ class Connector(
                 logProto(request, prompt = "GateToService (connector $id)")
 
             when (request.bodyCase) {
-                SERVICEINFO -> pipelineClient.modelInfo = request.serviceInfo.asModelInfo
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
                 PREDICT -> executor.predict(request.predict, request.requestId, id, tracker)
@@ -248,7 +243,6 @@ class Connector(
                 EXT -> executor.ext(request.ext, request.requestId, id)
                 BATCH -> executor.batch(request.batch, request.requestId, id)
                 ERROR -> logger.error("Connector $id: error ${request.error.message}")
-                RESPONSE -> pipelineClient.registerResponse(request.requestId, request.response)
                 BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $id: body case is null")
                 else -> logger.debug("Could not find request bodyCase with type ${request.bodyCase}")
@@ -256,8 +250,12 @@ class Connector(
         }
 
         override fun onError(e: Throwable) {
-            state.shuttingDown()
+            if (e is StatusRuntimeException && e.status == Status.UNAVAILABLE) {
+                // shutdown method has been called
+                return
+            }
             logger.error("$this: RECEIVED error ${e.message}", e)
+            state.shuttingDown()
 
             executor.cancelAll(id)
             gracefulShutdownManagedChannel()

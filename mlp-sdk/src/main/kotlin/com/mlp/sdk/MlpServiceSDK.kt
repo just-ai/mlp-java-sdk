@@ -14,11 +14,6 @@ class MlpServiceSDK(
 ) : WithLogger, WithState() {
 
     private val taskExecutor: TaskExecutor = TaskExecutor(action, config)
-    val pipelineClient: PipelineClient = PipelineClient(this, config)
-
-    init {
-        action.pipelineClient = pipelineClient
-    }
 
     fun start() {
         check(state.notStarted) { "SDK already started" }
@@ -26,7 +21,7 @@ class MlpServiceSDK(
         setShutdownHook()
 
         taskExecutor.connectorsPool =
-            ConnectorsPool(config.connectionToken, taskExecutor, pipelineClient, config)
+            ConnectorsPool(config.connectionToken, taskExecutor, config)
 
         state.active()
         startupProbe()

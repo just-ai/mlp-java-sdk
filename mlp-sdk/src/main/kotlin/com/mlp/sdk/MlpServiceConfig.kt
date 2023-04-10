@@ -10,12 +10,10 @@ import com.mlp.sdk.utils.ConfigHelper
 class MlpServiceConfig(
     val initialGateUrls: List<String>,
     val connectionToken: String,
-    val clientApiGateUrl: String? = null,
+
     val threadPoolSize: Int = DEFAULT_THREAD_POOL_SIZE,
     val shutdownConfig: ActionShutdownConfig = ActionShutdownConfig(),
     val grpcConnectTimeoutMs: Long = GRPC_CONNECT_TIMEOUT_MS,
-    val pipeFutureTimeoutMs: Long = PIPE_FUTURE_TIMEOUT_MS,
-    val pipeFutureScheduleMs: Long = PIPE_FUTURE_SCHEDULE_MS,
     val grpcSecure: Boolean = GRPC_SECURE,
 ) {
     companion object {
@@ -23,8 +21,6 @@ class MlpServiceConfig(
         const val GRACEFUL_SHUTDOWN_CONNECTOR_MS: Long = 20000
         const val GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS: Long = 3000
         const val GRPC_CONNECT_TIMEOUT_MS: Long = 10000
-        const val PIPE_FUTURE_TIMEOUT_MS: Long = 45000
-        const val PIPE_FUTURE_SCHEDULE_MS: Long = 60000
         const val GRPC_SECURE: Boolean = true
     }
 }
@@ -39,7 +35,6 @@ fun loadActionConfig(configPath: String? = null): MlpServiceConfig {
     return MlpServiceConfig(
         initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
         connectionToken = props["MLP_SERVICE_TOKEN"]!!,
-        clientApiGateUrl = props["MLP_REST_URL"],
         threadPoolSize = props["MLP_THREAD_POOL_SIZE"]?.toInt()
             ?: DEFAULT_THREAD_POOL_SIZE,
         shutdownConfig = ActionShutdownConfig(
@@ -49,8 +44,6 @@ fun loadActionConfig(configPath: String? = null): MlpServiceConfig {
                 ?: GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
         ),
         grpcConnectTimeoutMs = props["MLP_GRPC_CONNECT_TIMEOUT_MS"]?.toLong()
-            ?: GRPC_CONNECT_TIMEOUT_MS,
-        pipeFutureTimeoutMs = props["MLP_PIPE_FUTURE_TIMEOUT_MS"]?.toLong()
             ?: GRPC_CONNECT_TIMEOUT_MS,
         grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE
     )

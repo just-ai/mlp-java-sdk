@@ -28,7 +28,7 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
 
     fun init() {
         gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
-        token = config.connectionToken
+        token = config.clientToken
         logger.debug("Starting mlp client for url $gateUrl")
         connect()
     }

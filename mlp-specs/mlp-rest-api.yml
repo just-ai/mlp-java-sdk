@@ -4467,6 +4467,7 @@ components:
             format: int64
     ModelTimeoutsData:
       required:
+      - fitTimeoutSec
       - podStartTimeoutSec
       - predictTimeoutSec
       type: object
@@ -4475,6 +4476,9 @@ components:
           type: integer
           format: int64
         predictTimeoutSec:
+          type: integer
+          format: int64
+        fitTimeoutSec:
           type: integer
           format: int64
     PersistentVolumeData:
