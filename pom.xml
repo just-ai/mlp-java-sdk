@@ -10,6 +10,7 @@
         <module>mlp-examples/mlp-simple-action</module>
 <!--        <module>mlp-examples/mlp-composit-action</module>-->
         <module>mlp-examples/mlp-client-app</module>
+        <module>mlp-examples/mlp-rest-app</module>
     </modules>
 
     <groupId>com.mlp</groupId>

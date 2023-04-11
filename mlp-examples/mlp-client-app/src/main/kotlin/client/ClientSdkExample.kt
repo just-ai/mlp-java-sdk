@@ -1,18 +1,13 @@
 package client
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.mlp.sdk.MlpClientSDK
-
-val objectMapper = ObjectMapper().apply {
-    registerModule(KotlinModule())
-}
+import com.mlp.sdk.utils.JSON
 
 fun main() {
     val clientSDK = MlpClientSDK()
     clientSDK.init()
 
-    val payload = objectMapper.writeValueAsString("hello")
+    val payload = JSON.stringify("hello")
     val res = clientSDK.predict("just-ai", "test-action", payload)
 
     println(res)
