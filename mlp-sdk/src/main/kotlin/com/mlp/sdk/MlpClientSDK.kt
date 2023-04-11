@@ -1,171 +1,164 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ClientRequestProto
-import com.mlp.gate.ClientResponseProto
 import com.mlp.gate.ExtendedRequestProto
-import com.mlp.gate.GateGrpc
+import com.mlp.gate.GateGrpcKt.GateCoroutineStub
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.sdk.utils.WithLogger
+import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
-import io.grpc.Status.Code.UNAVAILABLE
+import io.grpc.StatusException
 import io.grpc.StatusRuntimeException
+import kotlin.Int.Companion.MAX_VALUE
+import kotlin.coroutines.resume
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import org.slf4j.MDC
 import java.time.Duration
-import java.time.Duration.ofMillis
+import java.time.Duration.between
+import java.time.Duration.ofSeconds
 import java.time.Instant.now
+import java.util.concurrent.Executors.defaultThreadFactory
+import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
 
-class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : WithLogger {
+class MlpClientSDK(
+    private val config: MlpClientConfig = loadClientConfig(),
+) : WithLogger {
 
+    var connectionToken: String?
     private lateinit var channel: ManagedChannel
-    private lateinit var stub: GateGrpc.GateBlockingStub
-    private lateinit var gateUrl: String
-    private var token: String? = null
+    private lateinit var stub: GateCoroutineStub
 
-    fun init() {
-        gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
-        token = config.connectionToken
+    val apiClient by lazy { MlpApiClient.getInstance(config.connectionToken, config.clientApiGateUrl) }
+
+    init {
+        val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
+        connectionToken = config.connectionToken
         logger.debug("Starting mlp client for url $gateUrl")
-        connect()
+        connect(gateUrl)
+
+        launchBackoffJob()
     }
 
-    private fun connect() {
-        if (this::channel.isInitialized) {
-            config.initialGateUrls[0]
-        }
-
+    private fun connect(gateUrl: String) {
         val channelBuilder = ManagedChannelBuilder.forTarget(gateUrl)
-        if (!config.grpcSecure) {
+            .enableRetry()
+            .maxRetryAttempts(MAX_VALUE)
+
+        if (!config.grpcSecure)
             channelBuilder.usePlaintext()
-        }
         channel = channelBuilder.build()
-        stub = GateGrpc.newBlockingStub(channel)
+
+        stub = GateCoroutineStub(channel)
     }
 
-    fun predict(
-        account: String,
-        model: String,
-        payload: String,
-    ): String {
-        val authToken = requireNotNull(token) {
-            "Set authToken in environment variables, or in init method, or directly in predict method"
+    /**
+     * Connection may be IDLE because of inactivity some time ago. If you want to await for connection to be ready, use [awaitConnection] instead.
+     */
+    fun isConnected() =
+        channel.getState(true) == READY
+
+    /**
+     * Await for connection to be ready. If connection is already ready, returns immediately.
+     */
+    suspend fun awaitConnection() {
+        while (true) {
+            val state = channel.getState(true)
+
+            if (state == READY)
+                break
+
+            suspendCancellableCoroutine<Unit> {
+                channel.notifyWhenStateChanged(state) { it.resume(Unit) }
+            }
         }
-        return runBlocking {
-            predictSuspendable(account, model, authToken, Payload(dataType = "", data = payload)).data
-        }
     }
 
-    fun predict(
+    fun predictBlocking(
         account: String,
         model: String,
-        authToken: String,
-        payload: String,
-    ) = runBlocking {
-        predictSuspendable(account, model, authToken, Payload(dataType = "", data = payload)).data
-    }
+        data: String,
+        config: String? = null,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken()
+    ) =
+        runBlocking { predict(account, model, data, config, timeout, authToken) }
 
-    fun predict(
+    fun predictBlocking(
         account: String,
         model: String,
-        authToken: String,
-        payload: Payload,
-        configPayload: Payload? = null
-    ): Payload = runBlocking {
-        predictSuspendable(account, model, authToken, payload, configPayload)
-    }
+        data: Payload,
+        config: Payload? = null,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken()
+    ) =
+        runBlocking { predict(account, model, data, config, timeout, authToken) }
 
-    suspend fun predictSuspendable(
+    suspend fun predict(
         account: String,
         model: String,
-        authToken: String,
-        payload: Payload,
-        configPayload: Payload? = null
-    ): Payload {
-        val requestBuilder = ClientRequestProto.newBuilder()
-            .setAccount(account)
-            .setModel(model)
-            .setAuthToken(authToken)
-            .setPredict(
-                PredictRequestProto.newBuilder().apply {
-                    data = PayloadProto.newBuilder()
-                        .setDataType(payload.dataType)
-                        .setJson(payload.data)
-                        .build()
-                    configPayload?.let {
-                        config = PayloadProto.newBuilder()
-                            .setDataType(configPayload.dataType)
-                            .setJson(configPayload.data)
-                            .build()
-                    }
-                }
-            )
+        data: String,
+        config: String? = null,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken()
+    ) =
+        predict(account, model, Payload("", data), config?.let { Payload("", it) }, timeout, authToken).data
 
-        MDC.get("requestId")?.let { requestBuilder.putHeaders("Z-requestId", it) }
-        return sendRequest(requestBuilder.build())
-    }
+    suspend fun predict(
+        account: String,
+        model: String,
+        data: Payload,
+        config: Payload? = null,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken()
+    ) =
+        sendRequest(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
 
-
-    fun ext(
+    fun extBlocking(
         account: String,
         model: String,
         methodName: String,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken(),
         vararg params: Pair<String, PayloadProto>
-    ): Payload {
-        val authToken = requireNotNull(token) {
-            "Set authToken in environment variables, or in init method, or directly in predict method"
-        }
+    ) =
+        runBlocking { ext(account, model, methodName, timeout, authToken, *params) }
 
-        return runBlocking {
-            extSuspendable(account, model, authToken, methodName, *params)
-        }
-    }
-
-    fun ext(
+    suspend fun ext(
         account: String,
         model: String,
-        authToken: String,
         methodName: String,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken(),
         vararg params: Pair<String, PayloadProto>
-    ) = runBlocking {
-        extSuspendable(account, model, authToken, methodName, *params)
+    ) =
+        sendRequest(buildExtRequest(account, model, methodName, timeout, authToken, params), timeout)
+
+    private fun ensureDefaultToken() = requireNotNull(connectionToken) {
+        "Set authToken in environment variables, or in init method, or directly in predict method"
     }
 
-    suspend fun extSuspendable(
-        account: String,
-        model: String,
-        authToken: String,
-        methodName: String,
-        vararg params: Pair<String, PayloadProto>
-    ) = sendRequest(
-        ClientRequestProto.newBuilder()
-            .setAccount(account)
-            .setModel(model)
-            .setAuthToken(authToken)
-            .setExt(
-                ExtendedRequestProto.newBuilder().apply {
-                    this.methodName = methodName
-                    this.putAllParams(params.toMap())
-                }
-            )
-            .build()
-    )
+    private suspend fun sendRequest(request: ClientRequestProto, timeout: Duration?): Payload {
+        val timeoutMs = timeout?.toMillis() ?: config.clientPredictTimeoutMs
+        val response = withTimeout(timeoutMs) { executePredictRequest(request) }
 
-    private suspend fun sendRequest(request: ClientRequestProto): Payload {
-        val timeout = ofMillis(config.clientPredictTimeoutMs)
-
-        val response = executePredictRequest(request, timeout)
-            ?: throw MlpClientException("UNAVAILABLE", "Cannot connect after ${timeout.seconds} seconds", emptyMap())
-
-        when {
+        return when {
             response.hasPredict() ->
-                return Payload(response.predict.data.dataType, response.predict.data.json)
+                Payload(response.predict.data.dataType, response.predict.data.json)
 
             response.hasExt() ->
-                return Payload(response.ext.data.dataType, response.ext.data.json)
+                Payload(response.ext.data.dataType, response.ext.data.json)
 
             response.hasError() -> {
                 logger.error("Error from gate. Error \n${response.error}")
@@ -177,33 +170,18 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
         }
     }
 
-    private suspend fun executePredictRequest(request: ClientRequestProto, timeout: Duration): ClientResponseProto? {
-        val end = now() + timeout
-
-        var response: ClientResponseProto? = null
-
-        while (now() < end) {
-            val result = runCatching {
-                stub.process(request)
-            }
-            if (result.isSuccess) {
-                response = result.getOrThrow()
-                break
-            }
-            result.onFailure {
-                processResultFailure(it)
-            }
-            delay(1000)
-        }
-        return response
+    private suspend fun executePredictRequest(request: ClientRequestProto) = try {
+        stub.process(request)
+    } catch (t: Throwable) {
+        processResultFailure(t)
     }
 
-    private fun processResultFailure(exception: Throwable) = when {
-        exception is StatusRuntimeException
-                && exception.status.code == UNAVAILABLE -> connect()
+    private fun processResultFailure(exception: Throwable): Nothing = when (exception) {
+        is TimeoutCancellationException ->
+            throw MlpClientException("timeout", exception.message ?: "$exception", emptyMap())
 
-        exception is StatusRuntimeException ->
-            throw MlpClientException(exception.status.code.name, exception.message ?: "$exception", emptyMap())
+        is StatusRuntimeException, is StatusException ->
+            throw exception
 
         else ->
             throw MlpClientException("wrong-response", exception.message ?: "$exception", emptyMap())
@@ -222,19 +200,99 @@ class MlpClientSDK(private val config: MlpClientConfig = loadClientConfig()) : W
         }
     }
 
-    private fun predictRequestProto(
-        payload: Payload,
-        configPayload: Payload?
-    ) = PredictRequestProto.newBuilder().apply {
-        data = PayloadProto.newBuilder()
-            .setDataType(payload.dataType)
-            .setJson(payload.data)
-            .build()
-        configPayload?.let {
-            config = PayloadProto.newBuilder()
-                .setDataType(configPayload.dataType)
-                .setJson(configPayload.data)
-                .build()
+    private fun launchBackoffJob() = backoffCleanerScope.launch {
+        val maxBackoffMs = ofSeconds(config.maxBackoffSeconds)
+        var lastReadyTime = now()
+
+        while (isActive) {
+            delay(1000L)
+
+            if (channel.getState(true) == READY) {
+                lastReadyTime = now()
+                continue
+            }
+
+            if (between(lastReadyTime, now()) > maxBackoffMs) {
+                logger.warn("Channel is not ready for ${config.maxBackoffSeconds} seconds, resetting backoff")
+                channel.resetConnectBackoff()
+            }
         }
-    }.build()
+    }
+
+    private fun buildPredictRequest(
+        account: String,
+        model: String,
+        data: Payload,
+        config: Payload?,
+        timeout: Duration?,
+        authToken: String
+    ): ClientRequestProto {
+        val builder = ClientRequestProto.newBuilder()
+
+        builder
+            .setAccount(account)
+            .setModel(model)
+            .setAuthToken(authToken)
+            .setPredict(
+                PredictRequestProto.newBuilder().apply {
+                    this.data = PayloadProto.newBuilder()
+                        .setDataType(data.dataType)
+                        .setJson(data.data)
+                        .build()
+
+                    config?.let {
+                        this.config = PayloadProto.newBuilder()
+                            .setDataType(config.dataType)
+                            .setJson(config.data)
+                            .build()
+                    }
+                }
+            )
+
+        if (MDC.get("requestId") != null)
+            builder.putHeaders("Z-requestId", MDC.get("requestId"))
+
+        if (timeout != null)
+            builder.timeoutSec = timeout.seconds.toInt()
+
+        return builder.build()
+    }
+
+    private fun buildExtRequest(
+        account: String,
+        model: String,
+        methodName: String,
+        timeout: Duration?,
+        authToken: String,
+        params: Array<out Pair<String, PayloadProto>>
+    ): ClientRequestProto {
+        val builder = ClientRequestProto.newBuilder()
+
+        builder
+            .setAccount(account)
+            .setModel(model)
+            .setAuthToken(authToken)
+            .setExt(
+                ExtendedRequestProto.newBuilder().apply {
+                    this.methodName = methodName
+                    this.putAllParams(params.toMap())
+                }
+            )
+
+        if (MDC.get("requestId") != null)
+            builder.putHeaders("Z-requestId", MDC.get("requestId"))
+
+        if (timeout != null)
+            builder.timeoutSec = timeout.seconds.toInt()
+
+        return builder.build()
+    }
+
+    companion object {
+        private val dispatcher = newDaemonSingleThreadExecutor().asCoroutineDispatcher()
+        private val backoffCleanerScope = CoroutineScope(dispatcher + SupervisorJob())
+
+        private fun newDaemonSingleThreadExecutor() =
+            newSingleThreadExecutor { defaultThreadFactory().newThread(it).apply { isDaemon = true } }
+    }
 }
