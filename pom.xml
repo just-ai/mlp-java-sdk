@@ -29,8 +29,15 @@
 
         <kotlin.version>1.6.10</kotlin.version>
         <grpc.kotlin.version>1.2.0</grpc.kotlin.version>
-        <grpc.version>1.43.2</grpc.version>
+
+        <!-- The version is the latest found here: https://search.maven.org/artifact/io.grpc/grpc-protobuf -->
+        <!-- IMPORTANT: currently we support max 1.39.0 -->
+        <grpc.version>1.53.0</grpc.version>
+
+        <!-- the version is the latest found here: https://search.maven.org/search?q=a:protobuf-kotlin -->
+        <!-- IMPORTANT: currently we support max 3.18.1 -->
         <protobuf.version>3.19.3</protobuf.version>
+
         <slf4j.version>1.7.25</slf4j.version>
     </properties>
 
