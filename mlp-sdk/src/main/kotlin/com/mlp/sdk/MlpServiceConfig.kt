@@ -15,6 +15,7 @@ class MlpServiceConfig(
     val shutdownConfig: ActionShutdownConfig = ActionShutdownConfig(),
     val grpcConnectTimeoutMs: Long = GRPC_CONNECT_TIMEOUT_MS,
     val grpcSecure: Boolean = GRPC_SECURE,
+    val clientApiAuthToken: String? = null,
 ) {
     companion object {
         const val DEFAULT_THREAD_POOL_SIZE: Int = 10
@@ -45,6 +46,7 @@ fun loadActionConfig(configPath: String? = null): MlpServiceConfig {
         ),
         grpcConnectTimeoutMs = props["MLP_GRPC_CONNECT_TIMEOUT_MS"]?.toLong()
             ?: GRPC_CONNECT_TIMEOUT_MS,
-        grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE
+        grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE,
+        clientApiAuthToken = props["MLP_CLIENT_TOKEN"]
     )
 }
