@@ -100,6 +100,7 @@ class MlpRestClient(
         clientToken: String = System.getenv("MLP_CLIENT_TOKEN")
 ) {
     val ACCOUNT_ID = System.getenv("MLP_ACCOUNT_ID")
+    val MODEL_ID = System.getenv("MLP_MODEL_ID")
     val log = LoggerFactory.getLogger("MlpRestClient")
 
     val apiClient: ApiClient

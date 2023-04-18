@@ -13,6 +13,9 @@ class MlpServiceSDK(
     private val config: MlpServiceConfig = loadActionConfig()
 ) : WithLogger, WithState() {
 
+    val ACCOUNT_ID = System.getenv("MLP_ACCOUNT_ID")
+    val MODEL_ID = System.getenv("MLP_MODEL_ID")
+
     private val taskExecutor: TaskExecutor = TaskExecutor(action, config)
 
     fun start() {
