@@ -2,8 +2,11 @@ package com.mlp.sdk
 
 import com.mlp.api.ApiClient
 import com.mlp.api.client.*
+import com.mlp.api.client.model.DatasetInfoWithContentData
+import com.mlp.api.client.model.ModelInfoPK
 import com.mlp.gate.*
 import com.mlp.sdk.utils.JSON
+import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
 
 abstract class MlpServiceBase<F: Any, FC: Any, P: Any, R: Any>(
@@ -96,6 +99,9 @@ class MlpRestClient(
         restUrl: String = System.getenv("MLP_REST_URL"),
         clientToken: String = System.getenv("MLP_CLIENT_TOKEN")
 ) {
+    val ACCOUNT_ID = System.getenv("MLP_ACCOUNT_ID")
+    val log = LoggerFactory.getLogger("MlpRestClient")
+
     val apiClient: ApiClient
 
     val processApi: ProcessEndpointApi
