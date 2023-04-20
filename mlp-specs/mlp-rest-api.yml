@@ -2146,7 +2146,7 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream:
+            application/json:
               schema:
                 type: string
                 format: binary
