@@ -33,22 +33,15 @@
                             <generatorName>java</generatorName>
                             <groupId>${project.groupId}</groupId>
                             <artifactId>mlp-rest-client</artifactId>
-                            <library>resttemplate</library>
                             <artifactVersion>${project.version}</artifactVersion>
                             <output>${project.build.directory}/api-client</output>
-                            <templateDirectory>
-                                ${project.basedir}/src/main/resources/Java/libraries/resttemplate
-                            </templateDirectory>
-                            <typeMappings>
-                                <typeMapping>File=org.springframework.core.io.Resource</typeMapping>
-                            </typeMappings>
+                            <templateDirectory>${project.basedir}/src/main/resources/Java/libraries/resttemplate</templateDirectory>
                             <configOptions>
                                 <java8>true</java8>
                                 <dateLibrary>java8</dateLibrary>
                                 <fullJavaUtil>false</fullJavaUtil>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                 <library>resttemplate</library>
-                                <generateSupportingFiles>true</generateSupportingFiles>
                             </configOptions>
                             <modelPackage>com.mlp.api.client.model</modelPackage>
                             <apiPackage>com.mlp.api.client</apiPackage>
