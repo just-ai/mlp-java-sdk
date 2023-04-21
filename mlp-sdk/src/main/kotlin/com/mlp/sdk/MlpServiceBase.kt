@@ -2,7 +2,6 @@ package com.mlp.sdk
 
 import com.mlp.api.ApiClient
 import com.mlp.api.client.*
-import com.mlp.api.client.model.DatasetInfoWithContentData
 import com.mlp.api.client.model.ModelInfoPK
 import com.mlp.gate.*
 import com.mlp.sdk.utils.JSON
