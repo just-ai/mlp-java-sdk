@@ -13,7 +13,7 @@
     <artifactId>mlp-client-generator</artifactId>
 
     <properties>
-        <openapi-generator-maven.version>5.4.0</openapi-generator-maven.version>
+        <openapi-generator-maven.version>6.5.0</openapi-generator-maven.version>
     </properties>
 
     <build>
