@@ -4,10 +4,9 @@ import io.minio.MinioClient
 
 object StorageFactory {
 
-    fun getStorage(): Storage {
-        val storageType = System.getenv("MLP_STORAGE_TYPE")
-        return when (storageType) {
-            S3Storage.STORAGE_NAME -> getS3Service()
+    fun getStorage(bucketName: String = getPlatformBucket()): Storage {
+        return when (val storageType = System.getenv("MLP_STORAGE_TYPE")) {
+            S3Storage.STORAGE_NAME -> getS3Service(bucketName)
             LocalStorage.STORAGE_NAME -> getLocalStorage()
             else -> throw RuntimeException("Could not create storage for type: $storageType")
         }
@@ -15,9 +14,9 @@ object StorageFactory {
 
     fun getDefaultStorageDir(): String? = System.getenv("MLP_STORAGE_DIR")
 
-    private fun getS3Service() = S3Storage(
+    private fun getS3Service(bucketName: String) = S3Storage(
         minioClient = createMinioClient(),
-        bucketName = getPlatformBucket()
+        bucketName = bucketName
     )
 
     private fun getLocalStorage() = LocalStorage()

@@ -10,7 +10,7 @@ import java.lang.System.currentTimeMillis
 
 class MlpServiceSDK(
     action: MlpService,
-    private val config: MlpServiceConfig = loadActionConfig()
+    val config: MlpServiceConfig = loadActionConfig()
 ) : WithLogger, WithState() {
 
     val ACCOUNT_ID = System.getenv("MLP_ACCOUNT_ID")
