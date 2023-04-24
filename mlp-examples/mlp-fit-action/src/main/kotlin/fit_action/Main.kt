@@ -14,7 +14,7 @@ data class PredictRequestData(val text: String)
 data class PredictResponseData(val text: String)
 
 fun main() {
-    val initConfig = JSON.parse(System.getenv().get("SERVICE_CONFIG") ?: """{"model":"single"}""", InitConfigData::class.java)
+    val initConfig = JSON.parse(System.getenv().get("SERVICE_CONFIG") ?: """{"fitMode":"single"}""", InitConfigData::class.java)
     val service =
         when (initConfig.mode) {
             Mode.single -> SingleFit()
