@@ -20,7 +20,6 @@ pipeline {
                 script {
                     manager.addShortText(params.BRANCH)
                 }
-
                 updateGitlabCommitStatus name: "build", state: "running"
 
                 git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
