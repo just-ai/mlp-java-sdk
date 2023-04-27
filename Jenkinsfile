@@ -19,6 +19,7 @@ pipeline {
             steps {
                 script {
                     manager.addShortText(params.BRANCH)
+                     echo "${env.gitlabBranch}"
                 }
                 updateGitlabCommitStatus name: "build", state: "running"
 
