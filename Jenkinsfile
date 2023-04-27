@@ -11,7 +11,6 @@ pipeline {
     }
     parameters {
         string(name: "BRANCH", defaultValue: "dev", description: "")
-
         booleanParam(name: "CHECK_SCHEMAS_ONLY", defaultValue: false, description: '')
     }
     stages {
