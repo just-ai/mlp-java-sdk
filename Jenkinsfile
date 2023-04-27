@@ -10,7 +10,7 @@ pipeline {
         label 'caila-dev-cloud-agent'
     }
     parameters {
-        string(name: "BRANCH", defaultValue: "${env.gitlabBranchv != null ? env.gitlabBranch : "dev"}", description: "")
+        string(name: "BRANCH", defaultValue: "${env.gitlabBranch != null ? env.gitlabBranch : "dev"}", description: "")
 
         booleanParam(name: "CHECK_SCHEMAS_ONLY", defaultValue: false, description: '')
     }
