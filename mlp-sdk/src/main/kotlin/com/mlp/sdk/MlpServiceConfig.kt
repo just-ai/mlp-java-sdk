@@ -7,7 +7,7 @@ import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_CONNECT_TIMEOUT_MS
 import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_SECURE
 import com.mlp.sdk.utils.ConfigHelper
 
-class MlpServiceConfig(
+data class MlpServiceConfig(
     val initialGateUrls: List<String>,
     val connectionToken: String,
 

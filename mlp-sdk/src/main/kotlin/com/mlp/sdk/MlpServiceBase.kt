@@ -44,12 +44,13 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, R: Any>(
         targetServiceInfo: ServiceInfoProto,
         dataset: DatasetInfoProto
     ): MlpResponse {
+        @Suppress("UNCHECKED_CAST")
         val data =
             if (fitDataExample is Payload) train as F
             else JSON.parse(train.data, fitDataExample.javaClass)
-        val config = if (config != null) JSON.parse(config.data, fitConfigExample.javaClass) else null
+        val config0 = if (config != null) JSON.parse(config.data, fitConfigExample.javaClass) else null
 
-        fit(data, config, modelDir, previousModelDir, targetServiceInfo, dataset)
+        fit(data, config0, modelDir, previousModelDir, targetServiceInfo, dataset)
 
         return Payload(
             dataType = "text/plain",
