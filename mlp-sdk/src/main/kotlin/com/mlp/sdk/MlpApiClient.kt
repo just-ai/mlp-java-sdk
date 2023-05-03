@@ -9,7 +9,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpInputMessage
 import org.springframework.http.HttpOutputMessage
 import org.springframework.http.MediaType
-import org.springframework.http.client.BufferingClientHttpRequestFactory
 import org.springframework.http.converter.AbstractHttpMessageConverter
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.client.RestTemplate
@@ -17,22 +16,21 @@ import java.io.ByteArrayInputStream
 import java.io.File
 
 class MlpApiClient(
-    apiToken: String,
+    defaultApiToken: String?,
     apiGateUrl: String,
     restTemplate: RestTemplate = getRestTemplate()
 ) : ApiClient(restTemplate), WithLogger {
 
     init {
         basePath = apiGateUrl
-        addDefaultHeader("MLP-API-KEY", apiToken)
+        defaultApiToken?.let { addDefaultHeader("MLP-API-KEY", it) }
     }
 
     companion object {
 
-        fun getInstance(apiToken: String?, apiGateUrl: String?): MlpApiClient {
-            requireNotNull(apiToken) { "Api token is not set. Set it in environment variables, or manually in config" }
+        fun getInstance(defaultApiToken: String?, apiGateUrl: String?): MlpApiClient {
             requireNotNull(apiGateUrl) { "Api url is not set. Set it in environment variables, or manually in config" }
-            return MlpApiClient(apiToken, apiGateUrl)
+            return MlpApiClient(defaultApiToken, apiGateUrl)
         }
 
         private fun getRestTemplate(): RestTemplate {

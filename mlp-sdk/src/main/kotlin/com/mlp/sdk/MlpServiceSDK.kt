@@ -10,7 +10,7 @@ import java.lang.System.currentTimeMillis
 
 class MlpServiceSDK(
     action: MlpService,
-    private val config: MlpServiceConfig = loadActionConfig()
+    val config: MlpServiceConfig = loadActionConfig()
 ) : WithLogger, WithState() {
 
     private val taskExecutor: TaskExecutor = TaskExecutor(action, config)

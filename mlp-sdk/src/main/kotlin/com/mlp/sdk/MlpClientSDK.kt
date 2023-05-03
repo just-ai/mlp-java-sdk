@@ -33,7 +33,7 @@ import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
 
 class MlpClientSDK(
-    private val config: MlpClientConfig = loadClientConfig(),
+    val config: MlpClientConfig = loadClientConfig(),
 ) : WithLogger {
 
     var connectionToken: String?

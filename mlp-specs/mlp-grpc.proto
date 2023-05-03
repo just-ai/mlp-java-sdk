@@ -280,4 +280,3 @@ message ClusterUpdateProto {
 message SimpleTextProto {
   string text = 1;
 }
-
