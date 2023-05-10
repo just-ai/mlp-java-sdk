@@ -52,9 +52,11 @@ class MlpClientSDK(
     }
 
     private fun connect(gateUrl: String) {
-        val channelBuilder = ManagedChannelBuilder.forTarget(gateUrl)
+        val channelBuilder = ManagedChannelBuilder
+            .forTarget(gateUrl)
             .enableRetry()
             .maxRetryAttempts(MAX_VALUE)
+            .maxInboundMessageSize(MAX_VALUE)
 
         if (!config.grpcSecure)
             channelBuilder.usePlaintext()

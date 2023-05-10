@@ -17,13 +17,13 @@ pipeline {
         stage('Prepare') {
             steps {
                 script {
-                    manager.addShortText(params.BRANCH)
+                    manager.addShortText("${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}")
+                    echo "${env.gitlabBranch}"
                 }
-
                 updateGitlabCommitStatus name: "build", state: "running"
 
                 git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
-                        branch: "${params.BRANCH}",
+                        branch: "${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}",
                         credentialsId: 'bitbucket_key'
             }
         }
@@ -51,7 +51,7 @@ pipeline {
             }
             steps {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
-                    sh """mvn versions:set -DnewVersion=${params.BRANCH}-SNAPSHOT"""
+                    sh """mvn versions:set -DnewVersion=${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
                 }
             }

@@ -184,7 +184,9 @@ class Connector(
             logger.debug("Connector $id: opening grpc channel to $targetUrl ...")
             state.starting()
 
-            val channelBuilder = ManagedChannelBuilder.forTarget(targetUrl)
+            val channelBuilder = ManagedChannelBuilder
+                .forTarget(targetUrl)
+                .maxInboundMessageSize(Int.MAX_VALUE)
             if (!config.grpcSecure) {
                 channelBuilder.usePlaintext()
             }
