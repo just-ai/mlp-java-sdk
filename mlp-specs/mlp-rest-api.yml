@@ -418,6 +418,11 @@ paths:
         required: false
         schema:
           type: string
+      - name: withFavorites
+        in: query
+        required: false
+        schema:
+          type: boolean
       - name: page
         in: query
         required: false
@@ -1971,7 +1976,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: name
+      - name: datasetName
         in: query
         required: true
         schema:
@@ -2927,6 +2932,11 @@ paths:
         required: false
         schema:
           type: string
+      - name: withFavorites
+        in: query
+        required: false
+        schema:
+          type: boolean
       - name: page
         in: query
         required: false
