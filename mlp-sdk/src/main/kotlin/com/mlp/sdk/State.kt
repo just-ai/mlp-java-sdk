@@ -45,6 +45,9 @@ class State(private val component: Any, startCondition: Condition = NOT_STARTED)
     }
 
     fun shuttingDown() {
+        if (condition == SHUT_DOWN || condition == SHUTTING_DOWN) {
+            return
+        }
         val expectedStates = listOf(NOT_STARTED, STARTING, ACTIVE)
         check(condition in expectedStates) {
             "Can't start shutting down $component because it's in illegal state $condition (expected: $expectedStates)"

@@ -40,11 +40,11 @@ class MlpClientSDK(
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub
 
-    val apiClient by lazy { MlpApiClient.getInstance(config.connectionToken, config.clientApiGateUrl) }
+    val apiClient by lazy { MlpApiClient.getInstance(config.clientToken, config.clientApiGateUrl) }
 
     init {
         val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
-        connectionToken = config.connectionToken
+        connectionToken = config.clientToken
         logger.debug("Starting mlp client for url $gateUrl")
         connect(gateUrl)
 
@@ -164,11 +164,11 @@ class MlpClientSDK(
 
             response.hasError() -> {
                 logger.error("Error from gate. Error \n${response.error}")
-                throw MlpClientException(response.error.code, response.error.message, response.error.argsMap)
+                throw MlpClientException(response.error.code, response.error.message, response.error.argsMap, response.headersMap["Z-requestId"])
             }
 
             else ->
-                throw MlpClientException("wrong-response", "Wrong response type: $response", emptyMap())
+                throw MlpClientException("wrong-response", "Wrong response type: $response", emptyMap(), response.headersMap["Z-requestId"])
         }
     }
 
@@ -180,13 +180,13 @@ class MlpClientSDK(
 
     private fun processResultFailure(exception: Throwable): Nothing = when (exception) {
         is TimeoutCancellationException ->
-            throw MlpClientException("timeout", exception.message ?: "$exception", emptyMap())
+            throw MlpClientException("timeout", exception.message ?: "$exception", emptyMap(), MDC.get("requestId"))
 
         is StatusRuntimeException, is StatusException ->
             throw exception
 
         else ->
-            throw MlpClientException("wrong-response", exception.message ?: "$exception", emptyMap())
+            throw MlpClientException("wrong-response", exception.message ?: "$exception", emptyMap(), MDC.get("requestId"))
     }
 
     fun shutdown() {

@@ -7,8 +7,6 @@ import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
 
 abstract class MlpService {
 
-    lateinit var pipelineClient: PipelineClient
-
     open fun getDescriptor(): ServiceDescriptorProto {
         throw NotImplementedError()
     }

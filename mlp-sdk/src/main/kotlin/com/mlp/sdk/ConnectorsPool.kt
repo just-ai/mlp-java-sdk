@@ -17,12 +17,11 @@ import java.time.Instant.now
 class ConnectorsPool(
     val token: String,
     private val executor: TaskExecutor,
-    private val pipelineClient: PipelineClient,
     private val config: MlpServiceConfig
 ) : WithLogger, WithState(ACTIVE) {
 
     private var connectors = config.initialGateUrls.map {
-        Connector(it, this, executor, pipelineClient, config)
+        Connector(it, this, executor, config)
     }.associateBy { it.id }
 
     init {
@@ -95,7 +94,7 @@ class ConnectorsPool(
             connectorsToShutdown = connectors.filterValues { it.targetUrl !in urls }.values
 
             connectors = urls.map { url ->
-                connectorsMap[url] ?: Connector(url, this, executor, pipelineClient, config)
+                connectorsMap[url] ?: Connector(url, this, executor, config)
             }.associateBy { it.id }
 
             logger.info("$this: ... connectors are updated")
