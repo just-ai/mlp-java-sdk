@@ -576,6 +576,73 @@ paths:
       responses:
         "200":
           description: OK
+  /api/mlpgate/account/{account}/model/{model}/tariff:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getModelTariffDetails
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelTariffDetailsData'
+    post:
+      tags:
+      - model-endpoint
+      operationId: updateModelTariffDetails
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelTariffDetailsData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelTariffDetailsData'
   /api/mlpgate/account/{account}/model/{model}/simple-doc:
     get:
       tags:
@@ -4506,12 +4573,10 @@ components:
         timeWaitMs:
           type: integer
           format: int64
-        maxLengthToSkip:
-          type: integer
-          format: int64
     ModelDump:
       required:
       - asPublicSettingsData
+      - asTariffDetailsData
       - docs
       - fitConfigs
       - image
@@ -4608,6 +4673,22 @@ components:
           format: int32
         hidden:
           type: boolean
+        isTariffEnabled:
+          type: boolean
+        tariffUnit:
+          type: string
+          enum:
+          - CALLS
+          - BYTES
+          - CUSTOM
+        tokensPerUnit:
+          type: number
+          format: double
+        freeUnitQuota:
+          type: integer
+          format: int32
+        asTariffDetailsData:
+          $ref: '#/components/schemas/ModelTariffDetailsData'
         asPublicSettingsData:
           $ref: '#/components/schemas/ModelPublicSettingsData'
     ModelGroupDump:
@@ -4669,7 +4750,23 @@ components:
           items:
             type: integer
             format: int64
-        maxRetriesPerInstance:
+    ModelTariffDetailsData:
+      required:
+      - isTariffEnabled
+      type: object
+      properties:
+        isTariffEnabled:
+          type: boolean
+        tariffUnit:
+          type: string
+          enum:
+          - CALLS
+          - BYTES
+          - CUSTOM
+        tokensPerUnit:
+          type: number
+          format: double
+        freeUnitQuota:
           type: integer
           format: int32
     ModelTimeoutsData:
@@ -4682,9 +4779,6 @@ components:
           type: integer
           format: int64
         predictTimeoutSec:
-          type: integer
-          format: int64
-        fitTimeoutSec:
           type: integer
           format: int64
     PredictConfigDump:
