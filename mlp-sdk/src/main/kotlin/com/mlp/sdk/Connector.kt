@@ -50,6 +50,14 @@ class Connector(
     val id = lastConnectorId.getAndIncrement()
 
     private val grpcChannel = AtomicReference<GrpcChannel?>(null)
+    private val startServingProto = ServiceToGateProto.newBuilder()
+            .setStartServing(
+                    StartServingProto.newBuilder()
+                            .setConnectionToken(pool.token)
+                            .setServiceDescriptor(executor.action.getDescriptor())
+                            .build()
+            )
+            .build()
     private val keepConnectionJob = launchKeepConnectionJob()
 
     suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto) {
@@ -156,15 +164,6 @@ class Connector(
     }
 
     override fun toString() = "Connector(id='$id', url='$targetUrl')"
-
-    private val startServingProto = ServiceToGateProto.newBuilder()
-        .setStartServing(
-            StartServingProto.newBuilder()
-                .setConnectionToken(pool.token)
-                .setServiceDescriptor(executor.action.getDescriptor())
-                .build()
-        )
-        .build()
 
     companion object {
         private val lastConnectorId = AtomicLong()
