@@ -54,14 +54,6 @@ class Connector(
         )
         .build()
     private val grpcChannel = AtomicReference<GrpcChannel?>(null)
-    private val startServingProto = ServiceToGateProto.newBuilder()
-            .setStartServing(
-                    StartServingProto.newBuilder()
-                            .setConnectionToken(pool.token)
-                            .setServiceDescriptor(executor.action.getDescriptor())
-                            .build()
-            )
-            .build()
     private val keepConnectionJob = launchKeepConnectionJob()
 
     suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto) {
