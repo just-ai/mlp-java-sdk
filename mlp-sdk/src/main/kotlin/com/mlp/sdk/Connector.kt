@@ -266,7 +266,9 @@ class Connector(
             state.shuttingDown()
             logger.info("$this: RECEIVED completed")
 
-            executor.cancelAll(id)
+            runBlocking {
+                executor.gracefulShutdownAll(id)
+            }
             gracefulShutdownManagedChannel()
         }
 
