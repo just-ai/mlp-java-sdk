@@ -394,6 +394,7 @@ class Connector(
 
         private fun processHeartbeat(heartBeat: HeartBeatProto) {
             lastServerHeartbeat.set(now())
+            logger.info("11111")
 
             if (heartbeatInterval.get() == null)
                 heartbeatInterval.set(ofMillis(heartBeat.interval.toLong()))
