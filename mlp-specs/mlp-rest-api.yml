@@ -576,73 +576,6 @@ paths:
       responses:
         "200":
           description: OK
-  /api/mlpgate/account/{account}/model/{model}/tariff:
-    get:
-      tags:
-      - model-endpoint
-      operationId: getModelTariffDetails
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: model
-        in: path
-        description: Model id or model name
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModelTariffDetailsData'
-    post:
-      tags:
-      - model-endpoint
-      operationId: updateModelTariffDetails
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: model
-        in: path
-        description: Model id or model name
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ModelTariffDetailsData'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModelTariffDetailsData'
   /api/mlpgate/account/{account}/model/{model}/simple-doc:
     get:
       tags:
@@ -1660,6 +1593,73 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInfoData'
+  /api/mlpgate/account/{account}/model/{model}/billing:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getModelBillingSettings
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelBillingSettingsData'
+    post:
+      tags:
+      - model-endpoint
+      operationId: updateModelBillingSettings
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelBillingSettingsData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelBillingSettingsData'
   /api/mlpgate/account/{account}/model-group:
     get:
       tags:
@@ -2035,7 +2035,7 @@ paths:
     post:
       tags:
       - dataset-endpoint
-      operationId: createDataset
+      operationId: deprecatedCreateDataset
       parameters:
       - name: account
         in: path
@@ -2043,30 +2043,6 @@ paths:
         required: true
         schema:
           type: string
-      - name: datasetName
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: description
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: dataType
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: accessMode
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - private
-          - public
-          - restricted
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -2075,13 +2051,10 @@ paths:
           type: string
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
+              $ref: '#/components/schemas/DeprecatedDatasetInfoWithContentData'
+        required: true
       responses:
         "200":
           description: OK
@@ -2089,6 +2062,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DatasetInfoData'
+      deprecated: true
   /api/mlpgate/account/{account}/dataset/{datasetId}:
     get:
       tags:
@@ -2120,6 +2094,70 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DatasetInfoData'
+    post:
+      tags:
+      - dataset-endpoint
+      operationId: deprecatedUpdateDataset
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: datasetId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeprecatedDatasetInfoWithContentData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetInfoData'
+      deprecated: true
+    delete:
+      tags:
+      - dataset-endpoint
+      operationId: deleteDataset
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: datasetId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /api/mlpgate/account/{account}/dataset/{datasetId}/raw:
     post:
       tags:
       - dataset-endpoint
@@ -2156,32 +2194,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DatasetInfoData'
-    delete:
-      tags:
-      - dataset-endpoint
-      operationId: deleteDataset
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: datasetId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
   /api/mlpgate/account/{account}/dataset/{datasetId}/paraphrase:
     post:
       tags:
@@ -2279,6 +2291,64 @@ paths:
             schema:
               required:
               - file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetInfoData'
+  /api/mlpgate/account/{account}/dataset/raw:
+    post:
+      tags:
+      - dataset-endpoint
+      operationId: createDataset
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: datasetName
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: description
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: dataType
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: accessMode
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - private
+          - public
+          - restricted
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
               type: object
               properties:
                 file:
@@ -4464,26 +4534,26 @@ components:
     AccountDataDump:
       type: object
       properties:
-        images:
-          type: array
-          items:
-            $ref: '#/components/schemas/ImageDump'
-        models:
-          type: array
-          items:
-            $ref: '#/components/schemas/ModelDump'
         apiTokens:
           type: array
           items:
             type: string
-        dataImages:
-          type: array
-          items:
-            $ref: '#/components/schemas/DataImageDump'
         modelGroups:
           type: array
           items:
             $ref: '#/components/schemas/ModelGroupDump'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImageDump'
+        dataImages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataImageDump'
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelDump'
     DataImageDump:
       required:
       - dataPath
@@ -4573,10 +4643,32 @@ components:
         timeWaitMs:
           type: integer
           format: int64
+        maxLengthToSkip:
+          type: integer
+          format: int64
+    ModelBillingSettingsData:
+      required:
+      - isBillingEnabled
+      type: object
+      properties:
+        isBillingEnabled:
+          type: boolean
+        billingUnit:
+          type: string
+          enum:
+          - calls
+          - bytes
+          - custom
+        billingUnitPriceInNanoToken:
+          type: integer
+          format: int64
+        freeUnitQuota:
+          type: integer
+          format: int32
     ModelDump:
       required:
+      - asBillingSettingsData
       - asPublicSettingsData
-      - asTariffDetailsData
       - docs
       - fitConfigs
       - image
@@ -4673,37 +4765,29 @@ components:
           format: int32
         hidden:
           type: boolean
-        isTariffEnabled:
+        isBillingEnabled:
           type: boolean
-        tariffUnit:
+        billingUnit:
           type: string
           enum:
-          - CALLS
-          - BYTES
-          - CUSTOM
-        tokensPerUnit:
-          type: number
-          format: double
+          - calls
+          - bytes
+          - custom
+        billingUnitPriceInNanoToken:
+          type: integer
+          format: int64
         freeUnitQuota:
           type: integer
           format: int32
-        asTariffDetailsData:
-          $ref: '#/components/schemas/ModelTariffDetailsData'
+        asBillingSettingsData:
+          $ref: '#/components/schemas/ModelBillingSettingsData'
         asPublicSettingsData:
           $ref: '#/components/schemas/ModelPublicSettingsData'
     ModelGroupDump:
       required:
-      - accountId
-      - groupId
       - name
       type: object
       properties:
-        accountId:
-          type: integer
-          format: int64
-        groupId:
-          type: integer
-          format: int64
         name:
           type: string
     ModelLimitsData:
@@ -4750,23 +4834,7 @@ components:
           items:
             type: integer
             format: int64
-    ModelTariffDetailsData:
-      required:
-      - isTariffEnabled
-      type: object
-      properties:
-        isTariffEnabled:
-          type: boolean
-        tariffUnit:
-          type: string
-          enum:
-          - CALLS
-          - BYTES
-          - CUSTOM
-        tokensPerUnit:
-          type: number
-          format: double
-        freeUnitQuota:
+        maxRetriesPerInstance:
           type: integer
           format: int32
     ModelTimeoutsData:
@@ -4779,6 +4847,9 @@ components:
           type: integer
           format: int64
         predictTimeoutSec:
+          type: integer
+          format: int64
+        fitTimeoutSec:
           type: integer
           format: int64
     PredictConfigDump:
@@ -5138,6 +5209,7 @@ components:
     ModelInfoData:
       required:
       - batchesConfig
+      - billingSettings
       - composite
       - dataImageMounts
       - favorite
@@ -5249,6 +5321,8 @@ components:
           format: int32
         publicSettings:
           $ref: '#/components/schemas/ModelPublicSettingsData'
+        billingSettings:
+          $ref: '#/components/schemas/ModelBillingSettingsData'
         restrictedImageAccess:
           type: boolean
         lastActivity:
@@ -5478,6 +5552,19 @@ components:
         contacts:
           type: string
         comment:
+          type: string
+    DeprecatedDatasetInfoWithContentData:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        dataType:
+          type: string
+        content:
           type: string
     CreateOrUpdateDatasetInfoData:
       required:
