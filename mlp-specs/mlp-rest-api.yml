@@ -1593,6 +1593,73 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInfoData'
+  /api/mlpgate/account/{account}/model/{model}/billing:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getModelBillingSettings
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelBillingSettingsData'
+    post:
+      tags:
+      - model-endpoint
+      operationId: updateModelBillingSettings
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelBillingSettingsData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelBillingSettingsData'
   /api/mlpgate/account/{account}/model-group:
     get:
       tags:
@@ -4579,8 +4646,28 @@ components:
         maxLengthToSkip:
           type: integer
           format: int64
+    ModelBillingSettingsData:
+      required:
+      - isBillingEnabled
+      type: object
+      properties:
+        isBillingEnabled:
+          type: boolean
+        billingUnit:
+          type: string
+          enum:
+          - calls
+          - bytes
+          - custom
+        billingUnitPriceInNanoToken:
+          type: integer
+          format: int64
+        freeUnitQuota:
+          type: integer
+          format: int32
     ModelDump:
       required:
+      - asBillingSettingsData
       - asPublicSettingsData
       - docs
       - fitConfigs
@@ -4678,6 +4765,22 @@ components:
           format: int32
         hidden:
           type: boolean
+        isBillingEnabled:
+          type: boolean
+        billingUnit:
+          type: string
+          enum:
+          - calls
+          - bytes
+          - custom
+        billingUnitPriceInNanoToken:
+          type: integer
+          format: int64
+        freeUnitQuota:
+          type: integer
+          format: int32
+        asBillingSettingsData:
+          $ref: '#/components/schemas/ModelBillingSettingsData'
         asPublicSettingsData:
           $ref: '#/components/schemas/ModelPublicSettingsData'
     ModelGroupDump:
@@ -5106,6 +5209,7 @@ components:
     ModelInfoData:
       required:
       - batchesConfig
+      - billingSettings
       - composite
       - dataImageMounts
       - favorite
@@ -5217,6 +5321,8 @@ components:
           format: int32
         publicSettings:
           $ref: '#/components/schemas/ModelPublicSettingsData'
+        billingSettings:
+          $ref: '#/components/schemas/ModelBillingSettingsData'
         restrictedImageAccess:
           type: boolean
         lastActivity:
