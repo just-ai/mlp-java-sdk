@@ -263,13 +263,13 @@ class Connector(
         }
 
         override fun onCompleted() {
-            state.shuttingDown()
-            logger.info("$this: RECEIVED completed")
-
-            runBlocking {
-                executor.gracefulShutdownAll(id)
-            }
-            gracefulShutdownManagedChannel()
+//            state.shuttingDown()
+//            logger.info("$this: RECEIVED completed")
+//
+//            runBlocking {
+//                executor.gracefulShutdownAll(id)
+//            }
+//            gracefulShutdownManagedChannel()
         }
 
         suspend fun gracefulShutdown() {
