@@ -263,13 +263,19 @@ class Connector(
         }
 
         override fun onCompleted() {
-//            state.shuttingDown()
-//            logger.info("$this: RECEIVED completed")
-//
-//            runBlocking {
-//                executor.gracefulShutdownAll(id)
-//            }
-//            gracefulShutdownManagedChannel()
+            kotlin.runCatching {
+                runBlocking { send(stopServingProto) }
+            }.onFailure {
+                println("EROROR. $it")
+            }
+
+            state.shuttingDown()
+            logger.info("$this: RECEIVED completed")
+
+            runBlocking {
+                executor.gracefulShutdownAll(id)
+            }
+            gracefulShutdownManagedChannel()
         }
 
         suspend fun gracefulShutdown() {
