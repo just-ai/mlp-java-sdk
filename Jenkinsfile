@@ -22,7 +22,7 @@ pipeline {
                 }
                 updateGitlabCommitStatus name: "build", state: "running"
 
-                git url: "git@gitlab.just-ai.com:mpl-public/mpl-java-sdk.git",
+                git url: "git@gitlab.just-ai.com:mpl-public/mlp-java-sdk.git",
                         branch: "${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}",
                         credentialsId: 'bitbucket_key'
             }
