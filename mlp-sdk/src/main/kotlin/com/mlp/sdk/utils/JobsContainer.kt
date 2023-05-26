@@ -3,28 +3,23 @@ package com.mlp.sdk.utils
 import com.mlp.sdk.MlpServiceConfig
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 class JobsContainer(
     private val config: MlpServiceConfig,
 ) : WithLogger {
 
-    private val container = ConcurrentHashMap<Long, ConnectorContainer>()
+    private val containers = ConcurrentHashMap<Long, ConnectorContainer>()
 
     fun put(connectorId: Long, requestId: Long, job: Job): Boolean {
-        val connectorContainer = container.computeIfAbsent(connectorId) {
+        val connectorContainer = containers.computeIfAbsent(connectorId) {
             ConnectorContainer(ConcurrentHashMap<Long, Job>())
         }
 
-        val isShuttingDownConnector = container[connectorId]
-            ?.let {
-                shutdownMutex.holdsLock(it)
-            } == true
-        return if (!isShuttingDownConnector) {
+        return if (connectorContainer.ableToProcessNewJobs.get()) {
             connectorContainer.requestJobMap[requestId] = job
             true
         } else {
@@ -32,38 +27,34 @@ class JobsContainer(
         }
     }
 
-    fun cancel(connectorId: Long) {
-        container[connectorId]
-            ?.cancelAll()
-    }
-
-    fun cancelAll() {
-        container.forEach {
-            it.value.cancelAll()
-        }
-    }
-
     fun remove(connectorId: Long, requestId: Long) {
-        container[connectorId]
+        containers[connectorId]
             ?.requestJobMap
             ?.remove(requestId)
     }
 
-    suspend fun gracefulShutdownByConnector(connectorId: Long) {
-        val shutdownConfig = config.shutdownConfig
-        delay(shutdownConfig.actionConnectorRequestDelayMs)
-        val owner = container[connectorId]
-        shutdownMutex.withLock(owner) {
-            cancel(connectorId, shutdownConfig.actionConnectorMs - shutdownConfig.actionConnectorRequestDelayMs)
+    fun cancel(connectorId: Long) {
+        containers[connectorId]
+            ?.disableNewOnes()
+            ?.cancelAll()
+    }
+
+    fun cancelAll() {
+        containers.forEach {
+            it.value.disableNewOnes().cancelAll()
         }
     }
 
-    private suspend fun cancel(connectorId: Long, delayMs: Long) {
-        val endInstance = now() + ofMillis(delayMs)
-        while (now() < endInstance) {
-            val allJobsComplete = container[connectorId]
-                ?.requestJobMap
-                .isNullOrEmpty()
+    suspend fun gracefulShutdownByConnector(connectorId: Long) {
+        val container = containers[connectorId] ?: return
+
+        container.disableNewOnes()
+
+        val deadline = now() + ofMillis(config.shutdownConfig.actionConnectorMs)
+        while (now() < deadline) {
+            val allJobsComplete = container
+                .requestJobMap
+                .isEmpty()
             if (allJobsComplete) {
                 logger.info("$this: graceful shutdown all tasks of connector $connectorId")
                 return
@@ -71,21 +62,19 @@ class JobsContainer(
             delay(100)
         }
 
-        container[connectorId]
-            ?.cancelAll()
+        container
+            .cancelAll()
     }
+
+    private fun ConnectorContainer.disableNewOnes() = this
+        .also { it.ableToProcessNewJobs.set(false) }
 
     private fun ConnectorContainer.cancelAll() = requestJobMap
         .values
-        .forEach {
-            it.cancel()
-        }
-
-    companion object {
-        private val shutdownMutex = Mutex()
-    }
+        .forEach(Job::cancel)
 }
 
 data class ConnectorContainer(
-    val requestJobMap: ConcurrentHashMap<Long, Job>
+    val requestJobMap: ConcurrentHashMap<Long, Job>,
+    val ableToProcessNewJobs: AtomicBoolean = AtomicBoolean(true)
 )

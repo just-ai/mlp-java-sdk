@@ -53,7 +53,7 @@ class ConnectorsPool(
 
             runBlocking {
                 connectors.values.forEach {
-                    launch { it.gracefulShutdown() }
+                    launch { it.initGracefulShutdown() }
                 }
             }
 
@@ -103,7 +103,7 @@ class ConnectorsPool(
         runBlocking {
             logger.info("$this: shutting down old connectors ...")
             connectorsToShutdown.forEach {
-                launch { it.gracefulShutdown() }
+                launch { it.initGracefulShutdown() }
             }
         }
 

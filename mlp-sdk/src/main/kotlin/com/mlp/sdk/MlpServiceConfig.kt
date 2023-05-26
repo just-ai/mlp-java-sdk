@@ -20,6 +20,7 @@ data class MlpServiceConfig(
     companion object {
         const val DEFAULT_THREAD_POOL_SIZE: Int = 10
         const val GRACEFUL_SHUTDOWN_CONNECTOR_MS: Long = 20000
+        @Deprecated("Delete after 26 July")
         const val GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS: Long = 3000
         const val GRPC_CONNECT_TIMEOUT_MS: Long = 10000
         const val GRPC_SECURE: Boolean = true
@@ -28,6 +29,7 @@ data class MlpServiceConfig(
 
 data class ActionShutdownConfig(
     val actionConnectorMs: Long = GRACEFUL_SHUTDOWN_CONNECTOR_MS,
+    @Deprecated("Delete after 26 July")
     val actionConnectorRequestDelayMs: Long = GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
 )
 

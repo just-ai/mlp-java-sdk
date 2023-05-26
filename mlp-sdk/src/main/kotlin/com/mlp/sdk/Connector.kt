@@ -12,6 +12,7 @@ import com.mlp.gate.GateToServiceProto.BodyCase.EXT
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
+import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.StartServingProto
@@ -21,6 +22,7 @@ import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.WithLogger
 import io.grpc.*
 import io.grpc.stub.StreamObserver
+import kotlin.math.log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -34,6 +36,7 @@ import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.Condition
 
 class Connector(
     @Volatile
@@ -63,7 +66,7 @@ class Connector(
             ?.send(grpcResponse)
     }
 
-    suspend fun gracefulShutdown() {
+    suspend fun initGracefulShutdown() {
         if (state.isShutdownTypeState()) {
             return
         }
@@ -74,7 +77,7 @@ class Connector(
         runCatching { runBlocking { keepConnectionJob.cancelAndJoin() } }
             .onFailure { logger.error("$this: error while keep connection job cancelling", it) }
 
-        grpcChannel.get()?.gracefulShutdown()
+        grpcChannel.get()?.initGracefulShutdown()
 
         state.shutdown()
         logger.debug("$this: ... has been successfully shutdown")
@@ -244,6 +247,7 @@ class Connector(
                 EXT -> executor.ext(request.ext, request.requestId, id)
                 BATCH -> executor.batch(request.batch, request.requestId, id)
                 ERROR -> logger.error("Connector $id: error ${request.error.message}")
+                STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $id: body case is null")
                 else -> logger.debug("Could not find request bodyCase with type ${request.bodyCase}")
@@ -266,16 +270,22 @@ class Connector(
             state.shuttingDown()
             logger.info("$this: RECEIVED completed")
 
-            runBlocking {
-                executor.gracefulShutdownAll(id)
-            }
+            executor.cancelAll(id)
             gracefulShutdownManagedChannel()
         }
 
-        suspend fun gracefulShutdown() {
-            if (state.isShutdownTypeState()) {
-                return
+        private fun processStopServing() {
+            logger.info("$this: receive graceful shutdown from gate ...")
+            state.shuttingDown()
+
+            clusterDispatcher.launch {
+                gracefulShutdown()
             }
+        }
+
+        suspend fun initGracefulShutdown() {
+            if (state.isShutdownTypeState())
+                return
 
             logger.debug("$this: graceful shutting down grpc channel ...")
             state.shuttingDown()
@@ -285,9 +295,17 @@ class Connector(
                 return gracefulShutdownManagedChannel()
             }
 
-            runCatching { send(stopServingProto) }
-                .onFailure { logger.error("$this: can't send stop serving", it) }
+            runCatching {
+                send(stopServingProto)
+                logger.debug("$this: sent stopServing to gate, waiting for stopServing from gate ...")
+            }.onFailure {
+                logger.error("$this: can't send stop serving, continue shutdown ...", it)
+                gracefulShutdown()
+                return
+            }
+        }
 
+        private suspend fun gracefulShutdown() {
             executor.gracefulShutdownAll(id)
 
             logger.debug("$this: completing stream to $targetUrl ...")
@@ -313,11 +331,11 @@ class Connector(
             runCatching { send(stopServingProto) }
                 .onFailure { logger.error("$this: can't send stop serving", it) }
 
-            executor.cancelAll(id)
-
             logger.debug("$this: completing stream to $targetUrl ...")
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
                 .onFailure { logger.error("$this: can't complete stream", it) }
+
+            executor.cancelAll(id)
 
             shutdownNowManagedChannel()
         }
