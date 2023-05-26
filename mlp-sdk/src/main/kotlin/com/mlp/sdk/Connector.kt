@@ -263,12 +263,6 @@ class Connector(
         }
 
         override fun onCompleted() {
-            kotlin.runCatching {
-                runBlocking { send(stopServingProto) }
-            }.onFailure {
-                println("EROROR. $it")
-            }
-
             state.shuttingDown()
             logger.info("$this: RECEIVED completed")
 
@@ -394,7 +388,6 @@ class Connector(
 
         private fun processHeartbeat(heartBeat: HeartBeatProto) {
             lastServerHeartbeat.set(now())
-            logger.info("11111")
 
             if (heartbeatInterval.get() == null)
                 heartbeatInterval.set(ofMillis(heartBeat.interval.toLong()))
