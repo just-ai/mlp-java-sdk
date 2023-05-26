@@ -183,8 +183,12 @@ internal val Payload.asProto
 private val PayloadProto.asPayload: Payload
     get() = Payload(dataType, json)
 
-private fun Builder.setPredict(prediction: Payload) =
+private fun Builder.setPredict(prediction: Payload) {
+    if (prediction.billingUnits != null) {
+        putHeaders("Z-custom-billing", prediction.billingUnits.toString())
+    }
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
+}
 
 private fun Builder.setFit() =
     setFit(FitResponseProto.newBuilder())
