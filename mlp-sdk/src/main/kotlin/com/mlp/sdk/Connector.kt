@@ -22,7 +22,6 @@ import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.WithLogger
 import io.grpc.*
 import io.grpc.stub.StreamObserver
-import kotlin.math.log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,7 +35,6 @@ import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.locks.Condition
 
 class Connector(
     @Volatile
@@ -66,7 +64,7 @@ class Connector(
             ?.send(grpcResponse)
     }
 
-    suspend fun initGracefulShutdown() {
+    suspend fun gracefulShutdown() {
         if (state.isShutdownTypeState()) {
             return
         }
@@ -77,7 +75,7 @@ class Connector(
         runCatching { runBlocking { keepConnectionJob.cancelAndJoin() } }
             .onFailure { logger.error("$this: error while keep connection job cancelling", it) }
 
-        grpcChannel.get()?.initGracefulShutdown()
+        grpcChannel.get()?.gracefulShutdown()
 
         state.shutdown()
         logger.debug("$this: ... has been successfully shutdown")
@@ -279,11 +277,11 @@ class Connector(
             state.shuttingDown()
 
             clusterDispatcher.launch {
-                gracefulShutdown()
+                gracefulShutdownPrivate()
             }
         }
 
-        suspend fun initGracefulShutdown() {
+        suspend fun gracefulShutdown() {
             if (state.isShutdownTypeState())
                 return
 
@@ -298,14 +296,19 @@ class Connector(
             runCatching {
                 send(stopServingProto)
                 logger.debug("$this: sent stopServing to gate, waiting for stopServing from gate ...")
-            }.onFailure {
-                logger.error("$this: can't send stop serving, continue shutdown ...", it)
-                gracefulShutdown()
-                return
-            }
+
+                withTimeout(config.shutdownConfig.actionConnectorMs) {
+                    while(!state.shutdown) {
+                        delay(100)
+                    }
+                }
+            }.onFailure { logger.error("$this: can't send stop serving, continue shutdown ...", it) }
+
+            if (!state.shutdown)
+                shutdownNow()
         }
 
-        private suspend fun gracefulShutdown() {
+        private suspend fun gracefulShutdownPrivate() {
             executor.gracefulShutdownAll(id)
 
             logger.debug("$this: completing stream to $targetUrl ...")
