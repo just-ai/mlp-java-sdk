@@ -12,6 +12,9 @@ fi
 if [ $BRANCH == 'stable' ]; then
   SERVER=https://mlp.stable.caila-x-sls.test-ai.net
 fi
+if [ $BRANCH == 'release' ]; then
+  SERVER=https://mlp.stable.caila-x-sls.test-ai.net
+fi
 
 if [ -z $SERVER ]; then
   echo 221 $SERVER
