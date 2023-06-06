@@ -22,6 +22,7 @@ import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.WithLogger
 import io.grpc.*
 import io.grpc.stub.StreamObserver
+import kotlin.math.min
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -114,19 +115,27 @@ class Connector(
         logger.debug("${this@Connector}: keep connection job is started ...")
 
         var lastActiveTime = now()
+        var progressiveDelay = 100L
         runCatching {
             while (isActive) {
                 if (grpcChannel.isShutdownStateOrNull()) {
-                    lastActiveTime = tryConnectOrShutdown(lastActiveTime)
+                    val connected = tryConnectOrShutdown()
+                    if (connected) {
+                        progressiveDelay = 100L
+                        lastActiveTime = now()
+                    } else {
+                        progressiveDelay = min(progressiveDelay * 2, 5_000L)
+                    }
                 }
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
+                    progressiveDelay = 100L
                 }
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
                     tryGrpcShutdown()
                 }
 
-                delay(100)
+                delay(progressiveDelay)
             }
             logger.debug("${this@Connector}: ... keep connection job is stopped because scope is not active")
         }.onFailure { logger.error("${this@Connector}: error while keep connection job running", it) }
@@ -144,20 +153,18 @@ class Connector(
         }
     }
 
-    private suspend fun tryConnectOrShutdown(
-        lastActiveTime: Instant
-    ): Instant {
+    private suspend fun tryConnectOrShutdown(): Boolean {
         logger.debug("${this@Connector}: creating new grpc channel ...")
         val newGrpcChannel = GrpcChannel()
         runCatching {
             newGrpcChannel.tryConnect()
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
-            return now()
+            return true
         }.onFailure {
             logger.error("${this@Connector}: cannot create new grpc channel", it)
             newGrpcChannel.shutdownNow()
         }
-        return lastActiveTime
+        return false
     }
 
     override fun toString() = "Connector(id='$id', url='$targetUrl')"
