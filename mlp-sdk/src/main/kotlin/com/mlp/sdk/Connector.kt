@@ -188,6 +188,7 @@ class Connector(
             val channelBuilder = ManagedChannelBuilder
                 .forTarget(targetUrl)
                 .maxInboundMessageSize(Int.MAX_VALUE)
+
             if (!config.grpcSecure) {
                 channelBuilder.usePlaintext()
             }
@@ -204,6 +205,7 @@ class Connector(
                 .processAsync(this)
 
             sendStartServingProto()
+            executor.enableNewTasks(id)
         }
 
         suspend fun send(grpcResponse: ServiceToGateProto) {
