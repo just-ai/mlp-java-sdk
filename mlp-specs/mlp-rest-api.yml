@@ -790,6 +790,43 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/mlpgate/account/{account}/model/{model}/predict-with-config-v2:
+    post:
+      tags:
+      - process-endpoint
+      operationId: predictWithConfig_v2
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Predict2RequestData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/mlpgate/account/{account}/model/{model}/predict-config:
     get:
       tags:
@@ -1158,6 +1195,43 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/FitRequestData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusData'
+  /api/mlpgate/account/{account}/model/{model}/fit-v2:
+    post:
+      tags:
+      - process-endpoint
+      operationId: fit_v2
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Fit2RequestData'
         required: true
       responses:
         "200":
@@ -2315,7 +2389,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: datasetName
+      - name: name
         in: query
         required: true
         schema:
@@ -4200,6 +4274,31 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ModelInstance'
+  /api/mlpgate-internal/pg-test/{account}:
+    get:
+      tags:
+      - internal-endpoint
+      operationId: postgresTest
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInfoData'
   /api/mlpgate-internal/notify/{account}/user/{userId}:
     get:
       tags:
@@ -4217,6 +4316,21 @@ paths:
         required: true
         schema:
           type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /api/mlpgate-internal/empty-test:
+    get:
+      tags:
+      - internal-endpoint
+      operationId: postgresTest_1
+      parameters:
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -5357,6 +5471,15 @@ components:
           type: object
         data:
           type: object
+    Predict2RequestData:
+      required:
+      - data
+      type: object
+      properties:
+        config:
+          type: string
+        data:
+          type: string
     ConfigCreateUpdateData:
       required:
       - config
@@ -5440,6 +5563,19 @@ components:
           type: boolean
         errorMessage:
           type: string
+    Fit2RequestData:
+      required:
+      - datasetId
+      type: object
+      properties:
+        config:
+          type: string
+        configId:
+          type: integer
+          format: int64
+        datasetId:
+          type: integer
+          format: int64
     ExternalConnectionInfoData:
       required:
       - connected
@@ -5862,8 +5998,15 @@ components:
     ModelShortStatusData:
       required:
       - instances
+      - state
       type: object
       properties:
+        state:
+          type: string
+          enum:
+          - RUNNING
+          - STARTING
+          - INACTIVE
         instances:
           $ref: '#/components/schemas/InstancesStatusData'
         lastJob:
