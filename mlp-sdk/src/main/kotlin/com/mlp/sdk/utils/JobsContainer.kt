@@ -66,6 +66,11 @@ class JobsContainer(
             .cancelAll()
     }
 
+    fun enableNewOnes(connectorId: Long) {
+        containers[connectorId]
+            ?.ableToProcessNewJobs?.set(true)
+    }
+
     private fun ConnectorContainer.disableNewOnes() = this
         .also { it.ableToProcessNewJobs.set(false) }
 

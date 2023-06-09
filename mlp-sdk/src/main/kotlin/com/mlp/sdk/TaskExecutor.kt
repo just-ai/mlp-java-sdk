@@ -123,6 +123,11 @@ class TaskExecutor(
         }
     }
 
+    fun enableNewTasks(id: Long) {
+        logger.info("$this: enable new requests for connector $id")
+        jobsContainer.enableNewOnes(id)
+    }
+
     fun cancelAll() {
         logger.info("$this: cancel all tasks")
         runCatching { jobsContainer.cancelAll() }
