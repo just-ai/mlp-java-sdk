@@ -1,5 +1,6 @@
 package com.mlp.sdk
 
+import com.google.protobuf.MessageLite
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.WithLogger
@@ -137,9 +138,17 @@ class ConnectorsPool(
 }
 
 internal fun WithLogger.logProto(
-    body: Any,
+    body: MessageLite,
     prompt: String,
 ) {
+    // This size is always smaller than string version
+    val approximateSize = body.serializedSize
+    if (approximateSize > 1000) {
+        logger.debug("$prompt: data length at least $approximateSize")
+        return
+    }
+
+    // Stringify can produce OOM for large bodies
     val minimizedRequest = body.toString()
         .replace("\n", " ")
         .replace("  ", " ")
