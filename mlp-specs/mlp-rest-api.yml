@@ -5666,9 +5666,9 @@ components:
           type: string
           writeOnly: true
         tolerations:
-          type: object
+          type: string
         affinity:
-          type: object
+          type: string
         isDefault:
           type: boolean
     ResourceGroupsData:
