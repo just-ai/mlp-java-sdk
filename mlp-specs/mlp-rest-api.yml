@@ -3547,13 +3547,6 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: stepSeconds
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int64
-          default: 60
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -3766,13 +3759,6 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: stepSeconds
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int64
-          default: 60
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -4071,13 +4057,6 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: stepSeconds
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int64
-          default: 60
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -5793,9 +5772,9 @@ components:
           type: string
           writeOnly: true
         tolerations:
-          type: object
+          type: string
         affinity:
-          type: object
+          type: string
         isDefault:
           type: boolean
     ResourceGroupsData:
