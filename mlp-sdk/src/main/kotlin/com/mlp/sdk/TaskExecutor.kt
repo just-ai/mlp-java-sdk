@@ -189,8 +189,8 @@ private val PayloadProto.asPayload: Payload
     get() = Payload(dataType, json)
 
 private fun Builder.setPredict(prediction: Payload) {
-    if (prediction.billingUnits != null) {
-        putHeaders("Z-custom-billing", prediction.billingUnits.toString())
+    BillingUnitsThreadLocal.getUnits()?.also {
+        putHeaders("Z-custom-billing", it.toString())
     }
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
 }

@@ -2,8 +2,20 @@ package com.mlp.sdk
 
 sealed interface MlpResponse
 
-data class Payload(val dataType: String?, val data: String,
-                   val billingUnits: Long? = null): MlpResponse {
+object BillingUnitsThreadLocal {
+    private val tl = ThreadLocal<Long>()
+    fun clear() {
+        tl.set(null)
+    }
+    fun setUnits(units: Long) {
+        tl.set(units)
+    }
+    fun getUnits(): Long? {
+        return tl.get()
+    }
+}
+
+data class Payload(val dataType: String?, val data: String): MlpResponse {
     constructor(data: String) : this(null, data)
 
     companion object {

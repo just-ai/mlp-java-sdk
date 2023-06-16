@@ -11,6 +11,7 @@
 <!--        <module>mlp-examples/mlp-composit-action</module>-->
         <module>mlp-examples/mlp-client-app</module>
         <module>mlp-examples/mlp-rest-app</module>
+        <module>mlp-examples/chat-gpt-client</module>
     </modules>
 
     <groupId>com.mlp</groupId>

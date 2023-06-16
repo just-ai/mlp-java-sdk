@@ -1,12 +1,8 @@
-package com.mlp.sdk.datatypes.aiproxy;
+package com.mlp.sdk.datatypes.aiproxy
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class LogitBias(
-    val tokenId: String,
-    val bias: Double
-)
 
 data class ChatConfig(
 //    val model: String = "gpt-3.5-turbo",
@@ -14,12 +10,11 @@ data class ChatConfig(
     val temperature: Double? = null,
     val top_p: Double? = null,
     val n: Int? = null,
-    val stream: Boolean? = null,
     val stop: List<String>? = null,
     val max_tokens: Int? = null,
     val presence_penalty: Double? = null,
     val frequency_penalty: Double? = null,
-    val logit_bias: Map<String, LogitBias>? = null,
+    val logit_bias: Map<String, Int>? = null,
     val user: String? = null
 )
 
