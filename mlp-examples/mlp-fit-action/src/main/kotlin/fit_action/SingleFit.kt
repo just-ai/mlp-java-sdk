@@ -7,9 +7,9 @@ import com.mlp.sdk.storage.StorageFactory
 import com.mlp.sdk.utils.JSON
 import org.slf4j.LoggerFactory
 
-class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestData, PredictResponseData>(
+class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestData, Unit, PredictResponseData>(
     FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE,
-    REQUEST_EXAMPLE, RESPONSE_EXAMPLE
+    REQUEST_EXAMPLE, Unit, RESPONSE_EXAMPLE
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val storage = StorageFactory.getStorage()
@@ -44,7 +44,7 @@ class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestDat
         configData = JSON.parse(configDataStr, FitConfigData::class.java)
     }
 
-    override fun predict(request: PredictRequestData): PredictResponseData {
+    override fun predict(request: PredictRequestData, config: Unit?): PredictResponseData {
         val model = modelData
         val config = configData
         if (model == null || config == null) {
