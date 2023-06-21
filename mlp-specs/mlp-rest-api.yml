@@ -3480,6 +3480,13 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: stepSeconds
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+          default: 60
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -3692,6 +3699,13 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: stepSeconds
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+          default: 60
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -3990,6 +4004,13 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: stepSeconds
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+          default: 60
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -6138,6 +6159,7 @@ components:
       required:
       - connectionToken
       - id
+      - isEvictable
       - kubeType
       - lastHeartBeat
       - started
@@ -6177,3 +6199,5 @@ components:
         deleteTimestamp:
           type: string
           format: date-time
+        isEvictable:
+          type: boolean
