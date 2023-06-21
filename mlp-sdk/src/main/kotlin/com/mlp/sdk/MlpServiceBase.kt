@@ -64,7 +64,7 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
     abstract fun fit(data: F, config: FC?, modelDir: String, previousModelDir: String?, targetServiceInfo: ServiceInfoProto,
                      dataset: DatasetInfoProto)
 
-    final override fun predict(req: Payload, conf: Payload?): MlpResponse {
+    override fun predict(req: Payload, conf: Payload?): MlpResponse {
         val request = JSON.parse(req.data, predictRequestExample.javaClass)
 
         val config = if (conf != null && predictConfigExample !is Unit) {
