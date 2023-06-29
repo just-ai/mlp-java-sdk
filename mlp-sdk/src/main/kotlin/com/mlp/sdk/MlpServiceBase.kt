@@ -68,7 +68,7 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
         val request = JSON.parse(req.data, predictRequestExample.javaClass)
 
         val config = if (conf != null && predictConfigExample !is Unit) {
-            JSON.parse(req.data, predictConfigExample.javaClass)
+            JSON.parse(conf.data, predictConfigExample.javaClass)
         } else null
 
         val res = this.predict(request, config)
