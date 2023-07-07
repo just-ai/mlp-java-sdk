@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 
 data class ChatConfig(
-//    val model: String = "gpt-3.5-turbo",
-//    val chatId: String? = null,
+    val model: String = "gpt-3.5-turbo",
     val temperature: Double? = null,
     val top_p: Double? = null,
     val n: Int? = null,
