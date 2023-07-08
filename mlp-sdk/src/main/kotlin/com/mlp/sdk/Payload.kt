@@ -24,3 +24,5 @@ data class Payload(val dataType: String?, val data: String): MlpResponse {
 }
 
 data class MlpResponseException(val exception: Throwable): MlpResponse
+
+class MlpPartialBinaryResponse(): MlpResponse
