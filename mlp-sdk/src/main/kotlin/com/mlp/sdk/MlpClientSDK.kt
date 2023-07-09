@@ -1,6 +1,7 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ClientRequestProto
+import com.mlp.gate.ClientResponseProto
 import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.GateGrpcKt.GateCoroutineStub
 import com.mlp.gate.PayloadProto
@@ -125,7 +126,7 @@ class MlpClientSDK(
         timeout: Duration? = null,
         authToken: String = ensureDefaultToken()
     ) =
-        sendRequest(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
+        sendRequestPayload(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
 
     fun extBlocking(
         account: String,
@@ -151,9 +152,8 @@ class MlpClientSDK(
         "Set authToken in environment variables, or in init method, or directly in predict method"
     }
 
-    private suspend fun sendRequest(request: ClientRequestProto, timeout: Duration?): Payload {
-        val timeoutMs = timeout?.toMillis() ?: config.clientPredictTimeoutMs
-        val response = withTimeout(timeoutMs) { executePredictRequest(request) }
+    private suspend fun sendRequestPayload(request: ClientRequestProto, timeout: Duration? = null): Payload {
+        val response = sendRequest(request, timeout)
 
         return when {
             response.hasPredict() ->
@@ -162,14 +162,20 @@ class MlpClientSDK(
             response.hasExt() ->
                 Payload(response.ext.data.dataType, response.ext.data.json)
 
-            response.hasError() -> {
-                logger.error("Error from gate. Error \n${response.error}")
-                throw MlpClientException(response.error.code, response.error.message, response.error.argsMap, response.headersMap["Z-requestId"])
-            }
-
             else ->
                 throw MlpClientException("wrong-response", "Wrong response type: $response", emptyMap(), response.headersMap["Z-requestId"])
         }
+    }
+
+    suspend fun sendRequest(request: ClientRequestProto, timeout: Duration? = null): ClientResponseProto {
+        val timeoutMs = timeout?.toMillis() ?: config.clientPredictTimeoutMs
+        val response = withTimeout(timeoutMs) { executePredictRequest(request) }
+
+        if (response.hasError())  {
+            logger.error("Error from gate. Error \n${response.error}")
+            throw MlpClientException(response.error.code, response.error.message, response.error.argsMap, response.headersMap["Z-requestId"])
+        }
+        return response
     }
 
     private suspend fun executePredictRequest(request: ClientRequestProto) = try {
