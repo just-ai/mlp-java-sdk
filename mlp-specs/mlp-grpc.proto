@@ -11,8 +11,7 @@ service Gate {
 
   rpc process(ClientRequestProto) returns (ClientResponseProto) {}
 
-//  rpc clientStreamResponse(ClientRequestProto) returns (stream ClientPartialResponseProto) {}
-
+//  rpc processWithResponseStream(ClientRequestProto) returns (stream ClientPartialResponseProto) {}
 }
 
 message ServiceDescriptorProto {
@@ -253,6 +252,8 @@ message ClientResponseProto {
   map<string, string> headers = 1000;
 }
 
+//  Заготовка для реализации поддержки tts-стриминга через наш grpc-протокол
+//
 //message ClientPartialInitProto {
 //  string account = 1; // тут можно передавать либо id либо shortName аккаунта и модели соответственно
 //  string model = 2;   // обработка будет происходить так: если только цифры - значит id, иначе name
