@@ -152,15 +152,15 @@ class MlpClientSDK(
         "Set authToken in environment variables, or in init method, or directly in predict method"
     }
 
-    private suspend fun sendRequestPayload(request: ClientRequestProto, timeout: Duration? = null): ResponsePayload {
+    private suspend fun sendRequestPayload(request: ClientRequestProto, timeout: Duration? = null): RawPayload {
         val response = sendRequest(request, timeout)
 
         return when {
             response.hasPredict() ->
-                ResponsePayload(response.predict.data.dataType, response.predict.data.json, response.headersMap)
+                RawPayload(response.predict.data.dataType, response.predict.data.json, response.headersMap)
 
             response.hasExt() ->
-                ResponsePayload(response.ext.data.dataType, response.ext.data.json, response.headersMap)
+                RawPayload(response.ext.data.dataType, response.ext.data.json, response.headersMap)
 
             else ->
                 throw MlpClientException("wrong-response", "Wrong response type: $response", emptyMap(), response.headersMap["Z-requestId"])
