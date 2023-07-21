@@ -1,12 +1,17 @@
 package com.mlp.sdk.datatypes.aiproxy
 
-import com.fasterxml.jackson.annotation.JsonAlias
-import com.fasterxml.jackson.annotation.JsonProperty
 
+data class AiProxyRequest(
+    val chat: ChatCompletionRequest? = null,
+    val completion: CompletionRequest? = null,
+    val edit: EditRequest? = null,
+    val embedding: EmbeddingRequest? = null,
+    val moderation: ModerationRequest? = null
+)
 
+@Deprecated("Use AiProxyRequest with ChatCompletionRequest")
 data class ChatConfig(
-//    val model: String = "gpt-3.5-turbo",
-//    val chatId: String? = null,
+    val model: String = "gpt-3.5-turbo",
     val temperature: Double? = null,
     val top_p: Double? = null,
     val n: Int? = null,
@@ -18,27 +23,7 @@ data class ChatConfig(
     val user: String? = null
 )
 
-data class ChatMessage(val role: String, val content: String)
 
+@Deprecated("Use AiProxyRequest with ChatCompletionRequest")
 data class ChatRequest(val messages: List<ChatMessage>)
 
-data class Usage(
-    @JsonProperty("prompt_tokens") val promptTokens: Long,
-    @JsonProperty("completion_tokens") val completionTokens: Long,
-    @JsonProperty("total_tokens") val totalTokens: Long
-)
-
-data class ChatCompletionChoice(
-    val index: Int,
-    @JsonAlias("delta") val message: ChatMessage,
-    @JsonProperty("finish_reason") val finishReason: String
-)
-
-data class ChatCompletionResult(
-    val id: String,
-    val `object`: String,
-    val created: Long,
-    val model: String,
-    val choices: List<ChatCompletionChoice>,
-    val usage: Usage
-)

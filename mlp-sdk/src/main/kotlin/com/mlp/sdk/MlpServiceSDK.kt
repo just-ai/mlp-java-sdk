@@ -67,12 +67,8 @@ class MlpServiceSDK(
         state.shutdown()
     }
 
-    internal fun sendToAnyGate(gateProto: ServiceToGateProto) {
-        check(state.active) { "Action is not started" }
-        runBlocking {
-            taskExecutor.connectorsPool
-                .sendToAnyGate(gateProto)
-        }
+    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto) {
+        taskExecutor.connectorsPool.send(connectorId, toGateProto)
     }
 
     private fun setShutdownHook() {
