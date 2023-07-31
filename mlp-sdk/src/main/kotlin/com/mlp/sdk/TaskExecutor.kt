@@ -39,7 +39,10 @@ class TaskExecutor(
             runCatching {
                 when (val responsePayload = action.predict(dataPayload, request.config.asPayload)) {
                     is Payload -> responseBuilder.setPredict(responsePayload)
+                    is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload)
                     is MlpResponseException -> throw responsePayload.exception
+                    is MlpPartialBinaryResponse -> return@launchAndStore
+                    // если partialResponse, то просто ничего не делаем. Респонзы будет отправлять сам сервис.
                 }
             }.onFailure {
                 logger.error("Error while processing predict request", it)
@@ -89,7 +92,9 @@ class TaskExecutor(
             runCatching {
                 when (val responsePayload = action.ext(methodName, params)) {
                     is Payload -> responseBuilder.setExt(responsePayload)
+                    is RawPayload -> responseBuilder.setExt(responsePayload.asPayload)
                     is MlpResponseException -> throw responsePayload.exception
+                    is MlpPartialBinaryResponse -> throw NotImplementedError()
                 }
             }.onFailure {
                 logger.error("Error while processing ext request", it)

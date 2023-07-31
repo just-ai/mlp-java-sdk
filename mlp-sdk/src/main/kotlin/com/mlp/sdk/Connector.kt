@@ -12,6 +12,7 @@ import com.mlp.gate.GateToServiceProto.BodyCase.EXT
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
+import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
 import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
@@ -231,8 +232,11 @@ class Connector(
         override fun onNext(request: GateToServiceProto) {
             val tracker = TimeTracker()
             val requestId = request.headersMap["Z-requestId"] ?: request.requestId.toString()
-            MDC.setContextMap(mapOf("requestId" to requestId))
-
+            MDC.setContextMap(mapOf(
+                "requestId" to requestId,
+                "connectorId" to id.toString(),
+                "gateRequestId" to request.requestId.toString()
+            ))
             try {
                 processRequest(request, tracker)
             } finally {
