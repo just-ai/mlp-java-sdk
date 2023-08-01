@@ -11,7 +11,7 @@ data class CreateTranscriptionRequest(
     @JsonProperty(defaultValue = "whisper-1")
     val model: String = "whisper-1",
 
-    val file: ByteArray,
+    val audioBase64: String,
 
     val prompt: String? = null,
 
@@ -30,7 +30,7 @@ data class CreateTranslationRequest(
     @JsonProperty(defaultValue = "whisper-1")
     val model: String = "whisper-1",
 
-    val file: ByteArray,
+    val audioBase64: String,
 
     val prompt: String? = null,
 
