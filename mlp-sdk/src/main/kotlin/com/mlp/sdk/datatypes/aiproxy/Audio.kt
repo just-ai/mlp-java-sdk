@@ -1,8 +1,6 @@
 package com.mlp.sdk.datatypes.aiproxy
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.springframework.web.multipart.MultipartFile
 import java.time.Duration
 
 
@@ -42,15 +40,15 @@ data class CreateTranslationRequest(
     val temperature: Double? = null
 )
 
-data class AudioSubtitlesResult(
+data class SttResult(
     val text: String,
     val task: String? = null,
     val language: String? = null,
     val duration: Duration? = null,
-    val segments: List<AudioSegment>? = null
+    val segments: List<Segment>? = null
 )
 
-data class AudioSegment(
+data class Segment(
     val id: Long? = null,
     val seek: Long? = null,
     val start: Double? = null,
