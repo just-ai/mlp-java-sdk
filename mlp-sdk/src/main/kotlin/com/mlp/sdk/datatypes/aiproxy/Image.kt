@@ -24,9 +24,9 @@ data class CreateImageRequest(
  * https://platform.openai.com/docs/api-reference/images/create-edit
  */
 data class CreateImageEditRequest(
-    val image: MultipartFile,
+    val image: ByteArray,
 
-    val mask: MultipartFile?,
+    val mask: ByteArray?,
 
     val prompt: String,
 
@@ -44,7 +44,7 @@ data class CreateImageEditRequest(
  * https://platform.openai.com/docs/api-reference/images/create-variation
  */
 data class CreateImageVariationRequest(
-    val image: MultipartFile,
+    val image: ByteArray,
 
     val n: Int? = null,
 
