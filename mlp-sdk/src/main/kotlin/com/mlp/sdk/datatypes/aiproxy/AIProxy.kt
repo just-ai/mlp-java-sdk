@@ -6,7 +6,12 @@ data class AiProxyRequest(
     val completion: CompletionRequest? = null,
     val edit: EditRequest? = null,
     val embedding: EmbeddingRequest? = null,
-    val moderation: ModerationRequest? = null
+    val moderation: ModerationRequest? = null,
+    val audioTranscribe: CreateTranscriptionRequest? = null,
+    val audioTranslate: CreateTranslationRequest? = null,
+    val image: CreateImageRequest? = null,
+    val imageEdit: CreateImageEditRequest? = null,
+    val imageVariation: CreateImageVariationRequest? = null
 )
 
 @Deprecated("Use AiProxyRequest with ChatCompletionRequest")
