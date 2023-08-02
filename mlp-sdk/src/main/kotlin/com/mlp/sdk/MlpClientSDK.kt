@@ -169,7 +169,7 @@ class MlpClientSDK(
 
     suspend fun sendRequest(request: ClientRequestProto, timeout: Duration? = null): ClientResponseProto {
         val timeoutMs = timeout?.toMillis() ?: config.clientPredictTimeoutMs
-        val response = withTimeout(timeoutMs) { executePredictRequest(request) }
+        val response = withTimeout(timeoutMs) { withRetry { executePredictRequest(request) } }
 
         if (response.hasError())  {
             logger.error("Error from gate. Error \n${response.error}")
@@ -182,6 +182,28 @@ class MlpClientSDK(
         stub.process(request)
     } catch (t: Throwable) {
         processResultFailure(t)
+    }
+
+    private suspend fun withRetry(action: suspend () -> ClientResponseProto): ClientResponseProto {
+        val retryConfig = config.clientPredictRetryConfig
+
+        var attempt = 0
+        while (true) {
+            attempt++
+            val response = action()
+
+            val hasRetryableError = response.hasError() && response.error.code in retryConfig.retryableErrorCodes
+            val canRetry = hasRetryableError && attempt < retryConfig.maxAttempts
+
+            if (canRetry) {
+                logger.error("Error from gate, attempt $attempt/${retryConfig.maxAttempts}. Error \n${response.error}")
+
+                delay(retryConfig.backoffMs)
+                continue
+            } else {
+                return response
+            }
+        }
     }
 
     private fun processResultFailure(exception: Throwable): Nothing = when (exception) {
