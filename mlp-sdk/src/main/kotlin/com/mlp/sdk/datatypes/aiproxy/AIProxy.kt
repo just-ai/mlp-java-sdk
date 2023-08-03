@@ -14,6 +14,19 @@ data class AiProxyRequest(
     val imageVariation: CreateImageVariationRequest? = null
 )
 
+data class AiProxyResponse(
+    val chat: ChatCompletionResult? = null,
+    val completion: CompletionResult? = null,
+    val edit: EditResult? = null,
+    val embedding: EmbeddingResult? = null,
+    val moderation: ModerationResult? = null,
+    val audioTranscribe: SttResult? = null,
+    val audioTranslate: SttResult? = null,
+    val image: ImageResult? = null,
+    val imageEdit: ImageResult? = null,
+    val imageVariation: ImageResult? = null
+)
+
 @Deprecated("Use AiProxyRequest with ChatCompletionRequest")
 data class ChatConfig(
     val model: String = "gpt-3.5-turbo",
