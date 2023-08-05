@@ -244,13 +244,13 @@ class MlpClientSDK(
             .setPredict(
                 PredictRequestProto.newBuilder().apply {
                     this.data = PayloadProto.newBuilder()
-                        .setDataType(data.dataType ?: "")
+                        .setDataType(data.dataType)
                         .setJson(data.data)
                         .build()
 
                     config?.let {
                         this.config = PayloadProto.newBuilder()
-                            .setDataType(config.dataType ?: "")
+                            .setDataType(config.dataType)
                             .setJson(config.data)
                             .build()
                     }
