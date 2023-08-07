@@ -235,6 +235,6 @@ private val Throwable.asErrorProto
                 .setCode(PROCESSING_EXCEPTION.code)
                 .setMessage(PROCESSING_EXCEPTION.message)
                 .setStatus(PROCESSING_EXCEPTION.status)
-                .putArgs("message", message)
+                .putArgs("message", message ?: "")
 
     }
