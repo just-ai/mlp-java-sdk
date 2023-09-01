@@ -34,8 +34,8 @@ class MlpClientConfig(
     }
 }
 
-fun loadClientConfig(configPath: String? = null): MlpClientConfig {
-    val props = ConfigHelper.loadProperties(configPath)
+fun loadClientConfig(configPath: String? = null, environment: Environment? = null): MlpClientConfig {
+    val props = ConfigHelper.loadProperties(configPath, environment ?: Environment(emptyMap()))
     return MlpClientConfig(
         initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
         restUrl = props["MLP_REST_URL"]!!,
