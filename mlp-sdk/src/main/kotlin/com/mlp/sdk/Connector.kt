@@ -1,5 +1,6 @@
 package com.mlp.sdk
 
+import com.mlp.gate.ApiErrorProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.ClusterUpdateProto
 import com.mlp.gate.GateGrpc
@@ -257,7 +258,7 @@ class Connector(
                 FIT -> executor.fit(request.fit, request.requestId, id)
                 EXT -> executor.ext(request.ext, request.requestId, id)
                 BATCH -> executor.batch(request.batch, request.requestId, id)
-                ERROR -> logger.error("Connector $id: error ${request.error.message}")
+                ERROR -> processError(request.error)
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $id: body case is null")
@@ -283,6 +284,17 @@ class Connector(
 
             executor.cancelAll(id)
             gracefulShutdownManagedChannel()
+        }
+
+        private fun processError(error: ApiErrorProto) = runBlocking {
+            if (error.code == "mlp.gate.instance_by_token_not_found") {
+                // TODO надо бы как то его гасить насовесем. Либо гасить целиком сдк, а не пул. Ну либо только коннектор удалять, хз
+                pool.shutdownNow()
+                logger.error("Connector $id: Receive instance_by_token_not_found error, so shutdown connectors pool")
+                return@runBlocking
+            }
+
+            logger.error("Connector $id: error ${error.message}")
         }
 
         private fun processStopServing() {
