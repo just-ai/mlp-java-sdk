@@ -122,11 +122,20 @@ abstract class MlpPredictWithConfigServiceBase<P: Any, C: Any, R: Any>(
 }
 
 class MlpRestClient(
-        restUrl: String = System.getenv("MLP_REST_URL"),
-        clientToken: String = System.getenv("MLP_CLIENT_TOKEN")
+    val environment: Environment = Environment(emptyMap())
 ) {
-    val ACCOUNT_ID = System.getenv("MLP_ACCOUNT_ID")
-    val MODEL_ID = System.getenv("MLP_MODEL_ID")
+
+    var restUrl: String? = environment["MLP_REST_URL"]
+    var clientToken: String? = environment["MLP_CLIENT_TOKEN"]
+
+    // TODO переделать. Это просто MVP
+    constructor(restUrl: String? = null, clientToken: String? = null): this(Environment(emptyMap())) {
+        restUrl?.let { this.restUrl = it }
+        clientToken?.let { this.clientToken = it }
+    }
+
+    val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
+    val MODEL_ID = environment["MLP_MODEL_ID"]
     val log = LoggerFactory.getLogger("MlpRestClient")
 
     val apiClient: ApiClient

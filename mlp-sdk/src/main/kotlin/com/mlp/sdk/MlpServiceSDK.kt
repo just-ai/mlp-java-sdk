@@ -1,22 +1,32 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.sdk.storage.StorageFactory
 import com.mlp.sdk.utils.WithLogger
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
+import kotlinx.coroutines.CoroutineDispatcher
+
+class Environment(val overrideEnvs: Map<String, String>) {
+    operator fun get(name: String): String? = overrideEnvs[name] ?: System.getenv(name)
+}
 
 
 class MlpServiceSDK(
     action: MlpService,
-    val config: MlpServiceConfig = loadActionConfig()
+    val config: MlpServiceConfig = loadActionConfig(),
+    val environment: Environment = Environment(emptyMap()),
+    dispatcher: CoroutineDispatcher? = null
 ) : WithLogger, WithState() {
 
-    val ACCOUNT_ID = System.getenv("MLP_ACCOUNT_ID")
-    val MODEL_ID = System.getenv("MLP_MODEL_ID")
+    val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
+    val MODEL_ID = environment["MLP_MODEL_ID"]
 
-    private val taskExecutor: TaskExecutor = TaskExecutor(action, config)
+    private val taskExecutor: TaskExecutor = TaskExecutor(action, config, dispatcher)
+
+    val storageFactory = StorageFactory(environment)
 
     fun start() {
         check(state.notStarted) { "SDK already started" }

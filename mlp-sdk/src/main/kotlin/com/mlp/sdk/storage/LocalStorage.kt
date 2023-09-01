@@ -1,9 +1,12 @@
 package com.mlp.sdk.storage
 
+import com.mlp.sdk.Environment
 import java.io.File
 
-class LocalStorage : Storage {
-    val baseDir = System.getenv("MLP_STORAGE_DIR") ?: "."
+class LocalStorage(
+    val environment: Environment = Environment(emptyMap())
+) : Storage {
+    val baseDir = environment["MLP_STORAGE_DIR"] ?: "."
     override fun saveState(content: String, filePath: String) {
         val f = File(baseDir, filePath)
         f.parentFile.mkdirs()

@@ -1,18 +1,21 @@
 package com.mlp.sdk.storage
 
+import com.mlp.sdk.Environment
 import io.minio.MinioClient
 
-object StorageFactory {
+class StorageFactory(
+    val environment: Environment
+) {
 
     fun getStorage(bucketName: String = getPlatformBucket()): Storage {
-        return when (val storageType = System.getenv("MLP_STORAGE_TYPE")) {
+        return when (val storageType = environment["MLP_STORAGE_TYPE"]) {
             S3Storage.STORAGE_NAME -> getS3Service(bucketName)
             LocalStorage.STORAGE_NAME -> getLocalStorage()
             else -> throw RuntimeException("Could not create storage for type: $storageType")
         }
     }
 
-    fun getDefaultStorageDir(): String? = System.getenv("MLP_STORAGE_DIR")
+    fun getDefaultStorageDir(): String? = environment["MLP_STORAGE_DIR"]
 
     private fun getS3Service(bucketName: String) = S3Storage(
         minioClient = createMinioClient(),
@@ -23,14 +26,14 @@ object StorageFactory {
 
 
     private fun createMinioClient(): MinioClient {
-        val region = System.getenv("MLP_S3_REGION")
+        val region = environment["MLP_S3_REGION"]
         return MinioClient.builder()
-            .endpoint(System.getenv("MLP_S3_ENDPOINT"))
-            .credentials(System.getenv("MLP_S3_ACCESS_KEY"), System.getenv("MLP_S3_SECRET_KEY"))
+            .endpoint(environment["MLP_S3_ENDPOINT"])
+            .credentials(environment["MLP_S3_ACCESS_KEY"], environment["MLP_S3_SECRET_KEY"])
             .region(if (region.isNullOrEmpty()) "ru" else region)
             .build()
     }
 
-    private fun getPlatformBucket(): String = System.getenv("MLP_S3_BUCKET")
+    private fun getPlatformBucket(): String = environment["MLP_S3_BUCKET"] ?: error("") // TODO
 
 }

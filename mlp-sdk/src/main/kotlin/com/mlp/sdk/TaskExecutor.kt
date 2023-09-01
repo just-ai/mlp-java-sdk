@@ -24,11 +24,12 @@ import java.util.concurrent.Executors.newFixedThreadPool
 
 class TaskExecutor(
     val action: MlpService,
-    val config: MlpServiceConfig
+    val config: MlpServiceConfig,
+    dispatcher: CoroutineDispatcher?
 ) : WithLogger, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config)
-    private val scope = CoroutineScope(newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
+    private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
     internal lateinit var connectorsPool: ConnectorsPool
 
     fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, tracker: TimeTracker) {
