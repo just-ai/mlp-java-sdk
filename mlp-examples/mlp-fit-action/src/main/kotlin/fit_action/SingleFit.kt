@@ -12,8 +12,8 @@ class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestDat
     REQUEST_EXAMPLE, Unit, RESPONSE_EXAMPLE
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
-    private val storage = StorageFactory.getStorage()
-    private val predictModelDir = StorageFactory.getDefaultStorageDir()
+    private val storage = StorageFactory(Environment(emptyMap())).getStorage() // TODO
+    private val predictModelDir = StorageFactory(Environment(emptyMap())).getDefaultStorageDir() // TODO
 
     override fun fit(data: FitDatasetData,
                      config: FitConfigData?,

@@ -28,6 +28,11 @@ fun main() {
 
     val mlp = MlpServiceSDK(service)
 
+    when(service) {
+        is FitService -> service.storageFactory = mlp.storageFactory
+        is PredictService -> service.storageFactory = mlp.storageFactory
+    }
+
     mlp.start()
     mlp.blockUntilShutdown()
 }

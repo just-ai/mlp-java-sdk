@@ -7,9 +7,10 @@ import com.mlp.sdk.storage.StorageFactory
 import com.mlp.sdk.utils.JSON
 import org.slf4j.LoggerFactory
 
-class FitService: MlpFitServiceBase<FitDatasetData, FitConfigData>(FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE) {
+class FitService(): MlpFitServiceBase<FitDatasetData, FitConfigData>(FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE) {
     private val log = LoggerFactory.getLogger(this::class.java)
-    private val storage = StorageFactory.getStorage()
+    lateinit var storageFactory: StorageFactory
+    private val storage by lazy { storageFactory.getStorage() }
 
     override fun fit(data: FitDatasetData,
                      config: FitConfigData?,
@@ -35,17 +36,18 @@ class FitService: MlpFitServiceBase<FitDatasetData, FitConfigData>(FIT_DATA_EXAM
 }
 
 class PredictService: MlpPredictServiceBase<PredictRequestData, PredictResponseData>(REQUEST_EXAMPLE, RESPONSE_EXAMPLE) {
+    lateinit var storageFactory: StorageFactory
 
-    private val storage = StorageFactory.getStorage()
-    private val predictModelDir = StorageFactory.getDefaultStorageDir()
+    private val storage by lazy { storageFactory.getStorage() }
+    private val predictModelDir by lazy { storageFactory.getDefaultStorageDir() }
 
-    val modelData: FitDatasetData
-    val configData: FitConfigData
-    init {
+    val modelData: FitDatasetData by lazy {
         val modelDataStr = storage.loadState("$predictModelDir/${FitService.MODEL_FILENAME_DATA}")!!
-        modelData = JSON.parse(modelDataStr, FitDatasetData::class.java)
+        JSON.parse(modelDataStr, FitDatasetData::class.java)
+    }
+    val configData: FitConfigData by lazy {
         val configDataStr = storage.loadState("$predictModelDir/${FitService.MODEL_FILENAME_CONFIG}")!!
-        configData = JSON.parse(configDataStr, FitConfigData::class.java)
+        JSON.parse(configDataStr, FitConfigData::class.java)
     }
 
     override fun predict(request: PredictRequestData): PredictResponseData {
