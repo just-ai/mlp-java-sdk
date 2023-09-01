@@ -25,7 +25,7 @@ import java.util.concurrent.Executors.newFixedThreadPool
 class TaskExecutor(
     val action: MlpService,
     val config: MlpServiceConfig,
-    dispatcher: CoroutineDispatcher?
+    dispatcher: CoroutineDispatcher? = null
 ) : WithLogger, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config)
