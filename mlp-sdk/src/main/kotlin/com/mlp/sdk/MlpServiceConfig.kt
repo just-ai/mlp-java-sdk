@@ -33,8 +33,8 @@ data class ActionShutdownConfig(
     val actionConnectorRequestDelayMs: Long = GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
 )
 
-fun loadActionConfig(configPath: String? = null): MlpServiceConfig {
-    val props = ConfigHelper.loadProperties(configPath)
+fun loadActionConfig(configPath: String? = null, environment: Environment? = null): MlpServiceConfig {
+    val props = ConfigHelper.loadProperties(configPath, environment ?: Environment(emptyMap()))
     return MlpServiceConfig(
         initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
         connectionToken = props["MLP_SERVICE_TOKEN"]!!,
