@@ -23,6 +23,7 @@ data class TtsConfig(
 )
 
 data class TtsResponse(
+    val text: String,
     val audio_base64: String
 )
 
