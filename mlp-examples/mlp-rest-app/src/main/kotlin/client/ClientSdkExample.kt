@@ -15,7 +15,7 @@ fun main() {
     )
 
     val request = VectorizerRequest(texts = listOf("Привет"))
-    val res0 = restClient.processApi.predict("just-ai", "platform-vectorizer-ru-test", JSON.stringify(request), null, null, null)
+    val res0 = restClient.processApi.predict("just-ai", "platform-vectorizer-ru-test", JSON.stringify(request), null, null)
     val res = JSON.parse(res0, VectorizerResponse::class.java)
     println(res)
 }
