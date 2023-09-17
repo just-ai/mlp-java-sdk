@@ -11,20 +11,26 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class ChatCompletionConfig(
     val model: String? = null,
     val temperature: Double? = null,
-    val top_p: Double? = null,
+    @JsonProperty("top_p")
+    val topP: Double? = null,
     val n: Int? = null,
     val stop: List<String>? = null,
-    val max_tokens: Int? = null,
-    val presence_penalty: Double? = null,
-    val frequency_penalty: Double? = null,
-    val logit_bias: Map<String, Int>? = null,
+    @JsonProperty("max_tokens")
+    val maxTokens: Int? = null,
+    @JsonProperty("presence_penalty")
+    val presencePenalty: Double? = null,
+    @JsonProperty("frequency_penalty")
+    val frequencyPenalty: Double? = null,
+    @JsonProperty("logit_bias")
+    val logitBias: Map<String, Int>? = null,
     val user: String? = null,
 
     /**
      * System prompt could be specified in config. It will be placed on the first place in messages array.
      * If messages already has message with role=system then this value will be skipped
      */
-    val system_prompt: String? = null
+    @JsonProperty("system_prompt")
+    val systemPrompt: String? = null
 )
 
 /**
