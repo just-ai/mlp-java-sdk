@@ -17,6 +17,8 @@ data class TtsRequest(
 }
 
 data class TtsConfig(
+    val voice: String? = null,
+    val outputAudioSpec: TtsRequest.AudioFormatOptions? = null,
     val encodeBase64: Boolean = true
 )
 
