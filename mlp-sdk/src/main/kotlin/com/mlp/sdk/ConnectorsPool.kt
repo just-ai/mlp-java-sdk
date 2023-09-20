@@ -14,12 +14,15 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Duration.ofSeconds
 import java.time.Instant.now
+import kotlinx.coroutines.SupervisorJob
 
 class ConnectorsPool(
     val token: String,
     private val executor: TaskExecutor,
     private val config: MlpServiceConfig
 ) : WithLogger, WithState(ACTIVE) {
+
+    private val clusterMutex = Mutex()
 
     private var connectors = config.initialGateUrls.map {
         Connector(it, this, executor, config)
@@ -132,8 +135,7 @@ class ConnectorsPool(
     override fun toString() = "ConnectorsPool"
 
     companion object {
-        val clusterDispatcher = CoroutineScope(Dispatchers.IO)
-        private val clusterMutex = Mutex()
+        val clusterDispatcher = CoroutineScope(Dispatchers.IO + SupervisorJob())
     }
 }
 
