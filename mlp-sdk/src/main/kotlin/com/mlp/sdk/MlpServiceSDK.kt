@@ -45,6 +45,18 @@ class MlpServiceSDK(
         state.awaitShutdown()
     }
 
+    fun shutdownConnectorsPool() = runBlocking {
+        taskExecutor.connectorsPool.gracefulShutdown()
+    }
+
+    fun getConnectorsPoolState() =
+        taskExecutor.connectorsPool.state
+
+    fun awakeConnectorsPool() {
+        taskExecutor.connectorsPool =
+            ConnectorsPool(config.connectionToken, taskExecutor, config)
+    }
+
     fun gracefulShutdown() {
         if (!state.active && !state.starting) {
             return
