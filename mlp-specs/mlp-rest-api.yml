@@ -5330,6 +5330,7 @@ components:
           enum:
           - EXTERNAL
           - INTERNAL
+          - HOSTING_SERVER
         dataImageMounts:
           type: array
           items:
@@ -5378,8 +5379,6 @@ components:
           type: integer
           format: int32
         hidden:
-          type: boolean
-        publicTestingAllowed:
           type: boolean
         isBillingEnabled:
           type: boolean
@@ -5446,8 +5445,6 @@ components:
           type: integer
           format: int32
         hidden:
-          type: boolean
-        publicTestingAllowed:
           type: boolean
     ModelRetriesData:
       required:
@@ -5691,6 +5688,7 @@ components:
           enum:
           - EXTERNAL
           - INTERNAL
+          - HOSTING_SERVER
         persistentVolumes:
           type: array
           items:
@@ -5929,6 +5927,7 @@ components:
           enum:
           - EXTERNAL
           - INTERNAL
+          - HOSTING_SERVER
         persistentVolumes:
           type: array
           items:
