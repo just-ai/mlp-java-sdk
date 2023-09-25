@@ -7,9 +7,11 @@ import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import org.slf4j.ILoggerFactory
 
 class JobsContainer(
     private val config: MlpServiceConfig,
+    override val loggerFactory: ILoggerFactory?,
 ) : WithLogger {
 
     private val containers = ConcurrentHashMap<Long, ConnectorContainer>()

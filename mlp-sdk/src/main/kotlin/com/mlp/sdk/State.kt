@@ -8,12 +8,13 @@ import com.mlp.sdk.State.Condition.SHUT_DOWN
 import com.mlp.sdk.State.Condition.STARTING
 import com.mlp.sdk.utils.WithLogger
 import java.util.concurrent.CountDownLatch
+import org.slf4j.ILoggerFactory
 
-abstract class WithState(condition: Condition = NOT_STARTED) {
-    internal val state by lazy { State(this, condition) }
+abstract class WithState(condition: Condition = NOT_STARTED, loggerFactory: ILoggerFactory?) {
+    internal val state by lazy { State(this, condition, loggerFactory) }
 }
 
-class State(private val component: Any, startCondition: Condition = NOT_STARTED) : WithLogger {
+class State(private val component: Any, startCondition: Condition = NOT_STARTED, override val loggerFactory: ILoggerFactory?) : WithLogger {
 
     private val shutdownLatch = CountDownLatch(1)
 

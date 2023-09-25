@@ -32,9 +32,12 @@ import java.time.Instant.now
 import java.util.concurrent.Executors.defaultThreadFactory
 import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
+import org.slf4j.ILoggerFactory
+import org.slf4j.LoggerFactory
 
 class MlpClientSDK(
     val config: MlpClientConfig = loadClientConfig(),
+    override val loggerFactory: ILoggerFactory? = null
 ) : WithLogger {
 
     var connectionToken: String?

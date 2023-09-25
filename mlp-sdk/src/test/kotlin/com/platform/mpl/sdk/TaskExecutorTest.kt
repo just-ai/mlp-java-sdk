@@ -26,7 +26,7 @@ class TaskExecutorTest {
                 actionConnectorRequestDelayMs = 50
             )
         )
-        val taskExecutor = TaskExecutor(service, config)
+        val taskExecutor = TaskExecutor(service, config, loggerFactory = null)
 
         val connectorId_1 = 1L
         val connectorId_2 = 2L

@@ -32,6 +32,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.11</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.mlp</groupId>
             <artifactId>mlp-rest-client</artifactId>
             <version>${project.version}</version>

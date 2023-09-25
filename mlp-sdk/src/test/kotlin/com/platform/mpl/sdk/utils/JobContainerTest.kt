@@ -22,7 +22,7 @@ class JobContainerTest {
     fun `should cancel job`() = runBlocking {
         val number = AtomicInteger()
 
-        val jobsContainer = JobsContainer(config(100, 100))
+        val jobsContainer = JobsContainer(config(100, 100), null)
 
         jobsContainer.launch(1, 10, coroutineScope.launch { increment(number, 150) })
 
@@ -37,7 +37,7 @@ class JobContainerTest {
     fun `jobs should complete before graceful shutdown finish`() = runBlocking {
         val number = AtomicInteger()
 
-        val jobsContainer = JobsContainer(config(300, 100))
+        val jobsContainer = JobsContainer(config(300, 100), null)
 
         jobsContainer.launch(1, 1, coroutineScope.launch { increment(number) })
         jobsContainer.launch(1, 2, coroutineScope.launch { increment(number) })

@@ -15,17 +15,19 @@ import kotlinx.coroutines.sync.withLock
 import java.time.Duration.ofSeconds
 import java.time.Instant.now
 import kotlinx.coroutines.SupervisorJob
+import org.slf4j.ILoggerFactory
 
 class ConnectorsPool(
     val token: String,
     private val executor: TaskExecutor,
-    private val config: MlpServiceConfig
-) : WithLogger, WithState(ACTIVE) {
+    private val config: MlpServiceConfig,
+    override val loggerFactory: ILoggerFactory?
+) : WithLogger, WithState(ACTIVE, loggerFactory) {
 
     private val clusterMutex = Mutex()
 
     private var connectors = config.initialGateUrls.map {
-        Connector(it, this, executor, config)
+        Connector(it, this, executor, config, loggerFactory)
     }.associateBy { it.id }
 
     init {
@@ -98,7 +100,7 @@ class ConnectorsPool(
             connectorsToShutdown = connectors.filterValues { it.targetUrl !in urls }.values
 
             connectors = urls.map { url ->
-                connectorsMap[url] ?: Connector(url, this, executor, config)
+                connectorsMap[url] ?: Connector(url, this, executor, config, loggerFactory)
             }.associateBy { it.id }
 
             logger.info("$this: ... connectors are updated")

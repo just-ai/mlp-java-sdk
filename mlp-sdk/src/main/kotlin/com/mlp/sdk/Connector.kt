@@ -13,7 +13,6 @@ import com.mlp.gate.GateToServiceProto.BodyCase.EXT
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
-import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
 import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
@@ -33,19 +32,20 @@ import java.io.File
 import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofMillis
-import java.time.Instant
 import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import org.slf4j.ILoggerFactory
 
 class Connector(
     @Volatile
     var targetUrl: String,
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
-    val config: MlpServiceConfig
-) : WithLogger, WithState(ACTIVE) {
+    val config: MlpServiceConfig,
+    override val loggerFactory: ILoggerFactory?
+) : WithLogger, WithState(ACTIVE, loggerFactory) {
 
     val id = lastConnectorId.getAndIncrement()
 
@@ -157,7 +157,7 @@ class Connector(
 
     private suspend fun tryConnectOrShutdown(): Boolean {
         logger.debug("${this@Connector}: creating new grpc channel ...")
-        val newGrpcChannel = GrpcChannel()
+        val newGrpcChannel = GrpcChannel(loggerFactory)
         runCatching {
             newGrpcChannel.tryConnect()
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
@@ -176,7 +176,9 @@ class Connector(
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
     }
 
-    private inner class GrpcChannel : StreamObserver<GateToServiceProto>, WithLogger, WithState() {
+    private inner class GrpcChannel(override val loggerFactory: ILoggerFactory?) : StreamObserver<GateToServiceProto>, WithLogger, WithState(
+        loggerFactory = loggerFactory
+    ) {
 
         private lateinit var managedChannel: ManagedChannel
         private lateinit var stream: StreamObserver<ServiceToGateProto>

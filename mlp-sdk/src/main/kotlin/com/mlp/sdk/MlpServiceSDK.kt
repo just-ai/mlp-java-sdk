@@ -8,6 +8,7 @@ import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
 import kotlinx.coroutines.CoroutineDispatcher
+import org.slf4j.ILoggerFactory
 
 class Environment(val overrideEnvs: Map<String, String>) {
     operator fun get(name: String): String? = overrideEnvs[name] ?: System.getenv(name)
@@ -18,13 +19,19 @@ class MlpServiceSDK(
     action: MlpService,
     val config: MlpServiceConfig = loadActionConfig(),
     val environment: Environment = Environment(emptyMap()),
-    dispatcher: CoroutineDispatcher? = null
-) : WithLogger, WithState() {
+    dispatcher: CoroutineDispatcher? = null,
+    override val loggerFactory: ILoggerFactory? = null
+) : WithLogger, WithState(loggerFactory = loggerFactory) {
 
+    @Deprecated("Use accountId instead")
     val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
+    val accountId = environment["MLP_ACCOUNT_ID"]
+    @Deprecated("Use modelId instead")
     val MODEL_ID = environment["MLP_MODEL_ID"]
+    val modelId = environment["MLP_MODEL_ID"]
+    val instanceId = environment["MLP_INSTANCE_ID"]
 
-    private val taskExecutor: TaskExecutor = TaskExecutor(action, config, dispatcher)
+    private val taskExecutor: TaskExecutor = TaskExecutor(action, config, dispatcher, loggerFactory)
 
     val storageFactory = StorageFactory(environment)
 
@@ -34,7 +41,7 @@ class MlpServiceSDK(
         setShutdownHook()
 
         taskExecutor.connectorsPool =
-            ConnectorsPool(config.connectionToken, taskExecutor, config)
+            ConnectorsPool(config.connectionToken, taskExecutor, config, loggerFactory)
 
         state.active()
         startupProbe()
@@ -54,7 +61,7 @@ class MlpServiceSDK(
 
     fun awakeConnectorsPool() {
         taskExecutor.connectorsPool =
-            ConnectorsPool(config.connectionToken, taskExecutor, config)
+            ConnectorsPool(config.connectionToken, taskExecutor, config, loggerFactory)
     }
 
     fun gracefulShutdown() {

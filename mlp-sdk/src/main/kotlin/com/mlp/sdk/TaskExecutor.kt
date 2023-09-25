@@ -21,14 +21,16 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.slf4j.MDCContext
 import org.slf4j.MDC
 import java.util.concurrent.Executors.newFixedThreadPool
+import org.slf4j.ILoggerFactory
 
 class TaskExecutor(
     val action: MlpService,
     val config: MlpServiceConfig,
-    dispatcher: CoroutineDispatcher? = null
-) : WithLogger, WithState(ACTIVE) {
+    dispatcher: CoroutineDispatcher? = null,
+    override val loggerFactory: ILoggerFactory?
+) : WithLogger, WithState(ACTIVE, loggerFactory) {
 
-    private val jobsContainer = JobsContainer(config)
+    private val jobsContainer = JobsContainer(config, loggerFactory)
     private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
     internal lateinit var connectorsPool: ConnectorsPool
 

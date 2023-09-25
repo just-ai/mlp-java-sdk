@@ -14,11 +14,13 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.RestTemplate
 import java.io.ByteArrayInputStream
 import java.io.File
+import org.slf4j.ILoggerFactory
 
 class MlpApiClient(
     defaultApiToken: String?,
     apiGateUrl: String,
-    restTemplate: RestTemplate = getRestTemplate()
+    restTemplate: RestTemplate = getRestTemplate(),
+    override val loggerFactory: ILoggerFactory? = null
 ) : ApiClient(restTemplate), WithLogger {
 
     init {
