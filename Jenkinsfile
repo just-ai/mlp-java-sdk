@@ -59,7 +59,7 @@ pipeline {
 
         stage('Rebuild MLP Services') {
             steps {
-                build job: "mlp-ai-proxy"
+                build job: "mlp-ai-proxy/dev"
             }
         }
     }
