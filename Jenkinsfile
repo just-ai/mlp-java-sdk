@@ -121,9 +121,9 @@ pipeline {
                     "build mlp-vectorize-service" : {
                         build job: "mlp-vectorize-service-build/${params.BRANCH}"
                     },
-                    "build mlp_task_zoo" : {
-                        build job: "mlp_task_zoo-build/${params.BRANCH}"
-                    },
+//                     "build mlp_task_zoo" : {
+//                         build job: "mlp_task_zoo-build/${params.BRANCH}"
+//                     },
                     "build sd" : {
                         build job: "sd-build/${params.BRANCH}"
                     }
