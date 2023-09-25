@@ -60,7 +60,7 @@ pipeline {
         stage('Rebuild MLP Services') {
             steps {
                 build job: "mlp-ai-proxy", parameters: [
-                     string(name: 'BRANCH', value: "${BRANCH_NAME}"),
+                     string(name: 'BRANCH_NAME', value: "${BRANCH_NAME}"),
                 ]
             }
         }
