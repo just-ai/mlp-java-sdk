@@ -56,6 +56,12 @@ pipeline {
                 }
             }
         }
+
+        stage('Rebuild MLP Services') {
+            steps {
+                build job: "mlp-ai-proxy"
+            }
+        }
     }
     post {
         failure {
