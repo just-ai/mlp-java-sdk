@@ -58,8 +58,22 @@ pipeline {
         }
 
         stage('Rebuild MLP Services') {
-            steps {
-                build job: "mlp-ai-proxy/${params.BRANCH}"
+//             steps {
+//                 build job: "justgpt-build/${params.BRANCH}"
+//                 build job: "mlp-ai-proxy/${params.BRANCH}"
+//             }
+            steps{
+                parallel (
+                    "build justgpt" : {
+                        build job: "justgpt-build/${params.BRANCH}"
+                    },
+                    "build mlp-ai-proxy" : {
+                        build job: "mlp-ai-proxy/${params.BRANCH}"
+                    },
+                    "build mlp-aimyvoice-base-service-build" : {
+                        build job: "mlp-aimyvoice-base-service-build/${params.BRANCH}"
+                    }
+                )
             }
         }
     }
