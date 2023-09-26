@@ -120,9 +120,9 @@ pipeline {
 //                     "build mlp_task_zoo" : {
 //                         build job: "mlp_task_zoo-build/${params.BRANCH}", wait: false
 //                     },
-                    "build sd" : {
-                        build job: "sd-build/${params.BRANCH}", wait: false
-                    }
+//                     "build sd" : {
+//                         build job: "sd-build/${params.BRANCH}", wait: false
+//                     }
                 )
             }
         }
