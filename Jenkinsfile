@@ -56,6 +56,80 @@ pipeline {
                 }
             }
         }
+
+        stage('Rebuild MLP Services') {
+//             steps {
+//                 build job: "justgpt-build/${params.BRANCH}"
+//                 build job: "mlp-ai-proxy/${params.BRANCH}"
+//             }
+            steps{
+                parallel (
+                    "build justgpt" : {
+                        build job: "justgpt-build/${params.BRANCH}"
+                    },
+                    "build mlp-ai-proxy" : {
+                        build job: "mlp-ai-proxy/${params.BRANCH}"
+                    },
+                    "build mlp-aimyvoice-base-service" : {
+                        build job: "mlp-aimyvoice-base-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-aimyvoice-proxy-service" : {
+                        build job: "mlp-aimyvoice-proxy-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-censorship-bot" : {
+                        build job: "mlp-censorship-bot-build/${params.BRANCH}"
+                    },
+                    "build mlp-chat-service" : {
+                        build job: "mlp-chat-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-chit-chat-service" : {
+                        build job: "mlp-chit-chat-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-cloud-dalle-service" : {
+                        build job: "mlp-cloud-dalle-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-cloud-whisper-service" : {
+                        build job: "mlp-cloud-whisper-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-cross-validation-service" : {
+                        build job: "mlp-cross-validation-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-faq-service" : {
+                        build job: "mlp-faq-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-gpt-mock" : {
+                        build job: "mlp-gpt-mock-build/${params.BRANCH}"
+                    },
+                    "build mlp-intents" : {
+                        build job: "mlp-intents-build/${params.BRANCH}"
+                    },
+                    "build mlp-justgpt-facade" : {
+                        build job: "mlp-justgpt-facade-build/${params.BRANCH}"
+                    },
+                    "build mlp-kaldi-asr-service" : {
+                        build job: "mlp-kaldi-asr-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-loadtest-service" : {
+                        build job: "mlp-loadtest-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-service-proxy" : {
+                        build job: "mlp-service-proxy-build/${params.BRANCH}"
+                    },
+                    "build mlp-summary-service" : {
+                        build job: "mlp-summary-service-build/${params.BRANCH}"
+                    },
+                    "build mlp-vectorize-service" : {
+                        build job: "mlp-vectorize-service-build/${params.BRANCH}"
+                    },
+//                     "build mlp_task_zoo" : {
+//                         build job: "mlp_task_zoo-build/${params.BRANCH}"
+//                     },
+                    "build sd" : {
+                        build job: "sd-build/${params.BRANCH}"
+                    }
+                )
+            }
+        }
     }
     post {
         failure {
