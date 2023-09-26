@@ -66,9 +66,6 @@ pipeline {
                     "build mlp-ai-proxy" : {
                         build job: "mlp-ai-proxy/${params.BRANCH}", wait: false
                     },
-                    "build mlp-aimyvoice-base-service" : {
-                        build job: "mlp-aimyvoice-base-service-build/${params.BRANCH}", wait: false
-                    },
                     "build mlp-aimyvoice-proxy-service" : {
                         build job: "mlp-aimyvoice-proxy-service-build/${params.BRANCH}", wait: false
                     },
@@ -117,12 +114,6 @@ pipeline {
                     "build mlp-vectorize-service" : {
                         build job: "mlp-vectorize-service-build/${params.BRANCH}", wait: false
                     },
-//                     "build mlp_task_zoo" : {
-//                         build job: "mlp_task_zoo-build/${params.BRANCH}", wait: false
-//                     },
-//                     "build sd" : {
-//                         build job: "sd-build/${params.BRANCH}", wait: false
-//                     }
                 )
             }
         }
