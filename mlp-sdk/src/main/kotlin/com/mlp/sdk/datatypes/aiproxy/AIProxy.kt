@@ -1,5 +1,8 @@
 package com.mlp.sdk.datatypes.aiproxy
 
+import com.mlp.sdk.datatypes.chatgpt.ChatCompletionRequest
+import com.mlp.sdk.datatypes.chatgpt.ChatCompletionResult
+
 
 data class AiProxyRequest(
     val chat: ChatCompletionRequest? = null,
@@ -26,22 +29,4 @@ data class AiProxyResponse(
     val imageEdit: ImageResult? = null,
     val imageVariation: ImageResult? = null
 )
-
-@Deprecated("Use AiProxyRequest with ChatCompletionRequest")
-data class ChatConfig(
-    val model: String = "gpt-3.5-turbo",
-    val temperature: Double? = null,
-    val top_p: Double? = null,
-    val n: Int? = null,
-    val stop: List<String>? = null,
-    val max_tokens: Int? = null,
-    val presence_penalty: Double? = null,
-    val frequency_penalty: Double? = null,
-    val logit_bias: Map<String, Int>? = null,
-    val user: String? = null
-)
-
-
-@Deprecated("Use AiProxyRequest with ChatCompletionRequest")
-data class ChatRequest(val messages: List<ChatMessage>)
 
