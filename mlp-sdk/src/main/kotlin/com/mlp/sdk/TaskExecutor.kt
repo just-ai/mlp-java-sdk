@@ -23,12 +23,12 @@ import org.slf4j.MDC
 import java.util.concurrent.Executors.newFixedThreadPool
 import org.slf4j.ILoggerFactory
 
-class TaskExecutor(
+class TaskExecutor private constructor (
     val action: MlpService,
     val config: MlpServiceConfig,
-    dispatcher: CoroutineDispatcher? = null,
-    override val loggerFactory: ILoggerFactory?
-) : WithLogger, WithState(ACTIVE, loggerFactory) {
+    dispatcher: CoroutineDispatcher?,
+    override val context: SdkContext
+) : WithSdkContext, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config, loggerFactory)
     private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
@@ -185,6 +185,11 @@ class TaskExecutor(
     }
 
     override fun toString() = "ActionTaskExecutor(action=$action)"
+
+    companion object {
+        fun WithSdkContext.getTaskExecutor(action: MlpService, config: MlpServiceConfig, dispatcher: CoroutineDispatcher?) =
+            TaskExecutor(action, config, dispatcher, context)
+    }
 }
 
 internal val Payload.asProto

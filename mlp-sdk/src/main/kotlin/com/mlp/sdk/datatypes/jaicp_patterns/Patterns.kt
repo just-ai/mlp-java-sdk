@@ -8,6 +8,9 @@ import com.mlp.sdk.MlpClientHelper
 import com.mlp.sdk.MlpClientSDK
 import com.mlp.sdk.MlpException
 import com.mlp.sdk.MlpRestClient
+import com.mlp.sdk.MlpRestClient.Companion.getRestClient
+import com.mlp.sdk.SdkContext
+import com.mlp.sdk.WithSdkContext
 import com.mlp.sdk.utils.JSON
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -43,13 +46,16 @@ data class PatternsResponseData(
  * - MLP_GRPC_HOST
  * - MLP_GRPC_SECURE
  */
-class MlpPatterns(val account: String, val model: String,
-                  val baseAccount: String = "just-ai", val baseModel: String = "mlp-jaicp-patterns"
-): MlpClientHelper {
-    override val log = LoggerFactory.getLogger(this.javaClass)
+class MlpPatterns(
+    val account: String,
+    val model: String,
+    val baseAccount: String = "just-ai",
+    val baseModel: String = "mlp-jaicp-patterns",
+    override val context: SdkContext
+): MlpClientHelper, WithSdkContext {
 
     override val grpcClient = MlpClientSDK()
-    override val restClient = MlpRestClient()
+    override val restClient = getRestClient()
 
     fun prepare(patterns: PatternsFitData) {
         val modelId = ensureDerivedModel(account, model, baseAccount, baseModel)
@@ -62,5 +68,4 @@ class MlpPatterns(val account: String, val model: String,
         val res = grpcClient.predictBlocking(account, model, JSON.stringify(PatternsRequestData(text=text)))
         return JSON.parse(res, PatternsResponseData::class.java)
     }
-
 }

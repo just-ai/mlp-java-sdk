@@ -4,6 +4,7 @@ import org.slf4j.ILoggerFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+@Deprecated("Use WithSdkContext") // TODO проверить что имя не изменилось
 interface WithLogger {
 
     /**

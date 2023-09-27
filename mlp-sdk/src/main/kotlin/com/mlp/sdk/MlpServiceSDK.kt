@@ -1,8 +1,9 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.sdk.ConnectorsPool.Companion.getConnectorsPool
+import com.mlp.sdk.TaskExecutor.Companion.getTaskExecutor
 import com.mlp.sdk.storage.StorageFactory
-import com.mlp.sdk.utils.WithLogger
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.lang.Runtime.getRuntime
@@ -10,28 +11,46 @@ import java.lang.System.currentTimeMillis
 import kotlinx.coroutines.CoroutineDispatcher
 import org.slf4j.ILoggerFactory
 
-class Environment(val overrideEnvs: Map<String, String>) {
+class Environment(val overrideEnvs: Map<String, String> = emptyMap()) {
     operator fun get(name: String): String? = overrideEnvs[name] ?: System.getenv(name)
+    fun getNotNull(name: String) =
+        get(name)
+            ?: error("$name is missing from the environment")
+}
+
+interface WithEnvironment {
+    val environment: Environment
+        get() = Environment(emptyMap())
 }
 
 
 class MlpServiceSDK(
     action: MlpService,
-    val config: MlpServiceConfig = loadActionConfig(),
-    val environment: Environment = Environment(emptyMap()),
-    dispatcher: CoroutineDispatcher? = null,
-    override val loggerFactory: ILoggerFactory? = null
-) : WithLogger, WithState(loggerFactory = loggerFactory) {
+    initConfig: MlpServiceConfig? = null,
+    override val context: SdkContext = SdkContext(),
+
+    dispatcher: CoroutineDispatcher? = null
+) : WithSdkContext, WithState() {
+
+    constructor(
+        actionProvider: (SdkContext) -> MlpService,
+        config: MlpServiceConfig? = null,
+        context: SdkContext = SdkContext(),
+        dispatcher: CoroutineDispatcher? = null
+    ): this(actionProvider(context), config, context, dispatcher)
+
+    val config: MlpServiceConfig = initConfig ?: loadActionConfig(environment = environment)
 
     @Deprecated("Use accountId instead")
     val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
-    val accountId = environment["MLP_ACCOUNT_ID"]
     @Deprecated("Use modelId instead")
     val MODEL_ID = environment["MLP_MODEL_ID"]
+
+    val accountId = environment["MLP_ACCOUNT_ID"]
     val modelId = environment["MLP_MODEL_ID"]
     val instanceId = environment["MLP_INSTANCE_ID"]
 
-    private val taskExecutor: TaskExecutor = TaskExecutor(action, config, dispatcher, loggerFactory)
+    private val taskExecutor: TaskExecutor = getTaskExecutor(action, config, dispatcher)
 
     val storageFactory = StorageFactory(environment)
 
@@ -41,7 +60,7 @@ class MlpServiceSDK(
         setShutdownHook()
 
         taskExecutor.connectorsPool =
-            ConnectorsPool(config.connectionToken, taskExecutor, config, loggerFactory)
+            getConnectorsPool(config.connectionToken, taskExecutor, config)
 
         state.active()
         startupProbe()
@@ -59,9 +78,12 @@ class MlpServiceSDK(
     fun getConnectorsPoolState() =
         taskExecutor.connectorsPool.state
 
-    fun awakeConnectorsPool() {
+    fun startConnectorsPool() {
+        check(state.active) { "Action is not started" }
+        check(taskExecutor.connectorsPool.state.isShutdownTypeState()) { "Connectors pool already started or starting" }
+
         taskExecutor.connectorsPool =
-            ConnectorsPool(config.connectionToken, taskExecutor, config, loggerFactory)
+            getConnectorsPool(config.connectionToken, taskExecutor, config)
     }
 
     fun gracefulShutdown() {

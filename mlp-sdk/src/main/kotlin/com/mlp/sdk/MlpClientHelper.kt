@@ -9,8 +9,11 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 
-interface MlpClientHelper {
+interface MlpClientHelper: WithSdkContext {
+
+    @Deprecated("Use logger instead")
     val log: Logger
+        get() = logger
     val grpcClient: MlpClientSDK
     val restClient: MlpRestClient
 
@@ -26,7 +29,7 @@ interface MlpClientHelper {
         content: String,
         type: String
     ): Long {
-        log.debug("ensureDataset $name")
+        logger.debug("ensureDataset $name")
 
         val accountId = myAccountId.toString()
         val contentFile = createTempFileContent(content)
@@ -64,12 +67,12 @@ interface MlpClientHelper {
 
     fun ensureDerivedModel(myAccountId: String, modelName: String, baseModelAccountId: String, baseModelId: String): ModelInfoPK {
         val existingModel = kotlin.runCatching {
-            log.info("Looking for existing model $myAccountId/$modelName")
+            logger.info("Looking for existing model $myAccountId/$modelName")
             restClient.modelApi.getModelInfo(myAccountId, modelName, null)
         }.getOrNull()
 
         return if (existingModel == null) {
-            log.info("Creating derived model model $myAccountId/$modelName")
+            logger.info("Creating derived model model $myAccountId/$modelName")
             val createdDerivedModel = restClient.modelApi.createDerivedModel(
                 baseModelAccountId,
                 baseModelId,
@@ -77,7 +80,7 @@ interface MlpClientHelper {
                 false,
                 null
             )
-            log.warn("Model was created with an id: ${createdDerivedModel.id.accountId}/${createdDerivedModel.id.modelId}")
+            logger.warn("Model was created with an id: ${createdDerivedModel.id.accountId}/${createdDerivedModel.id.modelId}")
             createdDerivedModel.id
         } else {
             existingModel.id
@@ -91,7 +94,7 @@ interface MlpClientHelper {
         while (!jobStatus.done && (System.currentTimeMillis() - start) < TIMEOUT) {
             jobStatus = restClient.jobApi.jobStatus(jobStatus.accountId.toString(), jobStatus.jobId, null)
         }
-        log.info("fit is done: $jobStatus")
+        logger.info("fit is done: $jobStatus")
 
         if (!jobStatus.done) {
             throw MlpException("Timeout waiting to fit underlying model")

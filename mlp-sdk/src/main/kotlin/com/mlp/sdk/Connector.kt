@@ -38,14 +38,14 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import org.slf4j.ILoggerFactory
 
-class Connector(
+class Connector private constructor (
     @Volatile
     var targetUrl: String,
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
     val config: MlpServiceConfig,
-    override val loggerFactory: ILoggerFactory?
-) : WithLogger, WithState(ACTIVE, loggerFactory) {
+    override val context: SdkContext
+) : WithSdkContext, WithState(ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()
 
@@ -157,7 +157,7 @@ class Connector(
 
     private suspend fun tryConnectOrShutdown(): Boolean {
         logger.debug("${this@Connector}: creating new grpc channel ...")
-        val newGrpcChannel = GrpcChannel(loggerFactory)
+        val newGrpcChannel = GrpcChannel(context)
         runCatching {
             newGrpcChannel.tryConnect()
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
@@ -174,11 +174,14 @@ class Connector(
     companion object {
         private val lastConnectorId = AtomicLong()
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
+
+        fun WithSdkContext.getConnector(targetUrl: String, pool: ConnectorsPool, executor: TaskExecutor, config: MlpServiceConfig) =
+            Connector(targetUrl, pool, executor, config, context)
     }
 
-    private inner class GrpcChannel(override val loggerFactory: ILoggerFactory?) : StreamObserver<GateToServiceProto>, WithLogger, WithState(
-        loggerFactory = loggerFactory
-    ) {
+    private inner class GrpcChannel(
+        override val context: SdkContext
+    ) : StreamObserver<GateToServiceProto>, WithSdkContext, WithState() {
 
         private lateinit var managedChannel: ManagedChannel
         private lateinit var stream: StreamObserver<ServiceToGateProto>

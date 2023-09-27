@@ -2,7 +2,8 @@ package com.mlp.sdk
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mlp.api.ApiClient
-import com.mlp.sdk.utils.WithLogger
+import java.io.ByteArrayInputStream
+import java.io.File
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.http.HttpHeaders
@@ -12,16 +13,12 @@ import org.springframework.http.MediaType
 import org.springframework.http.converter.AbstractHttpMessageConverter
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.client.RestTemplate
-import java.io.ByteArrayInputStream
-import java.io.File
-import org.slf4j.ILoggerFactory
 
 class MlpApiClient(
     defaultApiToken: String?,
     apiGateUrl: String,
     restTemplate: RestTemplate = getRestTemplate(),
-    override val loggerFactory: ILoggerFactory? = null
-) : ApiClient(restTemplate), WithLogger {
+) : ApiClient(restTemplate) {
 
     init {
         basePath = apiGateUrl
@@ -68,7 +65,8 @@ private class FileHttpMessageConverter :
         return destination
     }
 
-    override fun supports(clazz: Class<*>) = File::class.java == clazz
+    override fun supports(clazz: Class<*>) =
+        File::class.java == clazz
 
     override fun writeInternal(file: File, outputMessage: HttpOutputMessage) {
         ByteArrayInputStream(file.readBytes()).use {

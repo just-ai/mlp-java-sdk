@@ -1,6 +1,7 @@
 package com.mlp.sdk.utils
 
 import com.mlp.sdk.Environment
+import com.mlp.sdk.WithEnvironment
 import java.io.File
 import java.io.FileInputStream
 import java.lang.Exception
@@ -9,7 +10,10 @@ import kotlin.collections.HashMap
 
 object ConfigHelper {
 
-    fun loadProperties(configPath: String? = null, environment: Environment = Environment(emptyMap())): Map<String, String> {
+    fun WithEnvironment.loadProperties(configPath: String? = null): Map<String, String> =
+        loadProperties(configPath, environment)
+
+    fun loadProperties(configPath: String? = null, environment: Environment): Map<String, String> {
         val p = HashMap<String, String>()
         p.putAll(loadFromPropsFile("./src/main/conf/default.properties"))
         p.putAll(loadFromPropsFile("./src/main/conf/local.properties"))
@@ -63,5 +67,4 @@ object ConfigHelper {
     private fun loadFromEnv(): Map<String, String> {
         return System.getenv()
     }
-
 }

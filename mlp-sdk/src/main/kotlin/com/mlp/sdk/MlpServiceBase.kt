@@ -7,6 +7,7 @@ import com.mlp.gate.*
 import com.mlp.sdk.utils.JSON
 import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
+import org.slf4j.ILoggerFactory
 
 abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
     val fitDataExample: F,
@@ -121,22 +122,18 @@ abstract class MlpPredictWithConfigServiceBase<P: Any, C: Any, R: Any>(
     }
 }
 
-class MlpRestClient(
-    val environment: Environment = Environment(emptyMap())
-) {
+class MlpRestClient private constructor (
+    val restUrl: String,
+    val clientToken: String,
+    override val context: SdkContext
+): WithSdkContext {
 
-    var restUrl: String? = environment["MLP_REST_URL"]
-    var clientToken: String? = environment["MLP_CLIENT_TOKEN"]
-
-    // TODO переделать. Это просто MVP
-    constructor(restUrl: String? = null, clientToken: String? = null): this(Environment(emptyMap())) {
-        restUrl?.let { this.restUrl = it }
-        clientToken?.let { this.clientToken = it }
-    }
-
+    @Deprecated("Use accountId instead")
     val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
+    @Deprecated("Use modelId instead")
     val MODEL_ID = environment["MLP_MODEL_ID"]
-    val log = LoggerFactory.getLogger("MlpRestClient")
+    val accountId = environment["MLP_ACCOUNT_ID"]
+    val modelId = environment["MLP_MODEL_ID"]
 
     val apiClient: ApiClient
 
@@ -155,5 +152,14 @@ class MlpRestClient(
         modelApi = ModelEndpointApi(apiClient)
         jobApi = JobEndpointApi(apiClient)
         datasetApi = DatasetEndpointApi(apiClient)
+    }
+
+    companion object {
+        fun WithSdkContext.getRestClient(restUrl: String? = null, clientToken: String? = null) =
+            MlpRestClient(
+                restUrl ?: environment.getNotNull("MLP_REST_URL"),
+                clientToken ?: environment.getNotNull("MLP_CLIENT_TOKEN"),
+                context
+            )
     }
 }

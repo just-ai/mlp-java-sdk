@@ -34,6 +34,10 @@ class MlpClientConfig(
     }
 }
 
+fun WithSdkContext.loadClientConfig(configPath: String? = null): MlpClientConfig =
+    loadClientConfig(configPath, environment)
+
+
 fun loadClientConfig(configPath: String? = null, environment: Environment? = null): MlpClientConfig {
     val props = ConfigHelper.loadProperties(configPath, environment ?: Environment(emptyMap()))
     return MlpClientConfig(
