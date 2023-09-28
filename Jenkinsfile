@@ -50,7 +50,7 @@ pipeline {
                 expression { env.NEED_REBUILD == 'true' }
             }
             steps {
-                withMaven(maven: 'Maven 3.5', jdk: '11') {
+                withMaven(maven: 'Maven 3.5', jdk: '17') {
                     sh """mvn versions:set -DnewVersion=${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
                 }
