@@ -20,7 +20,6 @@ import com.mlp.gate.StartServingProto
 import com.mlp.gate.StopServingProto
 import com.mlp.sdk.ConnectorsPool.Companion.clusterDispatcher
 import com.mlp.sdk.State.Condition.ACTIVE
-import com.mlp.sdk.utils.WithLogger
 import io.grpc.*
 import io.grpc.stub.StreamObserver
 import kotlin.math.min
@@ -36,16 +35,15 @@ import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import org.slf4j.ILoggerFactory
 
-class Connector private constructor (
+class Connector(
     @Volatile
     var targetUrl: String,
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
     val config: MlpServiceConfig,
-    override val context: SdkContext
-) : WithSdkContext, WithState(ACTIVE) {
+    override val context: InstanceContext
+) : WithInstanceContext, WithState(ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()
 
@@ -174,14 +172,11 @@ class Connector private constructor (
     companion object {
         private val lastConnectorId = AtomicLong()
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
-
-        fun WithSdkContext.getConnector(targetUrl: String, pool: ConnectorsPool, executor: TaskExecutor, config: MlpServiceConfig) =
-            Connector(targetUrl, pool, executor, config, context)
     }
 
     private inner class GrpcChannel(
-        override val context: SdkContext
-    ) : StreamObserver<GateToServiceProto>, WithSdkContext, WithState() {
+        override val context: InstanceContext
+    ) : StreamObserver<GateToServiceProto>, WithInstanceContext, WithState() {
 
         private lateinit var managedChannel: ManagedChannel
         private lateinit var stream: StreamObserver<ServiceToGateProto>

@@ -1,19 +1,19 @@
 package com.mlp.sdk.utils
 
 import com.mlp.sdk.MlpServiceConfig
-import com.mlp.sdk.WithEnvironment
+import com.mlp.sdk.InstanceContext
+import com.mlp.sdk.WithInstanceContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import org.slf4j.ILoggerFactory
 
 class JobsContainer(
     private val config: MlpServiceConfig,
-    override val loggerFactory: ILoggerFactory?,
-) : WithLogger {
+    override val context: InstanceContext
+) : WithInstanceContext {
 
     private val containers = ConcurrentHashMap<Long, ConnectorContainer>()
 
@@ -65,8 +65,7 @@ class JobsContainer(
             delay(100)
         }
 
-        container
-            .cancelAll()
+        container.cancelAll()
     }
 
     fun enableNewOnes(connectorId: Long) {

@@ -1,7 +1,8 @@
 package com.mlp.sdk.utils
 
 import com.mlp.sdk.Environment
-import com.mlp.sdk.WithEnvironment
+import com.mlp.sdk.InstanceContext
+import com.mlp.sdk.WithInstanceContext
 import java.io.File
 import java.io.FileInputStream
 import java.lang.Exception
@@ -10,8 +11,17 @@ import kotlin.collections.HashMap
 
 object ConfigHelper {
 
-    fun WithEnvironment.loadProperties(configPath: String? = null): Map<String, String> =
-        loadProperties(configPath, environment)
+    /**
+     * Loads properties using a default [InstanceContext].
+     *
+     * @deprecated Use the overloaded function with explicit SdkContext.
+     */
+    @Deprecated(
+        "Use the overloaded function with explicit SdkContext",
+        ReplaceWith("loadProperties(configPath, SdkContext())")
+    )
+    fun loadProperties(configPath: String? = null): Map<String, String> =
+        loadProperties(configPath, Environment())
 
     fun loadProperties(configPath: String? = null, environment: Environment): Map<String, String> {
         val p = HashMap<String, String>()
@@ -37,7 +47,7 @@ object ConfigHelper {
         }
         val pp = HashMap<String, String>()
         p.forEach {
-            pp.put(it.key.toString(), it.value.toString())
+            pp[it.key.toString()] = it.value.toString()
         }
         return pp
     }
@@ -48,7 +58,7 @@ object ConfigHelper {
             p.load(this.javaClass.getResourceAsStream(resource))
             val pp = HashMap<String, String>()
             p.forEach {
-                pp.put(it.key.toString(), it.value.toString())
+                pp[it.key.toString()] = it.value.toString()
             }
             return pp
         } catch (e: Exception) {
@@ -59,7 +69,7 @@ object ConfigHelper {
     private fun loadFromSystemProps(): Map<String, String> {
         val pp = HashMap<String, String>()
         System.getProperties().forEach {
-            pp.put(it.key.toString(), it.value.toString())
+            pp[it.key.toString()] = it.value.toString()
         }
         return pp
     }
@@ -68,3 +78,6 @@ object ConfigHelper {
         return System.getenv()
     }
 }
+
+fun WithInstanceContext.loadProperties(configPath: String? = null): Map<String, String> =
+    ConfigHelper.loadProperties(configPath, context.environment)

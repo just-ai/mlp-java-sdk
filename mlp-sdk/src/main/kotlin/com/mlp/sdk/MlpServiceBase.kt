@@ -2,12 +2,9 @@ package com.mlp.sdk
 
 import com.mlp.api.ApiClient
 import com.mlp.api.client.*
-import com.mlp.api.client.model.ModelInfoPK
 import com.mlp.gate.*
 import com.mlp.sdk.utils.JSON
-import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
-import org.slf4j.ILoggerFactory
 
 abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
     val fitDataExample: F,
@@ -122,16 +119,17 @@ abstract class MlpPredictWithConfigServiceBase<P: Any, C: Any, R: Any>(
     }
 }
 
-class MlpRestClient private constructor (
-    val restUrl: String,
-    val clientToken: String,
-    override val context: SdkContext
-): WithSdkContext {
+class MlpRestClient (
+    restUrl: String? = null,
+    clientToken: String? = null,
+    override val context: InstanceContext
+): WithInstanceContext {
 
     @Deprecated("Use accountId instead")
     val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
     @Deprecated("Use modelId instead")
     val MODEL_ID = environment["MLP_MODEL_ID"]
+
     val accountId = environment["MLP_ACCOUNT_ID"]
     val modelId = environment["MLP_MODEL_ID"]
 
@@ -144,22 +142,13 @@ class MlpRestClient private constructor (
 
     init {
         apiClient = ApiClient().apply {
-            basePath = restUrl
-            addDefaultHeader("MLP-API-KEY", clientToken)
+            basePath = restUrl ?: environment.getOrThrow("MLP_REST_URL")
+            addDefaultHeader("MLP-API-KEY", clientToken ?: environment.getOrThrow("MLP_CLIENT_TOKEN"))
         }
 
         processApi = ProcessEndpointApi(apiClient)
         modelApi = ModelEndpointApi(apiClient)
         jobApi = JobEndpointApi(apiClient)
         datasetApi = DatasetEndpointApi(apiClient)
-    }
-
-    companion object {
-        fun WithSdkContext.getRestClient(restUrl: String? = null, clientToken: String? = null) =
-            MlpRestClient(
-                restUrl ?: environment.getNotNull("MLP_REST_URL"),
-                clientToken ?: environment.getNotNull("MLP_CLIENT_TOKEN"),
-                context
-            )
     }
 }

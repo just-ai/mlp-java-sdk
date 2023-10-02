@@ -9,33 +9,19 @@ import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
 import kotlinx.coroutines.CoroutineDispatcher
-import org.slf4j.ILoggerFactory
-
-class Environment(val overrideEnvs: Map<String, String> = emptyMap()) {
-    operator fun get(name: String): String? = overrideEnvs[name] ?: System.getenv(name)
-    fun getNotNull(name: String) =
-        get(name)
-            ?: error("$name is missing from the environment")
-}
-
-interface WithEnvironment {
-    val environment: Environment
-        get() = Environment(emptyMap())
-}
-
 
 class MlpServiceSDK(
     action: MlpService,
     initConfig: MlpServiceConfig? = null,
-    override val context: SdkContext = SdkContext(),
+    override val context: InstanceContext = InstanceContext(),
 
     dispatcher: CoroutineDispatcher? = null
-) : WithSdkContext, WithState() {
+) : WithInstanceContext, WithState() {
 
     constructor(
-        actionProvider: (SdkContext) -> MlpService,
+        actionProvider: (InstanceContext) -> MlpService,
         config: MlpServiceConfig? = null,
-        context: SdkContext = SdkContext(),
+        context: InstanceContext = InstanceContext(),
         dispatcher: CoroutineDispatcher? = null
     ): this(actionProvider(context), config, context, dispatcher)
 

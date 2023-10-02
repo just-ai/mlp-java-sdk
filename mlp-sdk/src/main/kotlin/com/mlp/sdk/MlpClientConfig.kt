@@ -34,12 +34,18 @@ class MlpClientConfig(
     }
 }
 
-fun WithSdkContext.loadClientConfig(configPath: String? = null): MlpClientConfig =
+fun WithInstanceContext.loadClientConfig(configPath: String? = null): MlpClientConfig =
     loadClientConfig(configPath, environment)
 
+@Deprecated(
+    "Use loadClientConfig with environment instead, or extension with same name",
+    ReplaceWith("loadClientConfig(context, environment)")
+)
+fun loadClientConfig(configPath: String? = null): MlpClientConfig = loadClientConfig(configPath, Environment())
 
-fun loadClientConfig(configPath: String? = null, environment: Environment? = null): MlpClientConfig {
-    val props = ConfigHelper.loadProperties(configPath, environment ?: Environment(emptyMap()))
+
+fun loadClientConfig(configPath: String? = null, environment: Environment): MlpClientConfig {
+    val props = ConfigHelper.loadProperties(configPath, environment)
     return MlpClientConfig(
         initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
         restUrl = props["MLP_REST_URL"]!!,

@@ -4,17 +4,18 @@ import io.minio.GetObjectArgs
 import io.minio.MinioClient
 import io.minio.PutObjectArgs
 import io.minio.errors.ErrorResponseException
-import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
+import org.apache.commons.io.IOUtils.toInputStream
 
 class S3Storage(
     val minioClient: MinioClient,
     val bucketName: String
 ) : Storage {
+
     override fun saveState(content: String, filePath: String) {
-        with(IOUtils.toInputStream(content, Charsets.UTF_8)) {
+        with(toInputStream(content, Charsets.UTF_8)) {
             minioClient.putObject(
                 PutObjectArgs.builder()
                     .bucket(bucketName)
@@ -28,11 +29,11 @@ class S3Storage(
     override fun saveState(content: ByteArray, filePath: String) {
         with(ByteArrayInputStream(content)) {
             minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucketName)
-                            .`object`(filePath)
-                            .stream(this, this.available().toLong(), -1)
-                            .build()
+                PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .`object`(filePath)
+                    .stream(this, this.available().toLong(), -1)
+                    .build()
             )
         }
     }
@@ -40,11 +41,11 @@ class S3Storage(
     override fun saveState(content: File, filePath: String) {
         with(FileInputStream(content)) {
             minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucketName)
-                            .`object`(filePath)
-                            .stream(this, this.available().toLong(), -1)
-                            .build()
+                PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .`object`(filePath)
+                    .stream(this, this.available().toLong(), -1)
+                    .build()
             )
         }
     }
@@ -61,6 +62,7 @@ class S3Storage(
                             .`object`(path)
                             .build()
             ).readAllBytes()
+
             if (modelResponseBytes.isEmpty()) {
                 return null
             }

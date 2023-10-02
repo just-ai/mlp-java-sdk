@@ -9,13 +9,17 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 
-interface MlpClientHelper: WithSdkContext {
+interface MlpClientHelper: WithInstanceContext {
 
     @Deprecated("Use logger instead")
     val log: Logger
         get() = logger
+
     val grpcClient: MlpClientSDK
     val restClient: MlpRestClient
+
+    override val context: InstanceContext
+        get() = InstanceContext()
 
     private fun createTempFileContent(content: String): File =
         File.createTempFile("tempFile", "").apply {

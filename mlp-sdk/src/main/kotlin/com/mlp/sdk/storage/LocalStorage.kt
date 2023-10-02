@@ -1,13 +1,19 @@
 package com.mlp.sdk.storage
 
-import com.mlp.sdk.Environment
-import com.mlp.sdk.WithEnvironment
+import com.mlp.sdk.InstanceContext
+import com.mlp.sdk.WithInstanceContext
 import java.io.File
 import java.io.FileNotFoundException
 
 class LocalStorage(
-    override val environment: Environment
-) : Storage, WithEnvironment {
+    override val context: InstanceContext
+) : Storage, WithInstanceContext {
+
+    /**
+     * @deprecated Use constructor with context instead.
+     */
+    @Deprecated("Use constructor with context instead", ReplaceWith("LocalStorage(context)"))
+    constructor(): this(InstanceContext())
 
     val baseDir = environment["MLP_STORAGE_DIR"] ?: "."
 

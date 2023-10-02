@@ -16,19 +16,17 @@ import com.mlp.gate.PredictResponseProto
 import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
-import com.mlp.sdk.utils.WithLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.slf4j.MDCContext
 import org.slf4j.MDC
 import java.util.concurrent.Executors.newFixedThreadPool
-import org.slf4j.ILoggerFactory
 
 class TaskExecutor private constructor (
     val action: MlpService,
     val config: MlpServiceConfig,
     dispatcher: CoroutineDispatcher?,
-    override val context: SdkContext
-) : WithSdkContext, WithState(ACTIVE) {
+    override val context: InstanceContext
+) : WithInstanceContext, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config, loggerFactory)
     private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
@@ -187,7 +185,7 @@ class TaskExecutor private constructor (
     override fun toString() = "ActionTaskExecutor(action=$action)"
 
     companion object {
-        fun WithSdkContext.getTaskExecutor(action: MlpService, config: MlpServiceConfig, dispatcher: CoroutineDispatcher?) =
+        fun WithInstanceContext.getTaskExecutor(action: MlpService, config: MlpServiceConfig, dispatcher: CoroutineDispatcher?) =
             TaskExecutor(action, config, dispatcher, context)
     }
 }

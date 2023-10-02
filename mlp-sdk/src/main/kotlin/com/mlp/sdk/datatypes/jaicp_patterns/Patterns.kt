@@ -1,22 +1,11 @@
 package com.mlp.sdk.datatypes.jaicp_patterns
 
-import com.mlp.api.client.model.CreateOrUpdateDatasetInfoData
-import com.mlp.api.client.model.FitRequestData
-import com.mlp.api.client.model.JobStatusData
-import com.mlp.api.client.model.ModelInfoPK
 import com.mlp.sdk.MlpClientHelper
 import com.mlp.sdk.MlpClientSDK
-import com.mlp.sdk.MlpException
-import com.mlp.sdk.MlpRestClient
 import com.mlp.sdk.MlpRestClient.Companion.getRestClient
-import com.mlp.sdk.SdkContext
-import com.mlp.sdk.WithSdkContext
+import com.mlp.sdk.InstanceContext
+import com.mlp.sdk.WithInstanceContext
 import com.mlp.sdk.utils.JSON
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 
 data class PatternData(
     val id: String,
@@ -51,8 +40,8 @@ class MlpPatterns(
     val model: String,
     val baseAccount: String = "just-ai",
     val baseModel: String = "mlp-jaicp-patterns",
-    override val context: SdkContext
-): MlpClientHelper, WithSdkContext {
+    override val context: InstanceContext
+): MlpClientHelper, WithInstanceContext {
 
     override val grpcClient = MlpClientSDK()
     override val restClient = getRestClient()

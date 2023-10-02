@@ -1,12 +1,18 @@
 package com.mlp.sdk.storage
 
-import com.mlp.sdk.Environment
-import com.mlp.sdk.WithEnvironment
+import com.mlp.sdk.InstanceContext
+import com.mlp.sdk.WithInstanceContext
 import io.minio.MinioClient
 
 class StorageFactory(
-    override val environment: Environment
-) : WithEnvironment {
+    override val context: InstanceContext
+) : WithInstanceContext {
+
+    /**
+     * @deprecated Use constructor with context instead.
+     */
+    @Deprecated("Use constructor with context instead", ReplaceWith("StorageFactory(context)"))
+    constructor(): this(InstanceContext())
 
     fun getStorage(bucketName: String = getPlatformBucket()): Storage {
         return when (val storageType = environment["MLP_STORAGE_TYPE"]) {
@@ -23,12 +29,12 @@ class StorageFactory(
         bucketName = bucketName
     )
 
-    private fun getLocalStorage() = LocalStorage(environment)
+    private fun getLocalStorage() = LocalStorage(context)
 
     private fun createMinioClient(): MinioClient {
-        val endpoint = environment.getNotNull("MLP_S3_ENDPOINT")
-        val accessKey = environment.getNotNull("MLP_S3_ACCESS_KEY")
-        val secretKey = environment.getNotNull("MLP_S3_SECRET_KEY")
+        val endpoint = environment.getOrThrow("MLP_S3_ENDPOINT")
+        val accessKey = environment.getOrThrow("MLP_S3_ACCESS_KEY")
+        val secretKey = environment.getOrThrow("MLP_S3_SECRET_KEY")
         val region = environment["MLP_S3_REGION"] ?: "ru"
 
         return MinioClient.builder()
@@ -38,6 +44,6 @@ class StorageFactory(
             .build()
     }
 
-    private fun getPlatformBucket(): String = environment.getNotNull("MLP_S3_BUCKET")
+    private fun getPlatformBucket(): String = environment.getOrThrow("MLP_S3_BUCKET")
 }
 
