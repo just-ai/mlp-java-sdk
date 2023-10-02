@@ -1,16 +1,24 @@
 package simple_action
 
-import com.mlp.sdk.*
+import com.mlp.sdk.MlpException
+import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.MlpPredictServiceBase
+import com.mlp.sdk.MlpServiceSDK
+import com.mlp.sdk.WithExecutionContext
 
 data class SimpleTestActionRequest(
     val action: String,
     val name: String
 )
-class SimpleTestAction : MlpPredictServiceBase<SimpleTestActionRequest, String>(REQUEST_EXAMPLE, RESPONSE_EXAMPLE) {
+
+class SimpleTestAction(
+    override val context: MlpExecutionContext
+) : MlpPredictServiceBase<SimpleTestActionRequest, String>(REQUEST_EXAMPLE, RESPONSE_EXAMPLE), WithExecutionContext{
 
     override fun predict(req: SimpleTestActionRequest): String {
         return when (req.action) {
             "hello" -> "Hello ${req.name}!"
+            "envs" -> "Envs: ${context.environment.envsOverride}"
             else -> throw MlpException("actionUnknownException")
         }
     }
@@ -19,12 +27,10 @@ class SimpleTestAction : MlpPredictServiceBase<SimpleTestActionRequest, String>(
         val REQUEST_EXAMPLE = SimpleTestActionRequest("hello", "World")
         val RESPONSE_EXAMPLE = "Hello World!"
     }
-
 }
 
 fun main() {
-    val action = SimpleTestAction()
-    val actionSDK = MlpServiceSDK(action)
+    val actionSDK = MlpServiceSDK({ SimpleTestAction(it) })
 
     actionSDK.start()
     actionSDK.blockUntilShutdown()

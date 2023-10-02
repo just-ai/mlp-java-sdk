@@ -22,7 +22,7 @@ class S3Storage(
     /**
      * @deprecated Use constructor with context instead.
      */
-    @Deprecated("Use constructor with context instead", ReplaceWith("S3Storage(minioClient, bucketName, context)"))
+    @Deprecated("Use constructor with context instead", ReplaceWith("S3Storage(minioClient, bucketName, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
     constructor(minioClient: MinioClient, bucketName: String) :
         this(minioClient, bucketName, MlpExecutionContext())
 

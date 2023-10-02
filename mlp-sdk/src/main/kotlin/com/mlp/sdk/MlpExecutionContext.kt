@@ -14,7 +14,11 @@ import org.slf4j.LoggerFactory.getILoggerFactory
 data class MlpExecutionContext(
     val environment: Environment = Environment(),
     val loggerFactory: ILoggerFactory = getILoggerFactory(),
-)
+) {
+    companion object {
+        val systemContext = MlpExecutionContext()
+    }
+}
 
 class Environment(
     val envsOverride: Map<String, String> = emptyMap()

@@ -1,6 +1,8 @@
 package client
 
 import com.mlp.sdk.MlpClientSDK
+import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.datatypes.aiproxy.AiProxyRequest
 import com.mlp.sdk.datatypes.aiproxy.AiProxyResponse
 import com.mlp.sdk.datatypes.chatgpt.*
@@ -9,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 
 
 fun main() = runBlocking {
-    val clientSDK = MlpClientSDK()
+    val clientSDK = MlpClientSDK(context = systemContext)
 
     val request = AiProxyRequest(
         chat = ChatCompletionRequest(

@@ -37,7 +37,7 @@ class MlpClientSDK(
     override val context: MlpExecutionContext
 ) : WithExecutionContext {
 
-    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpClientSDK(initConfig, context)"))
+    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpClientSDK(initConfig, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
     constructor(initConfig: MlpClientConfig? = null): this(initConfig, MlpExecutionContext())
 
     val config = initConfig ?:  loadClientConfig()

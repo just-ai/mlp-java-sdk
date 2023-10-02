@@ -125,7 +125,7 @@ class MlpRestClient (
     override val context: MlpExecutionContext
 ): WithExecutionContext {
 
-    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpRestClient(restUrl, clientToken, context)"))
+    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpRestClient(restUrl, clientToken, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
     constructor(restUrl: String? = null, clientToken: String? = null) : this(restUrl, clientToken, MlpExecutionContext())
 
     @Deprecated("Use accountId instead")

@@ -7,13 +7,16 @@ import com.mlp.sdk.storage.StorageFactory
 import com.mlp.sdk.utils.JSON
 import org.slf4j.LoggerFactory
 
-class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestData, Unit, PredictResponseData>(
+class SingleFit(
+    override val context: MlpExecutionContext
+): MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestData, Unit, PredictResponseData>(
     FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE,
     REQUEST_EXAMPLE, Unit, RESPONSE_EXAMPLE
-) {
-    private val log = LoggerFactory.getLogger(this::class.java)
-    private val storage = StorageFactory(Environment(emptyMap())).getStorage() // TODO
-    private val predictModelDir = StorageFactory(Environment(emptyMap())).getDefaultStorageDir() // TODO
+), WithExecutionContext {
+
+    private val storageFactory = StorageFactory(context)
+    private val storage = storageFactory.getStorage()
+    private val predictModelDir = storageFactory.getDefaultStorageDir()
 
     override fun fit(data: FitDatasetData,
                      config: FitConfigData?,
@@ -22,11 +25,11 @@ class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestDat
                      targetServiceInfo: ServiceInfoProto,
                      dataset: DatasetInfoProto
     ) {
-        log.warn("Start training ...")
+        logger.warn("Start training ...")
 
         storage.saveState(JSON.stringify(data), "$predictModelDir/$MODEL_FILENAME_DATA")
         storage.saveState(JSON.stringify(config ?:FitConfigData(false)), "$predictModelDir/$MODEL_FILENAME_CONFIG")
-        log.info("state saved")
+        logger.info("state saved")
 
         loadState()
     }
