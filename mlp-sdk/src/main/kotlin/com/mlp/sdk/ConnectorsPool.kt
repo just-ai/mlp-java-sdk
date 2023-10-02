@@ -19,8 +19,8 @@ class ConnectorsPool(
     val token: String,
     private val executor: TaskExecutor,
     private val config: MlpServiceConfig,
-    override val context: InstanceContext
-) : WithInstanceContext, WithState(ACTIVE) {
+    override val context: MlpExecutionContext
+) : WithExecutionContext, WithState(ACTIVE) {
 
     private val clusterMutex = Mutex()
 
@@ -139,7 +139,7 @@ class ConnectorsPool(
     }
 }
 
-internal fun WithInstanceContext.logProto(
+internal fun WithExecutionContext.logProto(
     body: MessageLite,
     prompt: String,
 ) {

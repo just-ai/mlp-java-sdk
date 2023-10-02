@@ -1,7 +1,7 @@
 package com.mlp.sdk.storage
 
-import com.mlp.sdk.InstanceContext
-import com.mlp.sdk.WithInstanceContext
+import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.WithExecutionContext
 import io.minio.GetObjectArgs
 import io.minio.MinioClient
 import io.minio.ObjectWriteResponse
@@ -16,15 +16,15 @@ import org.apache.commons.io.IOUtils.toInputStream
 class S3Storage(
     val minioClient: MinioClient,
     val bucketName: String,
-    override val context: InstanceContext
-) : Storage, WithInstanceContext {
+    override val context: MlpExecutionContext
+) : Storage, WithExecutionContext {
 
     /**
      * @deprecated Use constructor with context instead.
      */
     @Deprecated("Use constructor with context instead", ReplaceWith("S3Storage(minioClient, bucketName, context)"))
     constructor(minioClient: MinioClient, bucketName: String) :
-        this(minioClient, bucketName, InstanceContext())
+        this(minioClient, bucketName, MlpExecutionContext())
 
     override fun saveState(content: String, filePath: String) {
         with(toInputStream(content, Charsets.UTF_8)) {

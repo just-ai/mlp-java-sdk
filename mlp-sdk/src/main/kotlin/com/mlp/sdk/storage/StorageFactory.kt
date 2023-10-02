@@ -1,18 +1,18 @@
 package com.mlp.sdk.storage
 
-import com.mlp.sdk.InstanceContext
-import com.mlp.sdk.WithInstanceContext
+import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.WithExecutionContext
 import io.minio.MinioClient
 
 class StorageFactory(
-    override val context: InstanceContext
-) : WithInstanceContext {
+    override val context: MlpExecutionContext
+) : WithExecutionContext {
 
     /**
      * @deprecated Use constructor with context instead.
      */
     @Deprecated("Use constructor with context instead", ReplaceWith("StorageFactory(context)"))
-    constructor(): this(InstanceContext())
+    constructor(): this(MlpExecutionContext())
 
     fun getStorage(bucketName: String = getPlatformBucket()): Storage {
         return when (val storageType = environment["MLP_STORAGE_TYPE"]) {

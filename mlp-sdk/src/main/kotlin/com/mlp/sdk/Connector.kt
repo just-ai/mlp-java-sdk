@@ -42,8 +42,8 @@ class Connector(
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
     val config: MlpServiceConfig,
-    override val context: InstanceContext
-) : WithInstanceContext, WithState(ACTIVE) {
+    override val context: MlpExecutionContext
+) : WithExecutionContext, WithState(ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()
 
@@ -175,8 +175,8 @@ class Connector(
     }
 
     private inner class GrpcChannel(
-        override val context: InstanceContext
-    ) : StreamObserver<GateToServiceProto>, WithInstanceContext, WithState() {
+        override val context: MlpExecutionContext
+    ) : StreamObserver<GateToServiceProto>, WithExecutionContext, WithState() {
 
         private lateinit var managedChannel: ManagedChannel
         private lateinit var stream: StreamObserver<ServiceToGateProto>

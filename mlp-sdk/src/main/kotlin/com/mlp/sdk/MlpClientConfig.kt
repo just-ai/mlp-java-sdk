@@ -34,7 +34,7 @@ class MlpClientConfig(
     }
 }
 
-fun WithInstanceContext.loadClientConfig(configPath: String? = null): MlpClientConfig =
+fun WithExecutionContext.loadClientConfig(configPath: String? = null): MlpClientConfig =
     loadClientConfig(configPath, environment)
 
 @Deprecated(

@@ -8,15 +8,15 @@ import com.mlp.sdk.State.Condition.SHUT_DOWN
 import com.mlp.sdk.State.Condition.STARTING
 import java.util.concurrent.CountDownLatch
 
-abstract class WithState(condition: Condition = NOT_STARTED): WithInstanceContext {
+abstract class WithState(condition: Condition = NOT_STARTED): WithExecutionContext {
     internal val state by lazy { State(this, condition, context) }
 }
 
 class State(
     private val component: Any,
     startCondition: Condition = NOT_STARTED,
-    override val context: InstanceContext
-) : WithInstanceContext {
+    override val context: MlpExecutionContext
+) : WithExecutionContext {
 
     private val shutdownLatch = CountDownLatch(1)
 

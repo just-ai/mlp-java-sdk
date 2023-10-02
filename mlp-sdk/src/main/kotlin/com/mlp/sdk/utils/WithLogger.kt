@@ -4,7 +4,7 @@ import org.slf4j.ILoggerFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-@Deprecated("Use logger of InstanceContext") // TODO проверить что имя не изменилось
+@Deprecated("Use logger of MlpExecutionContext")
 interface WithLogger {
 
     /**

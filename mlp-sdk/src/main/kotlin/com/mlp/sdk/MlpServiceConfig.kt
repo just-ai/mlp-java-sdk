@@ -33,7 +33,7 @@ data class ActionShutdownConfig(
     val actionConnectorRequestDelayMs: Long = GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
 )
 
-fun WithInstanceContext.loadActionConfig(configPath: String? = null): MlpServiceConfig =
+fun WithExecutionContext.loadActionConfig(configPath: String? = null): MlpServiceConfig =
     loadActionConfig(configPath, environment)
 
 @Deprecated(

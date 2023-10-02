@@ -5,13 +5,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getILoggerFactory
 
 /**
- * Holds the context for a particular SDK instance.
- * With this class you can run several different MLP actions at same JVM.
+ * Keeps the settings for a specific SDK instance. This class lets you
+ * run different MLP actions in the same JVM.
  *
- * @property environment Environment variables, can be overridden.
- * @property loggerFactory Custom logger factory.
+ * @property environment Access to environment variables; you can change them if needed.
+ * @property loggerFactory Use your own logger factory to handle logging.
  */
-data class InstanceContext(
+data class MlpExecutionContext(
     val environment: Environment = Environment(),
     val loggerFactory: ILoggerFactory = getILoggerFactory(),
 )
@@ -29,9 +29,9 @@ class Environment(
             ?: error("$name is missing from the environment")
 }
 
-interface WithInstanceContext {
+interface WithExecutionContext {
 
-    val context: InstanceContext
+    val context: MlpExecutionContext
 
     val environment: Environment
         get() = context.environment

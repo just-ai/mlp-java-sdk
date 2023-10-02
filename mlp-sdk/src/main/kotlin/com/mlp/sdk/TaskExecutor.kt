@@ -30,8 +30,8 @@ class TaskExecutor (
     val action: MlpService,
     val config: MlpServiceConfig,
     dispatcher: CoroutineDispatcher?,
-    override val context: InstanceContext
-) : WithInstanceContext, WithState(ACTIVE) {
+    override val context: MlpExecutionContext
+) : WithExecutionContext, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config, context)
     private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
