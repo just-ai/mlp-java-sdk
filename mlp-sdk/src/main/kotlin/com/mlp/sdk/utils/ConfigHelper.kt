@@ -12,13 +12,13 @@ import kotlin.collections.HashMap
 object ConfigHelper {
 
     /**
-     * Loads properties using a default [InstanceContext].
+     * Loads properties using the system environments variables.
      *
-     * @deprecated Use the overloaded function with explicit SdkContext.
+     * @deprecated Use the overloaded function with explicit environment.
      */
     @Deprecated(
-        "Use the overloaded function with explicit SdkContext",
-        ReplaceWith("loadProperties(configPath, SdkContext())")
+        "Use the overloaded function with explicit environment",
+        ReplaceWith("loadProperties(configPath, environment)")
     )
     fun loadProperties(configPath: String? = null): Map<String, String> =
         loadProperties(configPath, Environment())
@@ -35,7 +35,7 @@ object ConfigHelper {
         p.putAll(loadFromPropsFile(System.getProperties().getProperty("config")))
         p.putAll(loadFromEnv())
         p.putAll(loadFromSystemProps())
-        p.putAll(environment.overrideEnvs)
+        p.putAll(environment.envsOverride)
         return p
     }
 
@@ -78,6 +78,3 @@ object ConfigHelper {
         return System.getenv()
     }
 }
-
-fun WithInstanceContext.loadProperties(configPath: String? = null): Map<String, String> =
-    ConfigHelper.loadProperties(configPath, context.environment)

@@ -20,6 +20,7 @@ import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
@@ -37,7 +38,10 @@ class MlpClientSDK(
     override val context: InstanceContext
 ) : WithInstanceContext {
 
-    val config = initConfig ?: loadClientConfig()
+    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpClientSDK(initConfig, context)"))
+    constructor(initConfig: MlpClientConfig? = null): this(initConfig, InstanceContext())
+
+    val config = initConfig ?:  loadClientConfig()
     var connectionToken: String?
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub

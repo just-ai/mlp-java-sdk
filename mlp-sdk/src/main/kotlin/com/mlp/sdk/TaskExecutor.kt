@@ -1,7 +1,5 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ServiceToGateProto
-import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.gate.ApiErrorProto
 import com.mlp.gate.BatchPayloadResponseProto
 import com.mlp.gate.BatchRequestProto
@@ -13,22 +11,29 @@ import com.mlp.gate.FitResponseProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.gate.PredictResponseProto
+import com.mlp.gate.ServiceToGateProto
+import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
-import kotlinx.coroutines.*
-import kotlinx.coroutines.slf4j.MDCContext
-import org.slf4j.MDC
 import java.util.concurrent.Executors.newFixedThreadPool
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.slf4j.MDCContext
+import kotlinx.coroutines.withContext
+import org.slf4j.MDC
 
-class TaskExecutor private constructor (
+class TaskExecutor (
     val action: MlpService,
     val config: MlpServiceConfig,
     dispatcher: CoroutineDispatcher?,
     override val context: InstanceContext
 ) : WithInstanceContext, WithState(ACTIVE) {
 
-    private val jobsContainer = JobsContainer(config, loggerFactory)
+    private val jobsContainer = JobsContainer(config, context)
     private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
     internal lateinit var connectorsPool: ConnectorsPool
 
@@ -183,11 +188,6 @@ class TaskExecutor private constructor (
     }
 
     override fun toString() = "ActionTaskExecutor(action=$action)"
-
-    companion object {
-        fun WithInstanceContext.getTaskExecutor(action: MlpService, config: MlpServiceConfig, dispatcher: CoroutineDispatcher?) =
-            TaskExecutor(action, config, dispatcher, context)
-    }
 }
 
 internal val Payload.asProto

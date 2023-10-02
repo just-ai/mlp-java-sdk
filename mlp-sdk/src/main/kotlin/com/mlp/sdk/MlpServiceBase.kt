@@ -125,6 +125,9 @@ class MlpRestClient (
     override val context: InstanceContext
 ): WithInstanceContext {
 
+    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpRestClient(restUrl, clientToken, context)"))
+    constructor(restUrl: String? = null, clientToken: String? = null) : this(restUrl, clientToken, InstanceContext())
+
     @Deprecated("Use accountId instead")
     val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
     @Deprecated("Use modelId instead")

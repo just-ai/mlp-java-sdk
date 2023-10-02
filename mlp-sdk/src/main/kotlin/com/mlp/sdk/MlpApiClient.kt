@@ -1,12 +1,12 @@
 package com.mlp.sdk
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.mlp.api.ApiClient
+import com.mlp.sdk.utils.JSON
 import java.io.ByteArrayInputStream
 import java.io.File
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
-import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpHeaders.CONTENT_DISPOSITION
 import org.springframework.http.HttpInputMessage
 import org.springframework.http.HttpOutputMessage
 import org.springframework.http.MediaType
@@ -41,7 +41,7 @@ class MlpApiClient(
                 it is MappingJackson2HttpMessageConverter
             } as MappingJackson2HttpMessageConverter
 
-            jacksonConverter.objectMapper = ObjectMapper()
+            jacksonConverter.objectMapper = JSON.mapper
 
             return restTemplate
         }
@@ -55,9 +55,10 @@ private class FileHttpMessageConverter :
         MediaType.APPLICATION_OCTET_STREAM
 
     override fun readInternal(clazz: Class<out File>, inputMessage: HttpInputMessage): File {
-        val fileName = inputMessage.headers.getValue(HttpHeaders.CONTENT_DISPOSITION)
-            .first()
-            .split("=")[1]
+        val fileName = inputMessage.headers[CONTENT_DISPOSITION]
+            ?.firstOrNull()
+            ?.split("=")?.getOrNull(1)
+            ?: throw IllegalArgumentException("Header $CONTENT_DISPOSITION not found")
 
         val destination = File(fileName)
         destination.deleteOnExit()

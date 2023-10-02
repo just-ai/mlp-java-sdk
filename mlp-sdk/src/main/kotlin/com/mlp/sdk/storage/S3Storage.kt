@@ -1,52 +1,46 @@
 package com.mlp.sdk.storage
 
+import com.mlp.sdk.InstanceContext
+import com.mlp.sdk.WithInstanceContext
 import io.minio.GetObjectArgs
 import io.minio.MinioClient
+import io.minio.ObjectWriteResponse
 import io.minio.PutObjectArgs
 import io.minio.errors.ErrorResponseException
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 import org.apache.commons.io.IOUtils.toInputStream
 
 class S3Storage(
     val minioClient: MinioClient,
-    val bucketName: String
-) : Storage {
+    val bucketName: String,
+    override val context: InstanceContext
+) : Storage, WithInstanceContext {
+
+    /**
+     * @deprecated Use constructor with context instead.
+     */
+    @Deprecated("Use constructor with context instead", ReplaceWith("S3Storage(minioClient, bucketName, context)"))
+    constructor(minioClient: MinioClient, bucketName: String) :
+        this(minioClient, bucketName, InstanceContext())
 
     override fun saveState(content: String, filePath: String) {
         with(toInputStream(content, Charsets.UTF_8)) {
-            minioClient.putObject(
-                PutObjectArgs.builder()
-                    .bucket(bucketName)
-                    .`object`(filePath)
-                    .stream(this, this.available().toLong(), -1)
-                    .build()
-            )
+            saveToS3(this, filePath)
         }
     }
 
     override fun saveState(content: ByteArray, filePath: String) {
         with(ByteArrayInputStream(content)) {
-            minioClient.putObject(
-                PutObjectArgs.builder()
-                    .bucket(bucketName)
-                    .`object`(filePath)
-                    .stream(this, this.available().toLong(), -1)
-                    .build()
-            )
+            saveToS3(this, filePath)
         }
     }
 
     override fun saveState(content: File, filePath: String) {
         with(FileInputStream(content)) {
-            minioClient.putObject(
-                PutObjectArgs.builder()
-                    .bucket(bucketName)
-                    .`object`(filePath)
-                    .stream(this, this.available().toLong(), -1)
-                    .build()
-            )
+            saveToS3(this, filePath)
         }
     }
 
@@ -56,26 +50,45 @@ class S3Storage(
 
     override fun loadStateBytes(path: String): ByteArray? {
         try {
-            val modelResponseBytes = minioClient.getObject(
-                    GetObjectArgs.builder()
-                            .bucket(bucketName)
-                            .`object`(path)
-                            .build()
+            val responseData = minioClient.getObject(
+                GetObjectArgs.builder()
+                    .bucket(bucketName)
+                    .`object`(path)
+                    .build()
             ).readAllBytes()
 
-            if (modelResponseBytes.isEmpty()) {
+            if (responseData.isEmpty()) {
                 return null
             }
-            return modelResponseBytes
+            return responseData
         } catch (e: ErrorResponseException) {
             if (e.errorResponse().code() != "NoSuchKey") {
+                logger.error("Failed to read from bucket $bucketName by path $path", e)
                 throw e
             }
             return null
+        } catch (e: Exception) {
+            logger.error("Failed to read from bucket $bucketName by path $path", e)
+            throw e
         }
     }
+
+    private fun saveToS3(inputStream: InputStream, filePath: String): ObjectWriteResponse? =
+        try {
+            minioClient.putObject(
+                PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .`object`(filePath)
+                    .stream(inputStream, inputStream.available().toLong(), -1)
+                    .build()
+            )
+        } catch (e: Exception) {
+            logger.error("Failed to save to $filePath in bucket $bucketName", e)
+            throw e
+        }
 
     companion object {
         const val STORAGE_NAME = "s3"
     }
 }
+

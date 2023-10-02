@@ -18,7 +18,7 @@ class StorageFactory(
         return when (val storageType = environment["MLP_STORAGE_TYPE"]) {
             S3Storage.STORAGE_NAME -> getS3Service(bucketName)
             LocalStorage.STORAGE_NAME -> getLocalStorage()
-            else -> throw RuntimeException("Could not create storage for type: $storageType")
+            else -> error("Could not create storage for type: $storageType")
         }
     }
 

@@ -15,7 +15,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class ConnectorsPool private constructor(
+class ConnectorsPool(
     val token: String,
     private val executor: TaskExecutor,
     private val config: MlpServiceConfig,
@@ -136,9 +136,6 @@ class ConnectorsPool private constructor(
 
     companion object {
         val clusterDispatcher = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-        fun WithInstanceContext.getConnectorsPool(token: String, executor: TaskExecutor, config: MlpServiceConfig) =
-            ConnectorsPool(token, executor, config, context)
     }
 }
 

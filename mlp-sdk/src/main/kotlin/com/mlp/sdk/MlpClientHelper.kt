@@ -6,12 +6,13 @@ import com.mlp.api.client.model.JobStatusData
 import com.mlp.api.client.model.ModelInfoPK
 import org.slf4j.Logger
 import java.io.File
+import java.lang.Thread.*
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 
 interface MlpClientHelper: WithInstanceContext {
 
-    @Deprecated("Use logger instead")
+    @Deprecated("Use logger instead", ReplaceWith("logger"))
     val log: Logger
         get() = logger
 
@@ -76,7 +77,7 @@ interface MlpClientHelper: WithInstanceContext {
         }.getOrNull()
 
         return if (existingModel == null) {
-            logger.info("Creating derived model model $myAccountId/$modelName")
+            logger.debug("Creating derived model model $myAccountId/$modelName")
             val createdDerivedModel = restClient.modelApi.createDerivedModel(
                 baseModelAccountId,
                 baseModelId,
@@ -84,7 +85,7 @@ interface MlpClientHelper: WithInstanceContext {
                 false,
                 null
             )
-            logger.warn("Model was created with an id: ${createdDerivedModel.id.accountId}/${createdDerivedModel.id.modelId}")
+            logger.info("Model was created with an id: ${createdDerivedModel.id.accountId}/${createdDerivedModel.id.modelId}")
             createdDerivedModel.id
         } else {
             existingModel.id
@@ -97,6 +98,7 @@ interface MlpClientHelper: WithInstanceContext {
         val TIMEOUT = 10 * 60_000 // 10m
         while (!jobStatus.done && (System.currentTimeMillis() - start) < TIMEOUT) {
             jobStatus = restClient.jobApi.jobStatus(jobStatus.accountId.toString(), jobStatus.jobId, null)
+            sleep(100)
         }
         logger.info("fit is done: $jobStatus")
 
@@ -116,6 +118,7 @@ interface MlpClientHelper: WithInstanceContext {
             FitRequestData().datasetId(datasetId),
             null
         )
+
         waitForJobDone(jobStatus)
     }
 

@@ -18,34 +18,38 @@ class LocalStorage(
     val baseDir = environment["MLP_STORAGE_DIR"] ?: "."
 
     override fun saveState(content: String, filePath: String) {
-        val f = File(baseDir, filePath)
-        f.parentFile.mkdirs()
-        f.writeBytes(content.toByteArray())
-    }
-
-    override fun loadState(path: String): String {
-        return String(File(baseDir, path).readBytes())
+        val file = prepareFile(filePath)
+        file.writeBytes(content.toByteArray())
     }
 
     override fun saveState(content: ByteArray, filePath: String) {
-        val f = File(baseDir, filePath)
-        f.parentFile.mkdirs()
-        f.writeBytes(content)
-    }
-
-    override fun loadStateBytes(path: String): ByteArray? {
-        val f = File(baseDir, path)
-        return if (f.exists()) f.readBytes() else null
+        val file = prepareFile(filePath)
+        file.writeBytes(content)
     }
 
     override fun saveState(content: File, filePath: String) {
-        if (!content.exists())
+        if (!content.exists()) {
+            logger.error("Save of source file ${content.absolutePath} is impossible, because it doesn't exist!")
             throw FileNotFoundException("Source file ${content.absolutePath} doesn't exist!")
+        }
 
-        val f = File(baseDir, filePath)
-        f.parentFile.mkdirs()
-        content.copyTo(f, true)
+        val file = prepareFile(filePath)
+        content.copyTo(file, true)
     }
+
+    override fun loadState(path: String): String? {
+        return loadStateBytes(path)?.let(::String)
+    }
+
+    override fun loadStateBytes(path: String): ByteArray? {
+        val file = File(baseDir, path)
+        return if (file.exists()) file.readBytes() else null
+    }
+
+
+    private fun prepareFile(filePath: String) =
+        File(baseDir, filePath)
+            .also { it.parentFile.mkdirs() }
 
     companion object {
         const val STORAGE_NAME = "local"

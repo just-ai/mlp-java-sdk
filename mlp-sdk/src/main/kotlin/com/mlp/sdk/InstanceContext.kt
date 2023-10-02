@@ -17,13 +17,14 @@ data class InstanceContext(
 )
 
 class Environment(
-    private val instanceEnvsOverride: Map<String, String> = emptyMap()
+    val envsOverride: Map<String, String> = emptyMap()
 ) {
 
     operator fun get(name: String): String? =
-        instanceEnvsOverride[name]
+        envsOverride[name]
             ?: System.getenv(name)
-    fun getOrThrow(name: String) =
+
+    fun getOrThrow(name: String): String =
         get(name)
             ?: error("$name is missing from the environment")
 }

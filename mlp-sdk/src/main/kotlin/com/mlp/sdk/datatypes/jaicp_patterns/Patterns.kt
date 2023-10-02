@@ -1,9 +1,9 @@
 package com.mlp.sdk.datatypes.jaicp_patterns
 
+import com.mlp.sdk.InstanceContext
 import com.mlp.sdk.MlpClientHelper
 import com.mlp.sdk.MlpClientSDK
-import com.mlp.sdk.MlpRestClient.Companion.getRestClient
-import com.mlp.sdk.InstanceContext
+import com.mlp.sdk.MlpRestClient
 import com.mlp.sdk.WithInstanceContext
 import com.mlp.sdk.utils.JSON
 
@@ -43,8 +43,16 @@ class MlpPatterns(
     override val context: InstanceContext
 ): MlpClientHelper, WithInstanceContext {
 
-    override val grpcClient = MlpClientSDK()
-    override val restClient = getRestClient()
+    @Deprecated("Use constructor with explicit context")
+    constructor(
+        account: String,
+        model: String,
+        baseAccount: String = "just-ai",
+        baseModel: String = "mlp-jaicp-patterns"
+    ) : this(account, model, baseAccount, baseModel, InstanceContext())
+
+    override val grpcClient = MlpClientSDK(context = context)
+    override val restClient = MlpRestClient(context = context)
 
     fun prepare(patterns: PatternsFitData) {
         val modelId = ensureDerivedModel(account, model, baseAccount, baseModel)
