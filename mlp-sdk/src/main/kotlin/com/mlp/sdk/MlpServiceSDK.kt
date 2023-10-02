@@ -1,6 +1,7 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.storage.StorageFactory
 import java.io.File
 import java.lang.Runtime.getRuntime
@@ -11,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 class MlpServiceSDK(
     action: MlpService,
     initConfig: MlpServiceConfig? = null,
-    override val context: MlpExecutionContext = MlpExecutionContext(),
+    override val context: MlpExecutionContext = systemContext,
 
     dispatcher: CoroutineDispatcher? = null
 ) : WithExecutionContext, WithState() {
@@ -27,7 +28,7 @@ class MlpServiceSDK(
     constructor(
         actionProvider: (MlpExecutionContext) -> MlpService,
         config: MlpServiceConfig? = null,
-        context: MlpExecutionContext = MlpExecutionContext(),
+        context: MlpExecutionContext = systemContext,
         dispatcher: CoroutineDispatcher? = null
     ): this(actionProvider(context), config, context, dispatcher)
 

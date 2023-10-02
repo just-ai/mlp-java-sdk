@@ -3,6 +3,7 @@ package com.mlp.sdk
 import com.mlp.api.ApiClient
 import com.mlp.api.client.*
 import com.mlp.gate.*
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.utils.JSON
 import java.lang.RuntimeException
 
@@ -126,7 +127,7 @@ class MlpRestClient (
 ): WithExecutionContext {
 
     @Deprecated("Use constructor with explicit context", ReplaceWith("MlpRestClient(restUrl, clientToken, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
-    constructor(restUrl: String? = null, clientToken: String? = null) : this(restUrl, clientToken, MlpExecutionContext())
+    constructor(restUrl: String? = null, clientToken: String? = null) : this(restUrl, clientToken, systemContext)
 
     @Deprecated("Use accountId instead")
     val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]

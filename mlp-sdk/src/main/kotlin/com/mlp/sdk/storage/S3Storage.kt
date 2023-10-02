@@ -1,6 +1,7 @@
 package com.mlp.sdk.storage
 
 import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.WithExecutionContext
 import io.minio.GetObjectArgs
 import io.minio.MinioClient
@@ -24,7 +25,7 @@ class S3Storage(
      */
     @Deprecated("Use constructor with context instead", ReplaceWith("S3Storage(minioClient, bucketName, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
     constructor(minioClient: MinioClient, bucketName: String) :
-        this(minioClient, bucketName, MlpExecutionContext())
+        this(minioClient, bucketName, systemContext)
 
     override fun saveState(content: String, filePath: String) {
         with(toInputStream(content, Charsets.UTF_8)) {

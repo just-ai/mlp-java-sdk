@@ -6,6 +6,7 @@ import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.GateGrpcKt.GateCoroutineStub
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -38,7 +39,7 @@ class MlpClientSDK(
 ) : WithExecutionContext {
 
     @Deprecated("Use constructor with explicit context", ReplaceWith("MlpClientSDK(initConfig, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
-    constructor(initConfig: MlpClientConfig? = null): this(initConfig, MlpExecutionContext())
+    constructor(initConfig: MlpClientConfig? = null): this(initConfig, systemContext)
 
     val config = initConfig ?:  loadClientConfig()
     var connectionToken: String?

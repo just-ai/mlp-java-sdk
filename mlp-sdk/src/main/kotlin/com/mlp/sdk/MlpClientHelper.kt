@@ -4,6 +4,7 @@ import com.mlp.api.client.model.CreateOrUpdateDatasetInfoData
 import com.mlp.api.client.model.FitRequestData
 import com.mlp.api.client.model.JobStatusData
 import com.mlp.api.client.model.ModelInfoPK
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import org.slf4j.Logger
 import java.io.File
 import java.lang.Thread.*
@@ -20,7 +21,7 @@ interface MlpClientHelper: WithExecutionContext {
     val restClient: MlpRestClient
 
     override val context: MlpExecutionContext
-        get() = MlpExecutionContext()
+        get() = systemContext
 
     private fun createTempFileContent(content: String): File =
         File.createTempFile("tempFile", "").apply {
