@@ -35,13 +35,10 @@ import org.slf4j.MDC
 
 class MlpClientSDK(
     initConfig: MlpClientConfig? = null,
-    override val context: MlpExecutionContext
+    override val context: MlpExecutionContext = systemContext
 ) : WithExecutionContext {
 
-    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpClientSDK(initConfig, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
-    constructor(initConfig: MlpClientConfig? = null): this(initConfig, systemContext)
-
-    val config = initConfig ?:  loadClientConfig()
+    val config = initConfig ?: loadClientConfig(environment = environment)
     var connectionToken: String?
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub

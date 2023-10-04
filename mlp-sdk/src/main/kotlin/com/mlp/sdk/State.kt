@@ -24,6 +24,9 @@ class State(
     var condition = startCondition
         private set
 
+    @Volatile
+    var shutdownReason: String? = null
+
     val notStarted get() = condition == NOT_STARTED
     val starting get() = condition == STARTING
     val active get() = condition == ACTIVE

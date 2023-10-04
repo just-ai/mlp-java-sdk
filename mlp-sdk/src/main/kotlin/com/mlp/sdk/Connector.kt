@@ -118,6 +118,10 @@ class Connector(
         var progressiveDelay = 100L
         runCatching {
             while (isActive) {
+                if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
+                    delay(5_000L)
+                }
+
                 if (grpcChannel.isShutdownStateOrNull()) {
                     val connected = tryConnectOrShutdown()
                     if (connected) {
@@ -127,10 +131,12 @@ class Connector(
                         progressiveDelay = min(progressiveDelay * 2, 5_000L)
                     }
                 }
+
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
                     progressiveDelay = 100L
                 }
+
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
                     tryGrpcShutdown()
                 }
@@ -287,14 +293,12 @@ class Connector(
         }
 
         private fun processError(error: ApiErrorProto) = runBlocking {
-            if (error.code == "mlp.gate.instance_by_token_not_found") {
-                // TODO надо бы как то его гасить насовесем. Либо гасить целиком сдк, а не пул. Ну либо только коннектор удалять, хз
-                pool.shutdownNow()
-                logger.error("Connector $id: Receive instance_by_token_not_found error, so shutdown connectors pool")
-                return@runBlocking
+            when (error.code) {
+                "mlp.gate.instance_by_token_not_found" ->
+                    processTokenNotFound()
+                else ->
+                    logger.error("Connector $id: error ${error.message}")
             }
-
-            logger.error("Connector $id: error ${error.message}")
         }
 
         private fun processStopServing() {
@@ -303,6 +307,16 @@ class Connector(
 
             clusterDispatcher.launch {
                 gracefulShutdownPrivate()
+            }
+        }
+
+        private fun processTokenNotFound() {
+            logger.warn("Connector $id: Receive instance_by_token_not_found error, so shutdown grpc channel")
+            state.shuttingDown()
+
+            clusterDispatcher.launch {
+                gracefulShutdownPrivate()
+                state.shutdownReason = "instance_by_token_not_found"
             }
         }
 
@@ -379,7 +393,7 @@ class Connector(
             }
         }
 
-        private fun gracefulShutdownManagedChannel() {
+        private fun gracefulShutdownManagedChannel(reason: String? = null) {
             logger.debug("$this: graceful shutting down managed channel to $targetUrl ...")
 
             try {

@@ -16,9 +16,16 @@ class SingleFit(
     REQUEST_EXAMPLE, Unit, RESPONSE_EXAMPLE
 ), WithExecutionContext {
 
+    var modelData: FitDatasetData? = null
+    var configData: FitConfigData? = null
+
     private val storageFactory = StorageFactory(context)
     private val storage = storageFactory.getStorage()
     private val predictModelDir = storageFactory.getDefaultStorageDir()
+
+    init {
+        loadState()
+    }
 
     override fun fit(data: FitDatasetData,
                      config: FitConfigData?,
@@ -33,12 +40,6 @@ class SingleFit(
         storage.saveState(JSON.stringify(config ?:FitConfigData(false)), "$predictModelDir/$MODEL_FILENAME_CONFIG")
         logger.info("state saved")
 
-        loadState()
-    }
-
-    var modelData: FitDatasetData? = null
-    var configData: FitConfigData? = null
-    init {
         loadState()
     }
 
