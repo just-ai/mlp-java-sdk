@@ -1,6 +1,7 @@
 package com.mlp.sdk.utils
 
 import com.mlp.sdk.Environment
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import java.io.File
 import java.io.FileInputStream
 import java.lang.Exception
@@ -11,15 +12,9 @@ object ConfigHelper {
 
     /**
      * Loads properties using the system environments variables.
-     *
-     * @deprecated Use the overloaded function with explicit environment.
      */
-    @Deprecated(
-        "Use the overloaded function with explicit environment",
-        ReplaceWith("loadProperties(configPath, environment)")
-    )
     fun loadProperties(configPath: String? = null): Map<String, String> =
-        loadProperties(configPath, Environment())
+        loadProperties(configPath, systemContext.environment)
 
     fun loadProperties(configPath: String? = null, environment: Environment): Map<String, String> {
         val p = HashMap<String, String>()

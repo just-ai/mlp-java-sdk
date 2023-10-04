@@ -123,11 +123,8 @@ abstract class MlpPredictWithConfigServiceBase<P: Any, C: Any, R: Any>(
 class MlpRestClient (
     restUrl: String? = null,
     clientToken: String? = null,
-    override val context: MlpExecutionContext
+    override val context: MlpExecutionContext = systemContext
 ): WithExecutionContext {
-
-    @Deprecated("Use constructor with explicit context", ReplaceWith("MlpRestClient(restUrl, clientToken, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
-    constructor(restUrl: String? = null, clientToken: String? = null) : this(restUrl, clientToken, systemContext)
 
     @Deprecated("Use accountId instead")
     val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]

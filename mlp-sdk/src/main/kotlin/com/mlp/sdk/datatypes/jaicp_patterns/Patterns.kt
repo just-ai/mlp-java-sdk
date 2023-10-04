@@ -41,16 +41,8 @@ class MlpPatterns(
     val model: String,
     val baseAccount: String = "just-ai",
     val baseModel: String = "mlp-jaicp-patterns",
-    override val context: MlpExecutionContext
+    override val context: MlpExecutionContext = systemContext
 ): MlpClientHelper, WithExecutionContext {
-
-    @Deprecated("Use constructor with explicit context")
-    constructor(
-        account: String,
-        model: String,
-        baseAccount: String = "just-ai",
-        baseModel: String = "mlp-jaicp-patterns"
-    ) : this(account, model, baseAccount, baseModel, systemContext)
 
     override val grpcClient = MlpClientSDK(context = context)
     override val restClient = MlpRestClient(context = context)

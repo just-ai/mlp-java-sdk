@@ -7,6 +7,7 @@ import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_PREDICT_TIMEOUT_MS
 import com.mlp.sdk.MlpClientConfig.Companion.GRACEFUL_SHUTDOWN_CLIENT_MS
 import com.mlp.sdk.MlpClientConfig.Companion.GRPC_SECURE
 import com.mlp.sdk.MlpClientConfig.Companion.MAX_BACKOFF_SECONDS
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.utils.ConfigHelper
 
 class MlpClientConfig(
@@ -34,11 +35,11 @@ class MlpClientConfig(
     }
 }
 
-@Deprecated(
-    "Use loadClientConfig with environment instead, or extension with same name",
-    ReplaceWith("loadClientConfig(context, environment)")
-)
-fun loadClientConfig(configPath: String? = null): MlpClientConfig = loadClientConfig(configPath, Environment())
+/**
+ * Loads properties using the system environments variables.
+ */
+fun loadClientConfig(configPath: String? = null): MlpClientConfig =
+    loadClientConfig(configPath, systemContext.environment)
 
 
 fun loadClientConfig(configPath: String? = null, environment: Environment): MlpClientConfig {

@@ -17,15 +17,9 @@ import org.apache.commons.io.IOUtils.toInputStream
 class S3Storage(
     val minioClient: MinioClient,
     val bucketName: String,
-    override val context: MlpExecutionContext
+    override val context: MlpExecutionContext = systemContext
 ) : Storage, WithExecutionContext {
 
-    /**
-     * @deprecated Use constructor with context instead.
-     */
-    @Deprecated("Use constructor with context instead", ReplaceWith("S3Storage(minioClient, bucketName, context = com.mlp.sdk.MlpExecutionContext.Companion.systemContext)"))
-    constructor(minioClient: MinioClient, bucketName: String) :
-        this(minioClient, bucketName, systemContext)
 
     override fun saveState(content: String, filePath: String) {
         with(toInputStream(content, Charsets.UTF_8)) {

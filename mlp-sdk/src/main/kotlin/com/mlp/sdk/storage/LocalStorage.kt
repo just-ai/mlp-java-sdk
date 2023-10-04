@@ -7,14 +7,9 @@ import java.io.File
 import java.io.FileNotFoundException
 
 class LocalStorage(
-    override val context: MlpExecutionContext
+    override val context: MlpExecutionContext = systemContext
 ) : Storage, WithExecutionContext {
 
-    /**
-     * @deprecated Use constructor with context instead.
-     */
-    @Deprecated("Use constructor with context instead", ReplaceWith("LocalStorage(context)"))
-    constructor(): this(systemContext)
 
     val baseDir = environment["MLP_STORAGE_DIR"] ?: "."
 
