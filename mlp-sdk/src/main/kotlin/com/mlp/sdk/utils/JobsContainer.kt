@@ -1,6 +1,8 @@
 package com.mlp.sdk.utils
 
 import com.mlp.sdk.MlpServiceConfig
+import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.WithExecutionContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import java.time.Duration.ofMillis
@@ -10,7 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class JobsContainer(
     private val config: MlpServiceConfig,
-) : WithLogger {
+    override val context: MlpExecutionContext
+) : WithExecutionContext {
 
     private val containers = ConcurrentHashMap<Long, ConnectorContainer>()
 
@@ -62,8 +65,7 @@ class JobsContainer(
             delay(100)
         }
 
-        container
-            .cancelAll()
+        container.cancelAll()
     }
 
     fun enableNewOnes(connectorId: Long) {

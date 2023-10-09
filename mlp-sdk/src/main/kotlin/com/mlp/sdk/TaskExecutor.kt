@@ -1,7 +1,5 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ServiceToGateProto
-import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.gate.ApiErrorProto
 import com.mlp.gate.BatchPayloadResponseProto
 import com.mlp.gate.BatchRequestProto
@@ -13,22 +11,30 @@ import com.mlp.gate.FitResponseProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.gate.PredictResponseProto
+import com.mlp.gate.ServiceToGateProto
+import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
-import com.mlp.sdk.utils.WithLogger
-import kotlinx.coroutines.*
-import kotlinx.coroutines.slf4j.MDCContext
-import org.slf4j.MDC
 import java.util.concurrent.Executors.newFixedThreadPool
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.slf4j.MDCContext
+import kotlinx.coroutines.withContext
+import org.slf4j.MDC
 
-class TaskExecutor(
+class TaskExecutor (
     val action: MlpService,
-    val config: MlpServiceConfig
-) : WithLogger, WithState(ACTIVE) {
+    val config: MlpServiceConfig,
+    dispatcher: CoroutineDispatcher?,
+    override val context: MlpExecutionContext
+) : WithExecutionContext, WithState(ACTIVE) {
 
-    private val jobsContainer = JobsContainer(config)
-    private val scope = CoroutineScope(newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
+    private val jobsContainer = JobsContainer(config, context)
+    private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
     internal lateinit var connectorsPool: ConnectorsPool
 
     fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, tracker: TimeTracker) {
