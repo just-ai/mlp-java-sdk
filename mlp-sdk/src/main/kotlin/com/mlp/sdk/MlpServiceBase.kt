@@ -127,9 +127,9 @@ class MlpRestClient (
 ): WithExecutionContext {
 
     @Deprecated("Use accountId instead")
-    val ACCOUNT_ID = environment["MLP_ACCOUNT_ID"]
+    val ACCOUNT_ID = environment.getOrThrow("MLP_ACCOUNT_ID")
     @Deprecated("Use modelId instead")
-    val MODEL_ID = environment["MLP_MODEL_ID"]
+    val MODEL_ID = environment.getOrThrow("MLP_MODEL_ID")
 
     val accountId = environment["MLP_ACCOUNT_ID"]
     val modelId = environment["MLP_MODEL_ID"]
