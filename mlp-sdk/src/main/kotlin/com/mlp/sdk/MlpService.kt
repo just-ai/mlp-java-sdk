@@ -6,7 +6,7 @@ import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 
-abstract class MlpService: WithExecutionContext{
+abstract class MlpService : WithExecutionContext {
 
     override val context: MlpExecutionContext = systemContext
 
@@ -22,9 +22,10 @@ abstract class MlpService: WithExecutionContext{
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
     }
 
-    open fun fit(train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
-                 targetServiceInfo: ServiceInfoProto,
-                 dataset: DatasetInfoProto
+    open fun fit(
+        train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
+        targetServiceInfo: ServiceInfoProto,
+        dataset: DatasetInfoProto
     ): MlpResponse {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "fit"))
     }

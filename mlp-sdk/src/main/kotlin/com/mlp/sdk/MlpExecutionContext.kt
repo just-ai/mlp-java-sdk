@@ -1,5 +1,6 @@
 package com.mlp.sdk
 
+import com.mlp.sdk.utils.WithLogger
 import org.slf4j.ILoggerFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getILoggerFactory
@@ -33,7 +34,7 @@ class Environment(
             ?: error("$name is missing from the environment")
 }
 
-interface WithExecutionContext {
+interface WithExecutionContext: WithLogger {
 
     val context: MlpExecutionContext
 
@@ -43,6 +44,6 @@ interface WithExecutionContext {
     val loggerFactory: ILoggerFactory
         get() = context.loggerFactory
 
-    val logger: Logger
+    override val logger: Logger
         get() = loggerFactory.getLogger(javaClass.name)
 }
