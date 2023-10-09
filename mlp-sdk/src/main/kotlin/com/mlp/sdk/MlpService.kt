@@ -4,8 +4,11 @@ import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 
-abstract class MlpService {
+abstract class MlpService: WithExecutionContext{
+
+    override val context: MlpExecutionContext = systemContext
 
     open fun getDescriptor(): ServiceDescriptorProto {
         throw NotImplementedError()

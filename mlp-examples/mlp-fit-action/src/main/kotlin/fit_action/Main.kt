@@ -29,7 +29,7 @@ fun main() {
                 }
         }
 
-    val mlp = MlpServiceSDK(service, context = systemContext)
+    val mlp = MlpServiceSDK(service)
 
     mlp.start()
     mlp.blockUntilShutdown()

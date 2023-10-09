@@ -14,7 +14,7 @@ class SingleFit(
 ): MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestData, Unit, PredictResponseData>(
     FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE,
     REQUEST_EXAMPLE, Unit, RESPONSE_EXAMPLE
-), WithExecutionContext {
+) {
 
     var modelData: FitDatasetData? = null
     var configData: FitConfigData? = null

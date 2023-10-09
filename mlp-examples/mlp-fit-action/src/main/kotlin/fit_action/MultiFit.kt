@@ -11,7 +11,7 @@ import com.mlp.sdk.utils.JSON
 
 class FitService(
     override val context: MlpExecutionContext
-): MlpFitServiceBase<FitDatasetData, FitConfigData>(FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE), WithExecutionContext {
+): MlpFitServiceBase<FitDatasetData, FitConfigData>(FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE) {
 
     private val storage = StorageFactory(context).getStorage()
 
@@ -40,7 +40,7 @@ class FitService(
 
 class PredictService(
     override val context: MlpExecutionContext
-): MlpPredictServiceBase<PredictRequestData, PredictResponseData>(REQUEST_EXAMPLE, RESPONSE_EXAMPLE), WithExecutionContext {
+): MlpPredictServiceBase<PredictRequestData, PredictResponseData>(REQUEST_EXAMPLE, RESPONSE_EXAMPLE) {
 
     private val storageFactory = StorageFactory(context)
     private val storage = storageFactory.getStorage()

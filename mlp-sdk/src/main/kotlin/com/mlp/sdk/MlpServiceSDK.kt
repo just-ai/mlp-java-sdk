@@ -12,25 +12,21 @@ import kotlinx.coroutines.runBlocking
 class MlpServiceSDK(
     action: MlpService,
     initConfig: MlpServiceConfig? = null,
-    override val context: MlpExecutionContext = systemContext,
-
     dispatcher: CoroutineDispatcher? = null
 ) : WithExecutionContext, WithState() {
 
     /**
-     * Constructs an instance of MlpServiceSDK, allowing you to inject a pre-existing InstanceContext.
-     *
      * @param actionProvider Function that provides the MlpService, given an InstanceContext.
      * @param config Optional configuration for the MlpService; defaults to null.
-     * @param context Pre-existing InstanceContext to be used in this instance; defaults to a new context.
      * @param dispatcher Optional CoroutineDispatcher for coroutine context; defaults to null.
      */
     constructor(
-        actionProvider: (MlpExecutionContext) -> MlpService,
+        actionProvider: () -> MlpService,
         config: MlpServiceConfig? = null,
-        context: MlpExecutionContext = systemContext,
         dispatcher: CoroutineDispatcher? = null
-    ): this(actionProvider(context), config, context, dispatcher)
+    ): this(actionProvider(), config, dispatcher)
+
+    override val context: MlpExecutionContext = action.context
 
     val config: MlpServiceConfig = initConfig ?: loadActionConfig(environment = environment)
 
