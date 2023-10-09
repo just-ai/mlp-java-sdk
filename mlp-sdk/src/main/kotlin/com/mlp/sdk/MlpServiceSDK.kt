@@ -1,8 +1,6 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ServiceToGateProto
-import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
-import com.mlp.sdk.storage.StorageFactory
 import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
@@ -40,8 +38,6 @@ class MlpServiceSDK(
     val instanceId = environment["MLP_INSTANCE_ID"]
 
     private val taskExecutor = TaskExecutor(action, config, dispatcher, context)
-
-    val storageFactory = StorageFactory(context)
 
     fun start() {
         check(state.notStarted) { "SDK already started" }

@@ -5,7 +5,6 @@ import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.MlpExecutionContext
 import com.mlp.sdk.MlpFitServiceBase
 import com.mlp.sdk.MlpPredictServiceBase
-import com.mlp.sdk.WithExecutionContext
 import com.mlp.sdk.storage.StorageFactory
 import com.mlp.sdk.utils.JSON
 
@@ -13,7 +12,7 @@ class FitService(
     override val context: MlpExecutionContext
 ): MlpFitServiceBase<FitDatasetData, FitConfigData>(FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE) {
 
-    private val storage = StorageFactory(context).getStorage()
+    private val storage = StorageFactory.getStorage(context)
 
     override fun fit(data: FitDatasetData,
                      config: FitConfigData?,
@@ -42,9 +41,8 @@ class PredictService(
     override val context: MlpExecutionContext
 ): MlpPredictServiceBase<PredictRequestData, PredictResponseData>(REQUEST_EXAMPLE, RESPONSE_EXAMPLE) {
 
-    private val storageFactory = StorageFactory(context)
-    private val storage = storageFactory.getStorage()
-    private val predictModelDir = storageFactory.getDefaultStorageDir()
+    private val storage = StorageFactory.getStorage(context)
+    private val predictModelDir = StorageFactory.getDefaultStorageDir(context)
 
     val modelData: FitDatasetData by lazy {
         val modelDataStr = storage.loadState("$predictModelDir/${FitService.MODEL_FILENAME_DATA}")!!

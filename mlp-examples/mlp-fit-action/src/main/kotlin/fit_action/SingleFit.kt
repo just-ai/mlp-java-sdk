@@ -19,9 +19,8 @@ class SingleFit(
     var modelData: FitDatasetData? = null
     var configData: FitConfigData? = null
 
-    private val storageFactory = StorageFactory(context)
-    private val storage = storageFactory.getStorage()
-    private val predictModelDir = storageFactory.getDefaultStorageDir()
+    private val storage = StorageFactory.getStorage(context)
+    private val predictModelDir = StorageFactory.getDefaultStorageDir(context)
 
     init {
         loadState()
