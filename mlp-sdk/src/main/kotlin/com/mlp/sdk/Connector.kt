@@ -1,5 +1,6 @@
 package com.mlp.sdk
 
+import com.mlp.gate.ApiErrorProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.ClusterUpdateProto
 import com.mlp.gate.GateGrpc
@@ -12,7 +13,6 @@ import com.mlp.gate.GateToServiceProto.BodyCase.EXT
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
-import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
 import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
@@ -20,7 +20,6 @@ import com.mlp.gate.StartServingProto
 import com.mlp.gate.StopServingProto
 import com.mlp.sdk.ConnectorsPool.Companion.clusterDispatcher
 import com.mlp.sdk.State.Condition.ACTIVE
-import com.mlp.sdk.utils.WithLogger
 import io.grpc.*
 import io.grpc.stub.StreamObserver
 import kotlin.math.min
@@ -32,7 +31,6 @@ import java.io.File
 import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofMillis
-import java.time.Instant
 import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
@@ -43,8 +41,9 @@ class Connector(
     var targetUrl: String,
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
-    val config: MlpServiceConfig
-) : WithLogger, WithState(ACTIVE) {
+    val config: MlpServiceConfig,
+    override val context: MlpExecutionContext
+) : WithExecutionContext, WithState(ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()
 
@@ -119,6 +118,10 @@ class Connector(
         var progressiveDelay = 100L
         runCatching {
             while (isActive) {
+                if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
+                    delay(5_000L)
+                }
+
                 if (grpcChannel.isShutdownStateOrNull()) {
                     val connected = tryConnectOrShutdown()
                     if (connected) {
@@ -128,10 +131,12 @@ class Connector(
                         progressiveDelay = min(progressiveDelay * 2, 5_000L)
                     }
                 }
+
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
                     progressiveDelay = 100L
                 }
+
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
                     tryGrpcShutdown()
                 }
@@ -156,7 +161,7 @@ class Connector(
 
     private suspend fun tryConnectOrShutdown(): Boolean {
         logger.debug("${this@Connector}: creating new grpc channel ...")
-        val newGrpcChannel = GrpcChannel()
+        val newGrpcChannel = GrpcChannel(context)
         runCatching {
             newGrpcChannel.tryConnect()
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
@@ -175,7 +180,9 @@ class Connector(
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
     }
 
-    private inner class GrpcChannel : StreamObserver<GateToServiceProto>, WithLogger, WithState() {
+    private inner class GrpcChannel(
+        override val context: MlpExecutionContext
+    ) : StreamObserver<GateToServiceProto>, WithExecutionContext, WithState() {
 
         private lateinit var managedChannel: ManagedChannel
         private lateinit var stream: StreamObserver<ServiceToGateProto>
@@ -257,7 +264,7 @@ class Connector(
                 FIT -> executor.fit(request.fit, request.requestId, id)
                 EXT -> executor.ext(request.ext, request.requestId, id)
                 BATCH -> executor.batch(request.batch, request.requestId, id)
-                ERROR -> logger.error("Connector $id: error ${request.error.message}")
+                ERROR -> processError(request.error)
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $id: body case is null")
@@ -285,12 +292,31 @@ class Connector(
             gracefulShutdownManagedChannel()
         }
 
+        private fun processError(error: ApiErrorProto) = runBlocking {
+            when (error.code) {
+                "mlp.gate.instance_by_token_not_found" ->
+                    processTokenNotFound()
+                else ->
+                    logger.error("Connector $id: error ${error.message}")
+            }
+        }
+
         private fun processStopServing() {
             logger.info("$this: receive graceful shutdown from gate ...")
             state.shuttingDown()
 
             clusterDispatcher.launch {
                 gracefulShutdownPrivate()
+            }
+        }
+
+        private fun processTokenNotFound() {
+            logger.warn("Connector $id: Receive instance_by_token_not_found error, so shutdown grpc channel")
+            state.shuttingDown()
+
+            clusterDispatcher.launch {
+                gracefulShutdownPrivate()
+                state.shutdownReason = "instance_by_token_not_found"
             }
         }
 
@@ -367,7 +393,7 @@ class Connector(
             }
         }
 
-        private fun gracefulShutdownManagedChannel() {
+        private fun gracefulShutdownManagedChannel(reason: String? = null) {
             logger.debug("$this: graceful shutting down managed channel to $targetUrl ...")
 
             try {

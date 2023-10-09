@@ -2,18 +2,30 @@ package fit_action
 
 import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.ServiceInfoProto
-import com.mlp.sdk.*
+import com.mlp.sdk.MlpException
+import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.MlpServiceBase
+import com.mlp.sdk.WithExecutionContext
 import com.mlp.sdk.storage.StorageFactory
 import com.mlp.sdk.utils.JSON
-import org.slf4j.LoggerFactory
 
-class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestData, Unit, PredictResponseData>(
+class SingleFit(
+    override val context: MlpExecutionContext
+): MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestData, Unit, PredictResponseData>(
     FIT_DATA_EXAMPLE, FIT_CONFIG_EXAMPLE,
     REQUEST_EXAMPLE, Unit, RESPONSE_EXAMPLE
 ) {
-    private val log = LoggerFactory.getLogger(this::class.java)
-    private val storage = StorageFactory.getStorage()
-    private val predictModelDir = StorageFactory.getDefaultStorageDir()
+
+    var modelData: FitDatasetData? = null
+    var configData: FitConfigData? = null
+
+    private val storageFactory = StorageFactory(context)
+    private val storage = storageFactory.getStorage()
+    private val predictModelDir = storageFactory.getDefaultStorageDir()
+
+    init {
+        loadState()
+    }
 
     override fun fit(data: FitDatasetData,
                      config: FitConfigData?,
@@ -22,18 +34,12 @@ class SingleFit: MlpServiceBase<FitDatasetData, FitConfigData, PredictRequestDat
                      targetServiceInfo: ServiceInfoProto,
                      dataset: DatasetInfoProto
     ) {
-        log.warn("Start training ...")
+        logger.warn("Start training ...")
 
         storage.saveState(JSON.stringify(data), "$predictModelDir/$MODEL_FILENAME_DATA")
         storage.saveState(JSON.stringify(config ?:FitConfigData(false)), "$predictModelDir/$MODEL_FILENAME_CONFIG")
-        log.info("state saved")
+        logger.info("state saved")
 
-        loadState()
-    }
-
-    var modelData: FitDatasetData? = null
-    var configData: FitConfigData? = null
-    init {
         loadState()
     }
 

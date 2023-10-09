@@ -1,6 +1,8 @@
 package com.platform.mpl.sdk.utils
 
 import com.mlp.sdk.ActionShutdownConfig
+import com.mlp.sdk.MlpExecutionContext
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.MlpServiceConfig
 import com.mlp.sdk.utils.JobsContainer
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +24,7 @@ class JobContainerTest {
     fun `should cancel job`() = runBlocking {
         val number = AtomicInteger()
 
-        val jobsContainer = JobsContainer(config(100, 100))
+        val jobsContainer = JobsContainer(config(100, 100), systemContext)
 
         jobsContainer.launch(1, 10, coroutineScope.launch { increment(number, 150) })
 
@@ -37,7 +39,7 @@ class JobContainerTest {
     fun `jobs should complete before graceful shutdown finish`() = runBlocking {
         val number = AtomicInteger()
 
-        val jobsContainer = JobsContainer(config(300, 100))
+        val jobsContainer = JobsContainer(config(300, 100), systemContext)
 
         jobsContainer.launch(1, 1, coroutineScope.launch { increment(number) })
         jobsContainer.launch(1, 2, coroutineScope.launch { increment(number) })
