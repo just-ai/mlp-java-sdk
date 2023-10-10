@@ -39,7 +39,7 @@
         <!-- IMPORTANT: currently we support max 3.18.1 -->
         <protobuf.version>3.19.3</protobuf.version>
 
-        <slf4j.version>2.0.7</slf4j.version>
+        <slf4j.version>1.7.32</slf4j.version>
     </properties>
 
     <repositories>
