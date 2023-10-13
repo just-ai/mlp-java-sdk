@@ -20,7 +20,8 @@ class MlpClientConfig(
         val grpcSecure: Boolean = GRPC_SECURE,
         val maxBackoffSeconds: Long = MAX_BACKOFF_SECONDS,
         val clientApiGateUrl: String? = null,
-        val clientPredictRetryConfig: ClientPredictRetryConfig = ClientPredictRetryConfig()
+        val clientPredictRetryConfig: ClientPredictRetryConfig = ClientPredictRetryConfig(),
+        val billingToken: String? = null
 ) {
 
     companion object {
@@ -48,6 +49,7 @@ fun loadClientConfig(configPath: String? = null, environment: Environment): MlpC
         initialGateUrls = props["MLP_GRPC_HOST"]?.split(",:") ?: error("Missed MLP_GRPC_HOST property"),
         restUrl = props["MLP_REST_URL"] ?: error("Missed MLP_REST_URL property"),
         clientToken = props["MLP_CLIENT_TOKEN"],
+        billingToken = props["MLP_BILLING_TOKEN"],
         clientPredictTimeoutMs = props["MLP_CLIENT_PREDICT_TIMEOUT_MS"]?.toLong()
             ?: CLIENT_PREDICT_TIMEOUT_MS,
         shutdownConfig = ClientShutdownConfig(

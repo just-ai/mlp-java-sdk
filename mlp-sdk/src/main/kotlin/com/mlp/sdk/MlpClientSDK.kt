@@ -40,6 +40,7 @@ class MlpClientSDK(
 
     val config = initConfig ?: loadClientConfig(environment = environment)
     var connectionToken: String?
+    var billingToken: String?
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub
 
@@ -48,6 +49,7 @@ class MlpClientSDK(
     init {
         val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
         connectionToken = config.clientToken
+        billingToken = config.billingToken
         logger.debug("Starting mlp client for url $gateUrl")
         connect(gateUrl)
 
@@ -283,6 +285,10 @@ class MlpClientSDK(
 
         if (MDC.get("requestId") != null)
             builder.putHeaders("Z-requestId", MDC.get("requestId"))
+
+        val billingKey = billingToken ?: MDC.get("MLP-BILLING-KEY")
+        if (billingKey != null)
+            builder.putHeaders("MLP-BILLING-KEY", billingKey)
 
         if (timeout != null)
             builder.timeoutSec = timeout.seconds.toInt()
