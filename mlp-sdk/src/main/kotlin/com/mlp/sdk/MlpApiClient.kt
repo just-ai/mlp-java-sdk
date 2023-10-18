@@ -18,11 +18,13 @@ class MlpApiClient(
     defaultApiToken: String?,
     apiGateUrl: String,
     restTemplate: RestTemplate = getRestTemplate(),
+    billingToken: String? = null
 ) : ApiClient(restTemplate) {
 
     init {
         basePath = apiGateUrl
         defaultApiToken?.let { addDefaultHeader("MLP-API-KEY", it) }
+        billingToken?.let { addDefaultHeader("MLP-BILLING-KEY", it) }
     }
 
     companion object {

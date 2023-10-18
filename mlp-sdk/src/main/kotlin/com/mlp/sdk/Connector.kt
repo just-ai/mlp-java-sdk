@@ -242,7 +242,8 @@ class Connector(
             MDC.setContextMap(mapOf(
                 "requestId" to requestId,
                 "connectorId" to id.toString(),
-                "gateRequestId" to request.requestId.toString()
+                "gateRequestId" to request.requestId.toString(),
+                "MLP-BILLING-KEY" to request.headersMap["MLP-BILLING-KEY"],
             ))
             try {
                 processRequest(request, tracker)
