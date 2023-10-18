@@ -423,6 +423,18 @@ paths:
         required: false
         schema:
           type: string
+      - name: imageId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: dataImageId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
       - name: page
         in: query
         required: false
@@ -610,7 +622,7 @@ paths:
         schema:
           type: string
           enum:
-          - LINEAR_16PCM
+          - LINEAR16_PCM
       - name: sampleRateHertz
         in: query
         required: false
@@ -3291,6 +3303,18 @@ paths:
         required: false
         schema:
           type: string
+      - name: imageId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: dataImageId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
       - name: page
         in: query
         required: false
@@ -5845,6 +5869,9 @@ components:
         billingUnitPriceInNanoToken:
           type: integer
           format: int64
+        billingUnitPriceInRubles:
+          type: number
+          format: double
         freeUnitQuota:
           type: integer
           format: int32
@@ -6596,7 +6623,7 @@ components:
         audioEncoding:
           type: string
           enum:
-          - LINEAR_16PCM
+          - LINEAR16_PCM
         sampleRateHertz:
           type: integer
           format: int32
@@ -7307,8 +7334,8 @@ components:
           format: float
     ModelInstanceData:
       required:
-      - hostingType
       - id
+      - instanceHostingType
       - restartCount
       - statusInfo
       type: object
@@ -7327,7 +7354,7 @@ components:
           type: string
         createdTimestamp:
           type: string
-        hostingType:
+        instanceHostingType:
           type: string
           enum:
           - deployment
