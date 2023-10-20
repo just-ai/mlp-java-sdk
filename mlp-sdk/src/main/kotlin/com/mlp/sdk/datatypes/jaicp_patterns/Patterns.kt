@@ -1,19 +1,12 @@
 package com.mlp.sdk.datatypes.jaicp_patterns
 
-import com.mlp.api.client.model.CreateOrUpdateDatasetInfoData
-import com.mlp.api.client.model.FitRequestData
-import com.mlp.api.client.model.JobStatusData
-import com.mlp.api.client.model.ModelInfoPK
+import com.mlp.sdk.MlpExecutionContext
 import com.mlp.sdk.MlpClientHelper
 import com.mlp.sdk.MlpClientSDK
-import com.mlp.sdk.MlpException
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.MlpRestClient
+import com.mlp.sdk.WithExecutionContext
 import com.mlp.sdk.utils.JSON
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 
 data class PatternData(
     val id: String,
@@ -43,13 +36,16 @@ data class PatternsResponseData(
  * - MLP_GRPC_HOST
  * - MLP_GRPC_SECURE
  */
-class MlpPatterns(val account: String, val model: String,
-                  val baseAccount: String = "just-ai", val baseModel: String = "mlp-jaicp-patterns"
-): MlpClientHelper {
-    override val log = LoggerFactory.getLogger(this.javaClass)
+class MlpPatterns(
+    val account: String,
+    val model: String,
+    val baseAccount: String = "just-ai",
+    val baseModel: String = "mlp-jaicp-patterns",
+    override val context: MlpExecutionContext = systemContext
+): MlpClientHelper, WithExecutionContext {
 
-    override val grpcClient = MlpClientSDK()
-    override val restClient = MlpRestClient()
+    override val grpcClient = MlpClientSDK(context = context)
+    override val restClient = MlpRestClient(context = context)
 
     fun prepare(patterns: PatternsFitData) {
         val modelId = ensureDerivedModel(account, model, baseAccount, baseModel)
@@ -62,5 +58,4 @@ class MlpPatterns(val account: String, val model: String,
         val res = grpcClient.predictBlocking(account, model, JSON.stringify(PatternsRequestData(text=text)))
         return JSON.parse(res, PatternsResponseData::class.java)
     }
-
 }

@@ -1,22 +1,45 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ServiceToGateProto
-import com.mlp.sdk.utils.WithLogger
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
-
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.runBlocking
 
 class MlpServiceSDK(
     action: MlpService,
-    val config: MlpServiceConfig = loadActionConfig()
-) : WithLogger, WithState() {
+    initConfig: MlpServiceConfig? = null,
+    dispatcher: CoroutineDispatcher? = null
+) : WithExecutionContext, WithState() {
 
-    val ACCOUNT_ID = System.getenv("MLP_ACCOUNT_ID")
-    val MODEL_ID = System.getenv("MLP_MODEL_ID")
+    /**
+     * @param actionProvider Function that provides the MlpService, given an InstanceContext.
+     * @param config Optional configuration for the MlpService; defaults to null.
+     * @param dispatcher Optional CoroutineDispatcher for coroutine context; defaults to null.
+     */
+    constructor(
+        actionProvider: () -> MlpService,
+        config: MlpServiceConfig? = null,
+        dispatcher: CoroutineDispatcher? = null
+    ): this(actionProvider(), config, dispatcher)
 
-    private val taskExecutor: TaskExecutor = TaskExecutor(action, config)
+    override val context: MlpExecutionContext = action.context
+
+    val config: MlpServiceConfig = initConfig ?: loadActionConfig(environment = environment)
+
+    @Deprecated("Use accountId instead", ReplaceWith("accountId"))
+    val ACCOUNT_ID
+        get() = environment.getOrThrow("MLP_ACCOUNT_ID")
+    @Deprecated("Use modelId instead", ReplaceWith("modelId"))
+    val MODEL_ID
+        get() = environment.getOrThrow("MLP_MODEL_ID")
+
+    val accountId = environment["MLP_ACCOUNT_ID"]
+    val modelId = environment["MLP_MODEL_ID"]
+    val instanceId = environment["MLP_INSTANCE_ID"]
+
+    private val taskExecutor = TaskExecutor(action, config, dispatcher, context)
 
     fun start() {
         check(state.notStarted) { "SDK already started" }
@@ -24,7 +47,7 @@ class MlpServiceSDK(
         setShutdownHook()
 
         taskExecutor.connectorsPool =
-            ConnectorsPool(config.connectionToken, taskExecutor, config)
+            ConnectorsPool(config.connectionToken, taskExecutor, config, context)
 
         state.active()
         startupProbe()
@@ -33,6 +56,21 @@ class MlpServiceSDK(
     fun blockUntilShutdown() {
         check(state.active) { "Action is not started" }
         state.awaitShutdown()
+    }
+
+    fun shutdownConnectorsPool() = runBlocking {
+        taskExecutor.connectorsPool.gracefulShutdown()
+    }
+
+    fun getConnectorsPoolState() =
+        taskExecutor.connectorsPool.state
+
+    fun startConnectorsPool() {
+        check(state.active) { "Action is not started" }
+        check(taskExecutor.connectorsPool.state.isShutdownTypeState()) { "Connectors pool already started or starting" }
+
+        taskExecutor.connectorsPool =
+            ConnectorsPool(config.connectionToken, taskExecutor, config, context)
     }
 
     fun gracefulShutdown() {

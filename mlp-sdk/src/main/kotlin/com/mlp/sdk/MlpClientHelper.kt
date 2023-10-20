@@ -4,15 +4,24 @@ import com.mlp.api.client.model.CreateOrUpdateDatasetInfoData
 import com.mlp.api.client.model.FitRequestData
 import com.mlp.api.client.model.JobStatusData
 import com.mlp.api.client.model.ModelInfoPK
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import org.slf4j.Logger
 import java.io.File
+import java.lang.Thread.*
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 
-interface MlpClientHelper {
+interface MlpClientHelper: WithExecutionContext {
+
+    @Deprecated("Use logger instead", ReplaceWith("logger"))
     val log: Logger
+        get() = logger
+
     val grpcClient: MlpClientSDK
     val restClient: MlpRestClient
+
+    override val context: MlpExecutionContext
+        get() = systemContext
 
     private fun createTempFileContent(content: String): File =
         File.createTempFile("tempFile", "").apply {
@@ -26,7 +35,7 @@ interface MlpClientHelper {
         content: String,
         type: String
     ): Long {
-        log.debug("ensureDataset $name")
+        logger.debug("ensureDataset $name")
 
         val accountId = myAccountId.toString()
         val contentFile = createTempFileContent(content)
@@ -64,12 +73,12 @@ interface MlpClientHelper {
 
     fun ensureDerivedModel(myAccountId: String, modelName: String, baseModelAccountId: String, baseModelId: String): ModelInfoPK {
         val existingModel = kotlin.runCatching {
-            log.info("Looking for existing model $myAccountId/$modelName")
+            logger.info("Looking for existing model $myAccountId/$modelName")
             restClient.modelApi.getModelInfo(myAccountId, modelName, null)
         }.getOrNull()
 
         return if (existingModel == null) {
-            log.info("Creating derived model model $myAccountId/$modelName")
+            logger.debug("Creating derived model model $myAccountId/$modelName")
             val createdDerivedModel = restClient.modelApi.createDerivedModel(
                 baseModelAccountId,
                 baseModelId,
@@ -77,7 +86,7 @@ interface MlpClientHelper {
                 false,
                 null
             )
-            log.warn("Model was created with an id: ${createdDerivedModel.id.accountId}/${createdDerivedModel.id.modelId}")
+            logger.info("Model was created with an id: ${createdDerivedModel.id.accountId}/${createdDerivedModel.id.modelId}")
             createdDerivedModel.id
         } else {
             existingModel.id
@@ -90,8 +99,9 @@ interface MlpClientHelper {
         val TIMEOUT = 10 * 60_000 // 10m
         while (!jobStatus.done && (System.currentTimeMillis() - start) < TIMEOUT) {
             jobStatus = restClient.jobApi.jobStatus(jobStatus.accountId.toString(), jobStatus.jobId, null)
+            sleep(100)
         }
-        log.info("fit is done: $jobStatus")
+        logger.info("fit is done: $jobStatus")
 
         if (!jobStatus.done) {
             throw MlpException("Timeout waiting to fit underlying model")
@@ -109,6 +119,7 @@ interface MlpClientHelper {
             FitRequestData().datasetId(datasetId),
             null
         )
+
         waitForJobDone(jobStatus)
     }
 

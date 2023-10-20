@@ -1,5 +1,6 @@
 package com.mlp.sdk
 
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.MlpServiceConfig.Companion.DEFAULT_THREAD_POOL_SIZE
 import com.mlp.sdk.MlpServiceConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_MS
 import com.mlp.sdk.MlpServiceConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
@@ -33,8 +34,14 @@ data class ActionShutdownConfig(
     val actionConnectorRequestDelayMs: Long = GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
 )
 
-fun loadActionConfig(configPath: String? = null): MlpServiceConfig {
-    val props = ConfigHelper.loadProperties(configPath)
+/**
+ * Loads properties using the system environments variables.
+ */
+fun loadActionConfig(configPath: String? = null): MlpServiceConfig =
+    loadActionConfig(configPath, systemContext.environment)
+
+fun loadActionConfig(configPath: String? = null, environment: Environment): MlpServiceConfig {
+    val props = ConfigHelper.loadProperties(configPath, environment)
     return MlpServiceConfig(
         initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
         connectionToken = props["MLP_SERVICE_TOKEN"]!!,

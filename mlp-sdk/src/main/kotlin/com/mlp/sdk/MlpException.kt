@@ -3,7 +3,7 @@ package com.mlp.sdk
 import com.mlp.gate.SimpleStatusProto
 
 class MlpException(
-        val error: MlpError
+    val error: MlpError
 ): RuntimeException(error.errorCode.message) {
 
     constructor(error: MlpErrorCode, args: Map<String, String> = emptyMap()) : this(MlpError(error, args))

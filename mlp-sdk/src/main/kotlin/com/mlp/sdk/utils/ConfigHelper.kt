@@ -1,5 +1,7 @@
 package com.mlp.sdk.utils
 
+import com.mlp.sdk.Environment
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import java.io.File
 import java.io.FileInputStream
 import java.lang.Exception
@@ -8,7 +10,13 @@ import kotlin.collections.HashMap
 
 object ConfigHelper {
 
-    fun loadProperties(configPath: String? = null): Map<String, String> {
+    /**
+     * Loads properties using the system environments variables.
+     */
+    fun loadProperties(configPath: String? = null): Map<String, String> =
+        loadProperties(configPath, systemContext.environment)
+
+    fun loadProperties(configPath: String? = null, environment: Environment): Map<String, String> {
         val p = HashMap<String, String>()
         p.putAll(loadFromPropsFile("./src/main/conf/default.properties"))
         p.putAll(loadFromPropsFile("./src/main/conf/local.properties"))
@@ -20,6 +28,7 @@ object ConfigHelper {
         p.putAll(loadFromPropsFile(System.getProperties().getProperty("config")))
         p.putAll(loadFromEnv())
         p.putAll(loadFromSystemProps())
+        p.putAll(environment.envsOverride)
         return p
     }
 
@@ -31,7 +40,7 @@ object ConfigHelper {
         }
         val pp = HashMap<String, String>()
         p.forEach {
-            pp.put(it.key.toString(), it.value.toString())
+            pp[it.key.toString()] = it.value.toString()
         }
         return pp
     }
@@ -42,7 +51,7 @@ object ConfigHelper {
             p.load(this.javaClass.getResourceAsStream(resource))
             val pp = HashMap<String, String>()
             p.forEach {
-                pp.put(it.key.toString(), it.value.toString())
+                pp[it.key.toString()] = it.value.toString()
             }
             return pp
         } catch (e: Exception) {
@@ -53,7 +62,7 @@ object ConfigHelper {
     private fun loadFromSystemProps(): Map<String, String> {
         val pp = HashMap<String, String>()
         System.getProperties().forEach {
-            pp.put(it.key.toString(), it.value.toString())
+            pp[it.key.toString()] = it.value.toString()
         }
         return pp
     }
@@ -61,5 +70,4 @@ object ConfigHelper {
     private fun loadFromEnv(): Map<String, String> {
         return System.getenv()
     }
-
 }

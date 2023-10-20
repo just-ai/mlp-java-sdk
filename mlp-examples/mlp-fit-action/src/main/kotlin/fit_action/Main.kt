@@ -1,28 +1,31 @@
 package fit_action
 
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.MlpServiceSDK
-import com.mlp.sdk.utils.JSON
+import com.mlp.sdk.utils.JSON.parse
+import fit_action.Mode.multi
+import fit_action.Mode.single
 
 enum class Mode {
     single,
     multi
 }
-data class InitConfigData(val mode: Mode = Mode.single)
+data class InitConfigData(val mode: Mode = single)
 data class FitDatasetData(val map: Map<String, String>)
 data class FitConfigData(val upper: Boolean)
 data class PredictRequestData(val text: String)
 data class PredictResponseData(val text: String)
 
 fun main() {
-    val initConfig = JSON.parse(System.getenv().get("SERVICE_CONFIG") ?: """{"fitMode":"single"}""", InitConfigData::class.java)
+    val initConfig = parse<InitConfigData>(systemContext.environment["SERVICE_CONFIG"] ?: """{"mode":"single"}""")
     val service =
         when (initConfig.mode) {
-            Mode.single -> SingleFit()
-            Mode.multi ->
-                if (System.getenv()["MLP_STORAGE_DIR"].isNullOrEmpty()) {
-                    FitService()
+            single -> SingleFit(systemContext)
+            multi ->
+                if (systemContext.environment["MLP_STORAGE_DIR"].isNullOrEmpty()) {
+                    FitService(systemContext)
                 } else {
-                    PredictService()
+                    PredictService(systemContext)
                 }
         }
 

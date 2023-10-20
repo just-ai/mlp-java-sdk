@@ -3,27 +3,31 @@ package com.mlp.sdk
 import com.google.protobuf.MessageLite
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.State.Condition.ACTIVE
-import com.mlp.sdk.utils.WithLogger
+import java.time.Duration.ofSeconds
+import java.time.Instant.now
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Duration.ofSeconds
-import java.time.Instant.now
 
 class ConnectorsPool(
     val token: String,
     private val executor: TaskExecutor,
-    private val config: MlpServiceConfig
-) : WithLogger, WithState(ACTIVE) {
+    private val config: MlpServiceConfig,
+    override val context: MlpExecutionContext
+) : WithExecutionContext, WithState(ACTIVE) {
 
-    private var connectors = config.initialGateUrls.map {
-        Connector(it, this, executor, config)
-    }.associateBy { it.id }
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val clusterMutex = Mutex()
+
+    private var connectors = config.initialGateUrls
+        .map { Connector(it, this, executor, config, scope, context) }
+        .associateBy { it.id }
 
     init {
         launchConnectorsMonitor()
@@ -95,7 +99,7 @@ class ConnectorsPool(
             connectorsToShutdown = connectors.filterValues { it.targetUrl !in urls }.values
 
             connectors = urls.map { url ->
-                connectorsMap[url] ?: Connector(url, this, executor, config)
+                connectorsMap[url] ?: Connector(url, this, executor, config, scope, context)
             }.associateBy { it.id }
 
             logger.info("$this: ... connectors are updated")
@@ -111,7 +115,7 @@ class ConnectorsPool(
         logger.info("$this: ... old connectors are shut down")
     }
 
-    private fun launchConnectorsMonitor() = clusterDispatcher.launch {
+    private fun launchConnectorsMonitor() = scope.launch {
         logger.info("$this: launched connectors monitor")
         var lastActiveTime = now()
         while (state.active && isActive) {
@@ -130,14 +134,9 @@ class ConnectorsPool(
     }
 
     override fun toString() = "ConnectorsPool"
-
-    companion object {
-        val clusterDispatcher = CoroutineScope(Dispatchers.IO)
-        private val clusterMutex = Mutex()
-    }
 }
 
-internal fun WithLogger.logProto(
+internal fun WithExecutionContext.logProto(
     body: MessageLite,
     prompt: String,
 ) {

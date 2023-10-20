@@ -6,12 +6,19 @@ import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.GateGrpcKt.GateCoroutineStub
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
-import com.mlp.sdk.utils.WithLogger
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.StatusException
 import io.grpc.StatusRuntimeException
+import java.time.Duration
+import java.time.Duration.between
+import java.time.Duration.ofSeconds
+import java.time.Instant.now
+import java.util.concurrent.Executors.defaultThreadFactory
+import java.util.concurrent.Executors.newSingleThreadExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
@@ -25,18 +32,13 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import org.slf4j.MDC
-import java.time.Duration
-import java.time.Duration.between
-import java.time.Duration.ofSeconds
-import java.time.Instant.now
-import java.util.concurrent.Executors.defaultThreadFactory
-import java.util.concurrent.Executors.newSingleThreadExecutor
-import java.util.concurrent.TimeUnit
 
 class MlpClientSDK(
-    val config: MlpClientConfig = loadClientConfig(),
-) : WithLogger {
+    initConfig: MlpClientConfig? = null,
+    override val context: MlpExecutionContext = systemContext
+) : WithExecutionContext {
 
+    val config = initConfig ?: loadClientConfig(environment = environment)
     var connectionToken: String?
     private lateinit var channel: ManagedChannel
     private lateinit var stub: GateCoroutineStub
@@ -223,7 +225,7 @@ class MlpClientSDK(
             if (channel.awaitTermination(config.shutdownConfig.clientMs, TimeUnit.MILLISECONDS)) {
                 logger.debug("Shutdown completed")
             } else {
-                logger.error("Failed to shutdown gprc channel!")
+                logger.error("Failed to shutdown grpc channel!")
             }
         } catch (e: InterruptedException) {
             logger.error("Interrupted while waiting for shutdown", e)
