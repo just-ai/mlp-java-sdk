@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.min
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -128,7 +129,7 @@ class Connector(
         runCatching {
             while (isActive) {
                 if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
-                    delay(5_000L)
+                    delay(1_000L)
                 }
 
                 if (grpcChannel.isShutdownStateOrNull()) {
@@ -153,7 +154,13 @@ class Connector(
                 delay(progressiveDelay)
             }
             logger.debug("${this@Connector}: ... keep connection job is stopped because scope is not active")
-        }.onFailure { logger.error("${this@Connector}: error while keep connection job running", it) }
+        }.onFailure {
+            if (state.isShutdownTypeState() && it is CancellationException)
+                return@onFailure
+            else
+                logger.error("${this@Connector}: error while keep connection job running", it)
+        }
+
         logger.debug("${this@Connector}: ... keep connection job has been stopped")
     }
 
@@ -361,7 +368,7 @@ class Connector(
 
             logger.debug("$this: completing stream to $targetUrl ...")
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
-                .onFailure { logger.error("$this: can't complete stream", it) }
+                .onFailure { if (it !is IllegalStateException) logger.error("$this: can't complete stream", it) }
 
             gracefulShutdownManagedChannel()
         }
