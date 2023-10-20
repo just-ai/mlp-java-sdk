@@ -1,7 +1,6 @@
 package com.mlp.sdk
 
 import com.mlp.gate.ApiErrorProto
-import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.ClusterUpdateProto
 import com.mlp.gate.GateGrpc
 import com.mlp.gate.GateToServiceProto
@@ -16,17 +15,15 @@ import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
 import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
+import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.StartServingProto
 import com.mlp.gate.StopServingProto
-import com.mlp.sdk.ConnectorsPool.Companion.clusterDispatcher
 import com.mlp.sdk.State.Condition.ACTIVE
-import io.grpc.*
+import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import kotlin.math.min
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.slf4j.MDC
 import java.io.File
 import java.time.Duration
 import java.time.Duration.between
@@ -35,6 +32,17 @@ import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.min
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
+import org.slf4j.MDC
 
 class Connector(
     @Volatile
@@ -42,6 +50,7 @@ class Connector(
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
     val config: MlpServiceConfig,
+    val scope: CoroutineScope,
     override val context: MlpExecutionContext
 ) : WithExecutionContext, WithState(ACTIVE) {
 
@@ -111,7 +120,7 @@ class Connector(
         logger.debug("$this: ... has been successfully shutdown")
     }
 
-    private fun launchKeepConnectionJob() = clusterDispatcher.launch {
+    private fun launchKeepConnectionJob() = scope.launch {
         logger.debug("${this@Connector}: keep connection job is started ...")
 
         var lastActiveTime = now()
@@ -305,7 +314,7 @@ class Connector(
             logger.info("$this: receive graceful shutdown from gate ...")
             state.shuttingDown()
 
-            clusterDispatcher.launch {
+            scope.launch {
                 gracefulShutdownPrivate()
             }
         }
@@ -314,7 +323,7 @@ class Connector(
             logger.warn("Connector $id: Receive instance_by_token_not_found error, so shutdown grpc channel")
             state.shuttingDown()
 
-            clusterDispatcher.launch {
+            scope.launch {
                 gracefulShutdownPrivate()
                 state.shutdownReason = "instance_by_token_not_found"
             }
@@ -459,12 +468,12 @@ class Connector(
                 targetUrl = cluster.currentServer
             }
 
-            clusterDispatcher.launch {
+            scope.launch {
                 pool.updateConnectors(cluster.serversList)
             }
         }
 
-        private fun launchHeartbeatJob() = clusterDispatcher.launch {
+        private fun launchHeartbeatJob() = scope.launch {
             logger.debug("Connector $id: starting heartbeats with interval $heartbeatInterval ms")
 
             while (!state.shutdown) {

@@ -22,10 +22,11 @@ class ConnectorsPool(
     override val context: MlpExecutionContext
 ) : WithExecutionContext, WithState(ACTIVE) {
 
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val clusterMutex = Mutex()
 
     private var connectors = config.initialGateUrls
-        .map { Connector(it, this, executor, config, context) }
+        .map { Connector(it, this, executor, config, scope, context) }
         .associateBy { it.id }
 
     init {
@@ -98,7 +99,7 @@ class ConnectorsPool(
             connectorsToShutdown = connectors.filterValues { it.targetUrl !in urls }.values
 
             connectors = urls.map { url ->
-                connectorsMap[url] ?: Connector(url, this, executor, config, context)
+                connectorsMap[url] ?: Connector(url, this, executor, config, scope, context)
             }.associateBy { it.id }
 
             logger.info("$this: ... connectors are updated")
@@ -114,7 +115,7 @@ class ConnectorsPool(
         logger.info("$this: ... old connectors are shut down")
     }
 
-    private fun launchConnectorsMonitor() = clusterDispatcher.launch {
+    private fun launchConnectorsMonitor() = scope.launch {
         logger.info("$this: launched connectors monitor")
         var lastActiveTime = now()
         while (state.active && isActive) {
@@ -133,10 +134,6 @@ class ConnectorsPool(
     }
 
     override fun toString() = "ConnectorsPool"
-
-    companion object {
-        val clusterDispatcher = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    }
 }
 
 internal fun WithExecutionContext.logProto(
