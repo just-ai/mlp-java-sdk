@@ -1,1 +1,7 @@
-{"args":null,"error":"common.error.internal","message":"Internal server error","uuid":"96d0ea05-6f69-4293-a9ab-8df359880393"}
+<html>
+<head><title>503 Service Temporarily Unavailable</title></head>
+<body>
+<center><h1>503 Service Temporarily Unavailable</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
