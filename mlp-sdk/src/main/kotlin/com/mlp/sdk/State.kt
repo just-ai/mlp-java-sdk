@@ -6,20 +6,26 @@ import com.mlp.sdk.State.Condition.NOT_STARTED
 import com.mlp.sdk.State.Condition.SHUTTING_DOWN
 import com.mlp.sdk.State.Condition.SHUT_DOWN
 import com.mlp.sdk.State.Condition.STARTING
-import com.mlp.sdk.utils.WithLogger
 import java.util.concurrent.CountDownLatch
 
-abstract class WithState(condition: Condition = NOT_STARTED) {
-    internal val state by lazy { State(this, condition) }
+abstract class WithState(condition: Condition = NOT_STARTED): WithExecutionContext {
+    internal val state by lazy { State(this, condition, context) }
 }
 
-class State(private val component: Any, startCondition: Condition = NOT_STARTED) : WithLogger {
+class State(
+    private val component: Any,
+    startCondition: Condition = NOT_STARTED,
+    override val context: MlpExecutionContext
+) : WithExecutionContext {
 
     private val shutdownLatch = CountDownLatch(1)
 
     @Volatile
     var condition = startCondition
         private set
+
+    @Volatile
+    var shutdownReason: String? = null
 
     val notStarted get() = condition == NOT_STARTED
     val starting get() = condition == STARTING

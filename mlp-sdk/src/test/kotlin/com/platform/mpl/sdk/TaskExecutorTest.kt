@@ -6,6 +6,7 @@ import com.mlp.gate.FitRequestProto
 import com.mlp.gate.PredictRequestProto.getDefaultInstance
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.*
+import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,7 +27,7 @@ class TaskExecutorTest {
                 actionConnectorRequestDelayMs = 50
             )
         )
-        val taskExecutor = TaskExecutor(service, config)
+        val taskExecutor = TaskExecutor(service, config, null, systemContext)
 
         val connectorId_1 = 1L
         val connectorId_2 = 2L

@@ -23,5 +23,12 @@ data class TtsConfig(
 )
 
 data class TtsResponse(
+    val text: String,
     val audio_base64: String
 )
+
+data class TtsDictionary(
+    val dictionary: List<TtsDictionaryEntry>
+)
+
+data class TtsDictionaryEntry(val original: String, val replacement: String)

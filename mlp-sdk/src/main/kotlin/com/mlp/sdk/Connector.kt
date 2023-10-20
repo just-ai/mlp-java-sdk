@@ -1,6 +1,6 @@
 package com.mlp.sdk
 
-import com.mlp.gate.ServiceToGateProto
+import com.mlp.gate.ApiErrorProto
 import com.mlp.gate.ClusterUpdateProto
 import com.mlp.gate.GateGrpc
 import com.mlp.gate.GateToServiceProto
@@ -12,39 +12,48 @@ import com.mlp.gate.GateToServiceProto.BodyCase.EXT
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
-import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
 import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceInfoProto
+import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.StartServingProto
 import com.mlp.gate.StopServingProto
-import com.mlp.sdk.ConnectorsPool.Companion.clusterDispatcher
 import com.mlp.sdk.State.Condition.ACTIVE
-import com.mlp.sdk.utils.WithLogger
-import io.grpc.*
+import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import kotlin.math.min
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.slf4j.MDC
 import java.io.File
 import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofMillis
-import java.time.Instant
 import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.min
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
+import org.slf4j.MDC
 
 class Connector(
     @Volatile
     var targetUrl: String,
     val pool: ConnectorsPool,
     val executor: TaskExecutor,
-    val config: MlpServiceConfig
-) : WithLogger, WithState(ACTIVE) {
+    val config: MlpServiceConfig,
+    val scope: CoroutineScope,
+    override val context: MlpExecutionContext
+) : WithExecutionContext, WithState(ACTIVE) {
 
     val id = lastConnectorId.getAndIncrement()
 
@@ -112,13 +121,17 @@ class Connector(
         logger.debug("$this: ... has been successfully shutdown")
     }
 
-    private fun launchKeepConnectionJob() = clusterDispatcher.launch {
+    private fun launchKeepConnectionJob() = scope.launch {
         logger.debug("${this@Connector}: keep connection job is started ...")
 
         var lastActiveTime = now()
         var progressiveDelay = 100L
         runCatching {
             while (isActive) {
+                if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
+                    delay(1_000L)
+                }
+
                 if (grpcChannel.isShutdownStateOrNull()) {
                     val connected = tryConnectOrShutdown()
                     if (connected) {
@@ -128,10 +141,12 @@ class Connector(
                         progressiveDelay = min(progressiveDelay * 2, 5_000L)
                     }
                 }
+
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
                     progressiveDelay = 100L
                 }
+
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
                     tryGrpcShutdown()
                 }
@@ -139,7 +154,13 @@ class Connector(
                 delay(progressiveDelay)
             }
             logger.debug("${this@Connector}: ... keep connection job is stopped because scope is not active")
-        }.onFailure { logger.error("${this@Connector}: error while keep connection job running", it) }
+        }.onFailure {
+            if (state.isShutdownTypeState() && it is CancellationException)
+                return@onFailure
+            else
+                logger.error("${this@Connector}: error while keep connection job running", it)
+        }
+
         logger.debug("${this@Connector}: ... keep connection job has been stopped")
     }
 
@@ -156,7 +177,7 @@ class Connector(
 
     private suspend fun tryConnectOrShutdown(): Boolean {
         logger.debug("${this@Connector}: creating new grpc channel ...")
-        val newGrpcChannel = GrpcChannel()
+        val newGrpcChannel = GrpcChannel(context)
         runCatching {
             newGrpcChannel.tryConnect()
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
@@ -175,7 +196,9 @@ class Connector(
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
     }
 
-    private inner class GrpcChannel : StreamObserver<GateToServiceProto>, WithLogger, WithState() {
+    private inner class GrpcChannel(
+        override val context: MlpExecutionContext
+    ) : StreamObserver<GateToServiceProto>, WithExecutionContext, WithState() {
 
         private lateinit var managedChannel: ManagedChannel
         private lateinit var stream: StreamObserver<ServiceToGateProto>
@@ -257,7 +280,7 @@ class Connector(
                 FIT -> executor.fit(request.fit, request.requestId, id)
                 EXT -> executor.ext(request.ext, request.requestId, id)
                 BATCH -> executor.batch(request.batch, request.requestId, id)
-                ERROR -> logger.error("Connector $id: error ${request.error.message}")
+                ERROR -> processError(request.error)
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $id: body case is null")
@@ -285,12 +308,31 @@ class Connector(
             gracefulShutdownManagedChannel()
         }
 
+        private fun processError(error: ApiErrorProto) = runBlocking {
+            when (error.code) {
+                "mlp.gate.instance_by_token_not_found" ->
+                    processTokenNotFound()
+                else ->
+                    logger.error("Connector $id: error ${error.message}")
+            }
+        }
+
         private fun processStopServing() {
             logger.info("$this: receive graceful shutdown from gate ...")
             state.shuttingDown()
 
-            clusterDispatcher.launch {
+            scope.launch {
                 gracefulShutdownPrivate()
+            }
+        }
+
+        private fun processTokenNotFound() {
+            logger.warn("Connector $id: Receive instance_by_token_not_found error, so shutdown grpc channel")
+            state.shuttingDown()
+
+            scope.launch {
+                gracefulShutdownPrivate()
+                state.shutdownReason = "instance_by_token_not_found"
             }
         }
 
@@ -326,7 +368,7 @@ class Connector(
 
             logger.debug("$this: completing stream to $targetUrl ...")
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
-                .onFailure { logger.error("$this: can't complete stream", it) }
+                .onFailure { if (it !is IllegalStateException) logger.error("$this: can't complete stream", it) }
 
             gracefulShutdownManagedChannel()
         }
@@ -367,7 +409,7 @@ class Connector(
             }
         }
 
-        private fun gracefulShutdownManagedChannel() {
+        private fun gracefulShutdownManagedChannel(reason: String? = null) {
             logger.debug("$this: graceful shutting down managed channel to $targetUrl ...")
 
             try {
@@ -433,12 +475,12 @@ class Connector(
                 targetUrl = cluster.currentServer
             }
 
-            clusterDispatcher.launch {
+            scope.launch {
                 pool.updateConnectors(cluster.serversList)
             }
         }
 
-        private fun launchHeartbeatJob() = clusterDispatcher.launch {
+        private fun launchHeartbeatJob() = scope.launch {
             logger.debug("Connector $id: starting heartbeats with interval $heartbeatInterval ms")
 
             while (!state.shutdown) {
