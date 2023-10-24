@@ -62,7 +62,7 @@ private class FileHttpMessageConverter :
             ?.split("=")?.getOrNull(1)
             ?: throw IllegalArgumentException("Header $CONTENT_DISPOSITION not found")
 
-        val destination = File(fileName)
+        val destination = File(FileUtils.getTempDirectoryPath(), fileName)
         destination.deleteOnExit()
         FileUtils.copyInputStreamToFile(inputMessage.body, destination)
         return destination
