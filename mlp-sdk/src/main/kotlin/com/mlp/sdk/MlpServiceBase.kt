@@ -123,6 +123,7 @@ abstract class MlpPredictWithConfigServiceBase<P: Any, C: Any, R: Any>(
 class MlpRestClient (
     restUrl: String? = null,
     clientToken: String? = null,
+    billingToken: String? = null,
     override val context: MlpExecutionContext = systemContext
 ): WithExecutionContext {
 
@@ -147,6 +148,7 @@ class MlpRestClient (
         apiClient = ApiClient().apply {
             basePath = restUrl ?: environment.getOrThrow("MLP_REST_URL")
             addDefaultHeader("MLP-API-KEY", clientToken ?: environment.getOrThrow("MLP_CLIENT_TOKEN"))
+            billingToken?.let { addDefaultHeader("MLP-BILLING-KEY", it) }
         }
 
         processApi = ProcessEndpointApi(apiClient)
