@@ -18,11 +18,13 @@ class MlpApiClient(
     defaultApiToken: String?,
     apiGateUrl: String,
     restTemplate: RestTemplate = getRestTemplate(),
+    billingToken: String? = null
 ) : ApiClient(restTemplate) {
 
     init {
         basePath = apiGateUrl
         defaultApiToken?.let { addDefaultHeader("MLP-API-KEY", it) }
+        billingToken?.let { addDefaultHeader("MLP-BILLING-KEY", it) }
     }
 
     companion object {
@@ -60,7 +62,7 @@ private class FileHttpMessageConverter :
             ?.split("=")?.getOrNull(1)
             ?: throw IllegalArgumentException("Header $CONTENT_DISPOSITION not found")
 
-        val destination = File(fileName)
+        val destination = File(FileUtils.getTempDirectoryPath(), fileName)
         destination.deleteOnExit()
         FileUtils.copyInputStreamToFile(inputMessage.body, destination)
         return destination

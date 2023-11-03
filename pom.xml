@@ -16,6 +16,7 @@
     <groupId>com.mlp</groupId>
     <artifactId>mlp-java-sdk</artifactId>
     <version>dev-SNAPSHOT</version>
+
     <name>mlp-java-sdk</name>
     <description>MLP Java SDK</description>
 
