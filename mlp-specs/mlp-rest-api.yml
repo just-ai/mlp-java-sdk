@@ -6416,9 +6416,9 @@ components:
     DifferenceIAccountDataDump:
       type: object
       properties:
-        after:
-          $ref: '#/components/schemas/AccountDataDump'
         before:
+          $ref: '#/components/schemas/AccountDataDump'
+        after:
           $ref: '#/components/schemas/AccountDataDump'
     DocumentDump:
       required:
@@ -6792,9 +6792,9 @@ components:
     DifferenceIAccountConfigDump:
       type: object
       properties:
-        after:
-          $ref: '#/components/schemas/AccountConfigDump'
         before:
+          $ref: '#/components/schemas/AccountConfigDump'
+        after:
           $ref: '#/components/schemas/AccountConfigDump'
     AccountInfoData:
       required:
@@ -8009,8 +8009,6 @@ components:
           format: int32
         first:
           type: boolean
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
         size:
           type: integer
           format: int32
@@ -8026,6 +8024,8 @@ components:
         numberOfElements:
           type: integer
           format: int32
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
         last:
           type: boolean
         empty:
@@ -8033,17 +8033,17 @@ components:
     PageableObject:
       type: object
       properties:
+        offset:
+          type: integer
+          format: int64
+        sort:
+          $ref: '#/components/schemas/Sort'
         pageNumber:
           type: integer
           format: int32
         pageSize:
           type: integer
           format: int32
-        offset:
-          type: integer
-          format: int64
-        sort:
-          $ref: '#/components/schemas/Sort'
         paged:
           type: boolean
         unpaged:
@@ -8051,9 +8051,9 @@ components:
     Sort:
       type: object
       properties:
-        sorted:
-          type: boolean
         empty:
+          type: boolean
+        sorted:
           type: boolean
         unsorted:
           type: boolean
