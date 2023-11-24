@@ -220,6 +220,18 @@ private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<
             when (data) {
                 is Payload -> builder.setPredict(PredictResponseProto.newBuilder().setData(data.asProto))
                 is MlpResponseException -> builder.setError(data.exception.asErrorProto)
+                is MlpPartialBinaryResponse -> builder.setError(
+                    ApiErrorProto.newBuilder()
+                        .setCode(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.code)
+                        .setMessage(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.message)
+                        .setStatus(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.status)
+                )
+                is RawPayload -> builder.setError(
+                    ApiErrorProto.newBuilder()
+                        .setCode(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.code)
+                        .setMessage(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.message)
+                        .setStatus(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.status)
+                )
             }
             builder.build()
         }

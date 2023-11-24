@@ -39,4 +39,8 @@ enum class CommonErrorCode(
     PROCESSING_EXCEPTION("mlp-action.common.processing-exception", "Something went wrong during processing the request", SimpleStatusProto.INTERNAL_SERVER_ERROR),
 
     REQUEST_TYPE_NOT_SUPPORTED("mlp-action.common.method-not-supported", "\${type} requests are not supported by this action", SimpleStatusProto.BAD_REQUEST),
+
+    PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH("mlp-action.common.no-partial-in-batch", "Partial response can not be used in batch", SimpleStatusProto.BAD_REQUEST),
+
+    RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH("mlp-action.common.no-raw-payload-in-batch", "Raw payload can not be used in batch", SimpleStatusProto.BAD_REQUEST),
 }
