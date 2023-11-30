@@ -13,6 +13,8 @@ data class CreateTranscriptionRequest(
 
     val audioBase64: String,
 
+    val formatExtension: String = "wav",
+
     val prompt: String? = null,
 
     @JsonProperty("response_format")
@@ -31,6 +33,8 @@ data class CreateTranslationRequest(
     val model: String = "whisper-1",
 
     val audioBase64: String,
+
+    val formatExtension: String = "wav",
 
     val prompt: String? = null,
 
