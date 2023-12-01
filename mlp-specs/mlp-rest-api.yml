@@ -7440,6 +7440,8 @@ components:
         datasetId:
           type: integer
           format: int64
+        billingToken:
+          type: string
     JsonNode:
       type: object
     JobStatusData:
@@ -8009,6 +8011,8 @@ components:
         totalPages:
           type: integer
           format: int32
+        first:
+          type: boolean
         size:
           type: integer
           format: int32
@@ -8021,8 +8025,6 @@ components:
           format: int32
         sort:
           $ref: '#/components/schemas/Sort'
-        first:
-          type: boolean
         numberOfElements:
           type: integer
           format: int32
@@ -8046,9 +8048,9 @@ components:
         pageSize:
           type: integer
           format: int32
-        paged:
-          type: boolean
         unpaged:
+          type: boolean
+        paged:
           type: boolean
     Sort:
       type: object
