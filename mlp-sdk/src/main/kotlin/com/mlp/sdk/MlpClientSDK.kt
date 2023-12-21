@@ -56,6 +56,12 @@ class MlpClientSDK(
         launchBackoffJob()
     }
 
+    private fun reconnect() {
+        logger.info("Reconnecting to gate")
+        val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
+        connect(gateUrl)
+    }
+
     private fun connect(gateUrl: String) {
         val channelBuilder = ManagedChannelBuilder
             .forTarget(gateUrl)
@@ -195,10 +201,15 @@ class MlpClientSDK(
         while (true) {
             attempt++
             val response = kotlin.runCatching { action() }
-                .onFailure { logger.error("Error while sending request", it) }
+                .onFailure {
+                    logger.error("Error while sending request", it)
+                    if (attempt >= retryConfig.maxAttempts)
+                        reconnect()
+                }
                 .getOrNull()
 
             if (response == null) {
+                logger.warn("Current channel state: ${channel.getState(true)}")
                 channel.resetConnectBackoff()
                 continue
             }
@@ -251,6 +262,8 @@ class MlpClientSDK(
             if (channel.getState(true) == READY) {
                 lastReadyTime = now()
                 continue
+            } else {
+                logger.warn("Channel is not ready")
             }
 
             if (between(lastReadyTime, now()) > maxBackoffMs) {
