@@ -175,7 +175,7 @@ class MlpClientSDK(
         val timeoutMs = timeout?.toMillis() ?: config.clientPredictTimeoutMs
         val response = withTimeout(timeoutMs) { withRetry { executePredictRequest(request) } }
 
-        if (response.hasError())  {
+        if (response.hasError()) {
             logger.error("Error from gate. Error \n${response.error}")
             throw MlpClientException(response.error.code, response.error.message, response.error.argsMap, response.headersMap["Z-requestId"])
         }
