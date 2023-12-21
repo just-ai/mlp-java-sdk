@@ -211,6 +211,7 @@ class MlpClientSDK(
             if (response == null) {
                 logger.warn("Current channel state: ${channel.getState(true)}")
                 channel.resetConnectBackoff()
+                delay(retryConfig.backoffMs)
                 continue
             }
 
