@@ -195,7 +195,7 @@ class MlpClientSDK(
         while (true) {
             attempt++
             val response = kotlin.runCatching { action() }
-                .onFailure { logger.error("Error while sending request") }
+                .onFailure { logger.error("Error while sending request", it) }
                 .getOrNull()
 
             if (response == null) {
