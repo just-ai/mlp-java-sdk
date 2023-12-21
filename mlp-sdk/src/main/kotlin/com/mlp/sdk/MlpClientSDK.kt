@@ -194,7 +194,14 @@ class MlpClientSDK(
         var attempt = 0
         while (true) {
             attempt++
-            val response = action()
+            val response = kotlin.runCatching { action() }
+                .onFailure { logger.error("Error while sending request") }
+                .getOrNull()
+
+            if (response == null) {
+                channel.resetConnectBackoff()
+                continue
+            }
 
             val hasRetryableError = response.hasError() && response.error.code in retryConfig.retryableErrorCodes
             val canRetry = hasRetryableError && attempt < retryConfig.maxAttempts
