@@ -210,7 +210,7 @@ class MlpClientSDK(
                 !response.hasError() || attempt >= retryConfig.maxAttempts ->
                     return response
 
-                response.error.code in reconnectErrorsCodes -> {
+                response.error.code in reconnectErrorCodes -> {
                     logger.warn("Reconnect error from gate, attempt $attempt/${retryConfig.maxAttempts}.")
 
                     reconnect()
@@ -351,7 +351,7 @@ class MlpClientSDK(
             newSingleThreadExecutor { defaultThreadFactory().newThread(it).apply { isDaemon = true } }
 
 
-        val reconnectErrorsCodes: List<String> =
+        val reconnectErrorCodes: List<String> =
             listOf("mlp.gate.gate_is_shut_down")
     }
 }
