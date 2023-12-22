@@ -200,32 +200,26 @@ class MlpClientSDK(
         var attempt = 0
         while (true) {
             attempt++
-            val response = kotlin.runCatching { action() }
-                .onFailure {
-                    logger.error("Error while sending request", it)
-                    if (attempt >= retryConfig.maxAttempts)
-                        reconnect()
+            val response = action()
+
+            when {
+                !response.hasError() || attempt >= retryConfig.maxAttempts ->
+                    return response
+
+                response.error.code in reconnectErrorsCodes -> {
+                    logger.warn("Reconnect error from gate, attempt $attempt/${retryConfig.maxAttempts}.")
+
+                    reconnect()
                 }
-                .getOrNull()
 
-            if (response == null) {
-                logger.warn("Current channel state: ${channel.getState(true)}")
-                channel.resetConnectBackoff()
-                delay(retryConfig.backoffMs)
-                continue
+                response.error.code in retryConfig.retryableErrorCodes ->
+                    logger.error("Error from gate, attempt $attempt/${retryConfig.maxAttempts}. Error \n${response.error}")
+
+                else ->
+                    return response
             }
 
-            val hasRetryableError = response.hasError() && response.error.code in retryConfig.retryableErrorCodes
-            val canRetry = hasRetryableError && attempt < retryConfig.maxAttempts
-
-            if (canRetry) {
-                logger.error("Error from gate, attempt $attempt/${retryConfig.maxAttempts}. Error \n${response.error}")
-
-                delay(retryConfig.backoffMs)
-                continue
-            } else {
-                return response
-            }
+            delay(retryConfig.backoffMs)
         }
     }
 
@@ -263,8 +257,6 @@ class MlpClientSDK(
             if (channel.getState(true) == READY) {
                 lastReadyTime = now()
                 continue
-            } else {
-                logger.warn("Channel is not ready")
             }
 
             if (between(lastReadyTime, now()) > maxBackoffMs) {
@@ -353,5 +345,9 @@ class MlpClientSDK(
 
         private fun newDaemonSingleThreadExecutor() =
             newSingleThreadExecutor { defaultThreadFactory().newThread(it).apply { isDaemon = true } }
+
+
+        val reconnectErrorsCodes: List<String> =
+            listOf("mlp.gate.gate_is_shut_down")
     }
 }

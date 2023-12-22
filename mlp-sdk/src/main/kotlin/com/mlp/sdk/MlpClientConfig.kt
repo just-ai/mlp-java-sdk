@@ -29,7 +29,10 @@ class MlpClientConfig(
         const val CLIENT_PREDICT_RETRY_MAX_ATTEMPTS: Int = 10
         const val CLIENT_PREDICT_RETRY_BACKOFF_MS: Long = 300
         val CLIENT_PREDICT_RETRYABLE_ERROR_CODES: List<String> =
-            listOf("mlp.gate.pps_limit_exceeded", "mlp.gate.gate_is_shut_down", "mlp-action.common.channel-closed-error")
+            listOf(
+                "mlp.gate.pps_limit_exceeded",
+                "mlp-action.common.channel-closed-error"
+            )
 
         const val GRACEFUL_SHUTDOWN_CLIENT_MS: Long = 10000
         const val GRPC_SECURE: Boolean = true
