@@ -19,6 +19,7 @@ import java.time.Instant.now
 import java.util.concurrent.Executors.defaultThreadFactory
 import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +42,7 @@ class MlpClientSDK(
     val config = initConfig ?: loadClientConfig(environment = environment)
     var connectionToken: String?
     var billingToken: String?
-    private lateinit var channel: ManagedChannel
+    private val channel = AtomicReference<ManagedChannel>()
     private lateinit var stub: GateCoroutineStub
 
     val apiClient by lazy { MlpApiClient.getInstance(config.clientToken, config.clientApiGateUrl) }
@@ -71,29 +72,32 @@ class MlpClientSDK(
 
         if (!config.grpcSecure)
             channelBuilder.usePlaintext()
-        channel = channelBuilder.build()
+        val newChannel = channelBuilder.build()
+        val previousChannel = channel.getAndSet(newChannel)
+        stub = GateCoroutineStub(newChannel)
 
-        stub = GateCoroutineStub(channel)
+        runCatching { previousChannel?.shutdown() }
+            .onFailure { logger.warn("Exception while shutting down managed channel") }
     }
 
     /**
      * Connection may be IDLE because of inactivity some time ago. If you want to await for connection to be ready, use [awaitConnection] instead.
      */
     fun isConnected() =
-        channel.getState(true) == READY
+        channel.get().getState(true) == READY
 
     /**
      * Await for connection to be ready. If connection is already ready, returns immediately.
      */
     suspend fun awaitConnection() {
         while (true) {
-            val state = channel.getState(true)
+            val state = channel.get().getState(true)
 
             if (state == READY)
                 break
 
             suspendCancellableCoroutine<Unit> {
-                channel.notifyWhenStateChanged(state) { it.resume(Unit) }
+                channel.get().notifyWhenStateChanged(state) { it.resume(Unit) }
             }
         }
     }
@@ -235,9 +239,9 @@ class MlpClientSDK(
     }
 
     fun shutdown() {
-        channel.shutdown()
+        channel.get()?.shutdown()
         try {
-            if (channel.awaitTermination(config.shutdownConfig.clientMs, TimeUnit.MILLISECONDS)) {
+            if (channel.get()?.awaitTermination(config.shutdownConfig.clientMs, TimeUnit.MILLISECONDS) != false) {
                 logger.debug("Shutdown completed")
             } else {
                 logger.error("Failed to shutdown grpc channel!")
@@ -254,14 +258,14 @@ class MlpClientSDK(
         while (isActive) {
             delay(1000L)
 
-            if (channel.getState(true) == READY) {
+            if (channel.get().getState(true) == READY) {
                 lastReadyTime = now()
                 continue
             }
 
             if (between(lastReadyTime, now()) > maxBackoffMs) {
                 logger.warn("Channel is not ready for ${config.maxBackoffSeconds} seconds, resetting backoff")
-                channel.resetConnectBackoff()
+                channel.get().resetConnectBackoff()
             }
         }
     }
