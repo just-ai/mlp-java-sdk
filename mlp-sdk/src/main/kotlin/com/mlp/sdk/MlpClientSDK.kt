@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -45,6 +46,7 @@ class MlpClientSDK(
     private lateinit var stub: GateCoroutineStub
 
     val apiClient by lazy { MlpApiClient.getInstance(config.clientToken, config.clientApiGateUrl) }
+    val backoffJob: Job
 
     init {
         val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
@@ -53,7 +55,7 @@ class MlpClientSDK(
         logger.debug("Starting mlp client for url $gateUrl")
         connect(gateUrl)
 
-        launchBackoffJob()
+        backoffJob = launchBackoffJob()
     }
 
     private fun connect(gateUrl: String) {
@@ -222,6 +224,8 @@ class MlpClientSDK(
     }
 
     fun shutdown() {
+        backoffJob.cancel()
+
         channel.shutdown()
         try {
             if (channel.awaitTermination(config.shutdownConfig.clientMs, TimeUnit.MILLISECONDS)) {
