@@ -82,11 +82,11 @@
             </properties>
             <distributionManagement>
                 <snapshotRepository>
-                    <id>nexus-open-snapshots</id>
+                    <id>nexus-snapshots</id>
                     <url>https://nexus-open.just-ai.com/repository/maven-snapshots/</url>
                 </snapshotRepository>
                 <repository>
-                    <id>nexus-open-releases</id>
+                    <id>nexus-releases</id>
                     <url>https://nexus-open.just-ai.com/repository/maven-releases/</url>
                 </repository>
             </distributionManagement>
