@@ -58,41 +58,37 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>${snapshotRepo}</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <url>${releaseRepo}</url>
+        </repository>
+    </distributionManagement>
+
     <profiles>
         <profile>
             <id>internal</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>nexus-snapshots</id>
-                    <url>https://nexus.just-ai.com/repository/maven-snapshots/</url>
-                </snapshotRepository>
-                <repository>
-                    <id>nexus-releases</id>
-                    <url>https://nexus.just-ai.com/repository/maven-releases/</url>
-                </repository>
-            </distributionManagement>
+            <properties>
+                <snapshotRepo>https://nexus.just-ai.com/repository/maven-snapshots/</snapshotRepo>
+                <releaseRepo>https://nexus.just-ai.com/repository/maven-releases/</releaseRepo>
+            </properties>
         </profile>
 
         <profile>
             <id>nexus-open</id>
             <properties>
+                <snapshotRepo>https://nexus-open.just-ai.com/repository/maven-snapshots/</snapshotRepo>
+                <releaseRepo>https://nexus-open.just-ai.com/repository/maven-releases/</releaseRepo>
             </properties>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>nexus-snapshots</id>
-                    <url>https://nexus-open.just-ai.com/repository/maven-snapshots/</url>
-                </snapshotRepository>
-                <repository>
-                    <id>nexus-releases</id>
-                    <url>https://nexus-open.just-ai.com/repository/maven-releases/</url>
-                </repository>
-            </distributionManagement>
         </profile>
     </profiles>
-
 
 
 </project>
