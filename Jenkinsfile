@@ -53,7 +53,7 @@ pipeline {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
                     sh """mvn versions:set -DnewVersion=${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
-                    sh """mvn deploy -P nexus-open -pl com.mlp:mlp-java-sdk,mlp-sdk,mlp-client-generator"""
+                    sh """mvn deploy -P nexus-open"""
                 }
             }
         }
