@@ -6954,21 +6954,42 @@ components:
           type: string
         isDefault:
           type: boolean
-        enabledAutoScaling:
-          type: boolean
         enabledEviction:
           type: boolean
+        access:
+          type: string
+          enum:
+          - PRIVATE
+          - PUBLIC
         resourceGroupType:
           type: string
           enum:
           - DOCKER
           - KUBERNETES
           - HOSTING_SERVER
-        access:
+        enabledAutoScaling:
+          type: boolean
+        autoScalingConfiguration:
+          $ref: '#/components/schemas/ResourceGroupAutoScalingConfiguration'
+    ResourceGroupAutoScalingConfiguration:
+      required:
+      - cooldownPeriodMinutes
+      - maxServersCount
+      - minServersCount
+      - serverConfiguration
+      type: object
+      properties:
+        serverConfiguration:
           type: string
-          enum:
-          - PRIVATE
-          - PUBLIC
+        maxServersCount:
+          type: integer
+          format: int32
+        minServersCount:
+          type: integer
+          format: int32
+        cooldownPeriodMinutes:
+          type: integer
+          format: int32
     ResourceGroupEssentialData:
       required:
       - access
@@ -6987,8 +7008,11 @@ components:
           format: int64
         isDefault:
           type: boolean
-        enabledAutoScaling:
-          type: boolean
+        access:
+          type: string
+          enum:
+          - PRIVATE
+          - PUBLIC
         enabledEviction:
           type: boolean
         resourceGroupType:
@@ -6997,20 +7021,21 @@ components:
           - DOCKER
           - KUBERNETES
           - HOSTING_SERVER
-        access:
-          type: string
-          enum:
-          - PRIVATE
-          - PUBLIC
+        enabledAutoScaling:
+          type: boolean
+        autoScalingConfiguration:
+          $ref: '#/components/schemas/ResourceGroupAutoScalingConfiguration'
     UpdateResourceGroupData:
       type: object
       properties:
         isDefault:
           type: boolean
-        enabledAutoScaling:
-          type: boolean
         enabledEviction:
           type: boolean
+        enabledAutoScaling:
+          type: boolean
+        autoScalingConfiguration:
+          $ref: '#/components/schemas/ResourceGroupAutoScalingConfiguration'
     CreateResourceGroupServer:
       required:
       - rawConfiguration
@@ -8173,11 +8198,11 @@ components:
           format: int32
         sort:
           $ref: '#/components/schemas/Sort'
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
         numberOfElements:
           type: integer
           format: int32
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
         last:
           type: boolean
         empty:
@@ -8287,9 +8312,9 @@ components:
           format: int64
         isDefault:
           type: boolean
-        enabledAutoScaling:
-          type: boolean
         enabledEviction:
+          type: boolean
+        enabledAutoScaling:
           type: boolean
         resourceGroupType:
           type: string
@@ -8308,6 +8333,8 @@ components:
         servicesCount:
           type: integer
           format: int32
+        autoScalingConfiguration:
+          $ref: '#/components/schemas/ResourceGroupAutoScalingConfiguration'
     InstancesStatusData:
       required:
       - externalRequested
