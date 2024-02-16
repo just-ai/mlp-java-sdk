@@ -3448,16 +3448,16 @@ paths:
       parameters:
       - name: account
         in: query
-        description: Account id or account name
         required: false
         schema:
-          type: string
+          type: integer
+          format: int64
       - name: model
         in: query
-        description: Model id or model name
         required: false
         schema:
-          type: string
+          type: integer
+          format: int64
       - name: instanceId
         in: query
         required: false
