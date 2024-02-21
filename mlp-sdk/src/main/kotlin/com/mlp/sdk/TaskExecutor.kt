@@ -8,6 +8,7 @@ import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.ExtendedResponseProto
 import com.mlp.gate.FitRequestProto
 import com.mlp.gate.FitResponseProto
+import com.mlp.gate.FitStatusProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.gate.PredictResponseProto
@@ -72,9 +73,15 @@ class TaskExecutor (
             val modelDir = request.modelDir
 
             runCatching {
+                val percentageConsumer: suspend (Int) -> Unit = { percentage ->
+                    runCatching {
+                        connectorsPool.send(connectorId, FitStatusProto.newBuilder().setPercentage(percentage).build())
+                    }
+                }
                 action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir,
                     request.targetServiceInfo,
-                    request.datasetInfo
+                    request.datasetInfo,
+                    percentageConsumer
                 )
                 responseBuilder.setFit()
             }.onFailure {
