@@ -75,7 +75,9 @@ class TaskExecutor (
             runCatching {
                 val percentageConsumer: suspend (Int) -> Unit = { percentage ->
                     runCatching {
-                        connectorsPool.send(connectorId, FitStatusProto.newBuilder().setPercentage(percentage).build())
+                        val status = FitStatusProto.newBuilder().setPercentage(percentage).build()
+                        val proto = ServiceToGateProto.newBuilder().setRequestId(requestId).setStatus(status).build()
+                        connectorsPool.send(connectorId, proto)
                     }
                 }
                 action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir,
