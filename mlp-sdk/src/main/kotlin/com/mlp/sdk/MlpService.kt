@@ -24,8 +24,13 @@ abstract class MlpService : WithExecutionContext {
 
     open fun fit(
         train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
-        targetServiceInfo: ServiceInfoProto,
-        dataset: DatasetInfoProto
+        targetServiceInfo: ServiceInfoProto, dataset: DatasetInfoProto, percentageConsumer: suspend (Int) -> Unit
+    ): MlpResponse =
+        fit(train, targets, config, modelDir, previousModelDir, targetServiceInfo, dataset)
+
+    open fun fit(
+        train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
+        targetServiceInfo: ServiceInfoProto, dataset: DatasetInfoProto
     ): MlpResponse {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "fit"))
     }

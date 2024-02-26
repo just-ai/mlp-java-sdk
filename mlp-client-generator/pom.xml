@@ -84,7 +84,7 @@
                                 <argument>deploy</argument>
                                 <argument>-DskipTests</argument>
                                 <argument>
-                                    -DaltDeploymentRepository=nexus-snapshots::default::https://nexus.just-ai.com/repository/maven-snapshots/
+                                    -DaltDeploymentRepository=nexus-snapshots::default::${snapshotRepo}
                                 </argument>
                             </arguments>
                         </configuration>
