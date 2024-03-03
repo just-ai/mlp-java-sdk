@@ -15,16 +15,15 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val clientSDK = MlpClientSDK(context = systemContext)
 
-    val request = AiProxyRequest(
-        chat = ChatCompletionRequest(
-            model = "gpt-3.5-turbo",
-            messages = listOf(ChatMessage(ChatCompletionRole.user, "Привет")))
+    val request = ChatCompletionRequest(
+            messages = listOf(ChatMessage(ChatCompletionRole.user, "Привет"))
         )
 
-    val res = clientSDK.predict("just-ai", "AI-Proxy", JSON.stringify(request))
-    val response = JSON.parse<AiProxyResponse>(res)
-
-    println(response)
+    val flow = clientSDK.predictStream("just-ai", "llm-saiga-chatcompletion", Payload(JSON.stringify(request)))
+    flow.collect {
+        val res = JSON.parse<ChatCompletionResult>(it.partialPredict.data.json)
+        println(res)
+    }
 
     clientSDK.shutdown()
 }
