@@ -46,7 +46,9 @@ enum class ChatCompletionRole {
  * Simplified form of ChatGPT request without any additional options
  */
 data class ChatCompletionSimpleRequest(
+    val model: String? = null,
     val messages: List<ChatMessage>,
+    val stream: Boolean? = null
 )
 
 data class ChatCompletionRequest(
