@@ -143,7 +143,6 @@ class MlpClientSDK(
         timeout: Duration? = null,
         authToken: String = ensureDefaultToken()
     ): Flow<ClientResponseProto> =
-//        predictStream(account, model, Payload("", data), config?.let { Payload("", it) }, timeout, authToken).data
         sendRequestPayloadStream(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
 
     suspend fun predict(
