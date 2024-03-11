@@ -59,11 +59,11 @@ pipeline {
         }
 
         stage('Rebuild MLP Services') {
+            when {
+                expression { params.BRANCH == 'dev' || params.BRANCH == 'stable' || params.BRANCH == 'release' }
+            }
             steps {
                 parallel (
-                    "build justgpt" : {
-                        build job: "justgpt-build/${params.BRANCH}", wait: false
-                    },
                     "build mlp-ai-proxy" : {
                         build job: "mlp-ai-proxy/${params.BRANCH}", wait: false
                     },
