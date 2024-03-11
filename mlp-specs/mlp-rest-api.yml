@@ -8930,8 +8930,6 @@ components:
           format: int32
         pageable:
           $ref: '#/components/schemas/PageableObject'
-        last:
-          type: boolean
         empty:
           type: boolean
     PageableObject:
