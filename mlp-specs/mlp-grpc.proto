@@ -314,3 +314,4 @@ message TtsResponseProto {
   optional bool first = 10;
   optional bool last = 12;
 }
+
