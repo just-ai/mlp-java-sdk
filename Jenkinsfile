@@ -60,7 +60,7 @@ pipeline {
 
         stage('Rebuild MLP Services') {
             when {
-                expression { params.BRANCH == 'dev' || params.BRANCH == 'stable' || params.BRANCH == 'release' }
+                expression { (env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH) in ['dev','stable','release'] }
             }
             steps {
                 parallel (
