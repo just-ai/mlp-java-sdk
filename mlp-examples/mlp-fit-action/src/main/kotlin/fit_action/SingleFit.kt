@@ -49,7 +49,8 @@ class SingleFit(
         configData = JSON.parse(configDataStr, FitConfigData::class.java)
     }
 
-    override fun predict(request: PredictRequestData, config: Unit?): PredictResponseData {
+    override fun predict(request: PredictRequestData, config: Unit?,
+                         generator: () -> ResultGenerator<PredictResponseData>): PredictResponseData {
         val model = modelData
         val config = configData
         if (model == null || config == null) {
