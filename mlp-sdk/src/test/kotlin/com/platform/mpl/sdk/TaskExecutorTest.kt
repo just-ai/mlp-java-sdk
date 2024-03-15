@@ -55,23 +55,23 @@ class TaskExecutorTest {
         val number = AtomicInteger()
         val extNumber = AtomicInteger()
 
-        override fun predict(req: Payload): MlpResponse {
-            Thread.sleep(100)
+        override suspend fun predict(req: Payload): MlpResponse {
+            delay(100)
             number.incrementAndGet()
             return Payload("type")
         }
 
-        override fun fit(train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
+        override suspend fun fit(train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
                          targetServiceInfo: ServiceInfoProto,
                          dataset: DatasetInfoProto
         ): MlpResponse {
-            Thread.sleep(450)
+            delay(450)
             number.incrementAndGet()
             return Payload("type")
         }
 
-        override fun ext(methodName: String, params: Map<String, Payload>): MlpResponse {
-            Thread.sleep(450)
+        override suspend fun ext(methodName: String, params: Map<String, Payload>): MlpResponse {
+            delay(450)
             extNumber.incrementAndGet()
             return Payload("type")
         }
