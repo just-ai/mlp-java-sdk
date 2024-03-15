@@ -5,6 +5,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>mlp-client-generator</module>
+        <module>mlp-datatypes</module>
         <module>mlp-sdk</module>
         <module>mlp-examples/mlp-fit-action</module>
         <module>mlp-examples/mlp-simple-action</module>

@@ -1,0 +1,77 @@
+openapi: 3.0.1
+info:
+  title: Datatypes specification for GPT task type
+  version: v0
+paths: {}
+
+components:
+  schemas:
+    ChatCompletionRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          items:
+            type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        stream:
+          type: boolean
+
+    ChatRole:
+      type: string
+      enum:
+        - system
+        - user
+        - assistant
+
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/ChatRole'
+        content:
+          type: string
+
+    ChatCompletionResult:
+      type: object
+      properties:
+        model:
+          type: string
+          items:
+            type: string
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatCompletionChoice'
+        usage:
+          $ref: '#/components/schemas/Usage'
+
+    ChatCompletionChoice:
+      type: object
+      properties:
+        index:
+          type: integer
+          format: int64
+        message:
+          $ref: '#/components/schemas/ChatMessage'
+        finish_reason:
+          type: string
+          enum:
+            - stop
+            - length
+
+    Usage:
+      type: object
+      properties:
+        prompt_tokens:
+          type: integer
+          format: int64
+        completion_tokens:
+          type: integer
+          format: int64
+        total_tokens:
+          type: integer
+          format: int64
