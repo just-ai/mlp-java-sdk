@@ -8,6 +8,8 @@ components:
   schemas:
     ChatCompletionRequest:
       type: object
+      required:
+        - messages
       properties:
         model:
           type: string
