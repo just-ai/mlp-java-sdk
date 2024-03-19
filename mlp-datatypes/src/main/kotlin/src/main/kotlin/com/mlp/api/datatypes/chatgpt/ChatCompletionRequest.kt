@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ChatCompletionRequest(
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("model") val model: kotlin.collections.List<kotlin.String>? = null,
+    @get:JsonProperty("model") val model: kotlin.String? = null,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("messages") val messages: kotlin.collections.List<ChatMessage>? = null,

@@ -11,8 +11,6 @@ components:
       properties:
         model:
           type: string
-          items:
-            type: string
         messages:
           type: array
           items:
