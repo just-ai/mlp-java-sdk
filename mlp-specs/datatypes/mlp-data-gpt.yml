@@ -46,7 +46,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChatCompletionChoice'
-        usage:
+        usage:  # for streaming=true responses we will fill this field in the last chunk
           $ref: '#/components/schemas/Usage'
 
     ChatCompletionChoice:
@@ -55,7 +55,9 @@ components:
         index:
           type: integer
           format: int64
-        message:
+        message: # for streaming=false responses
+          $ref: '#/components/schemas/ChatMessage'
+        delta:   # for streaming=true responses
           $ref: '#/components/schemas/ChatMessage'
         finish_reason:
           type: string
