@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 
  * @param index 
  * @param message 
+ * @param delta 
  * @param finishReason 
  */
 data class ChatCompletionChoice(
@@ -19,6 +20,9 @@ data class ChatCompletionChoice(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("message") val message: ChatMessage? = null,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("delta") val delta: ChatMessage? = null,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("finish_reason") val finishReason: ChatCompletionChoice.FinishReason? = null
