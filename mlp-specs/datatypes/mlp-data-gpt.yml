@@ -52,7 +52,6 @@ components:
       properties:
         index:
           type: integer
-          format: int64
         message: # for streaming=false responses
           $ref: '#/components/schemas/ChatMessage'
         delta:   # for streaming=true responses
@@ -68,10 +67,7 @@ components:
       properties:
         prompt_tokens:
           type: integer
-          format: int64
         completion_tokens:
           type: integer
-          format: int64
         total_tokens:
           type: integer
-          format: int64
