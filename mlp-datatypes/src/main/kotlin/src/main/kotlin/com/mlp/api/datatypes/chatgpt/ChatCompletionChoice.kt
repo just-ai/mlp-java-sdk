@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ChatCompletionChoice(
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("index") val index: kotlin.Long? = null,
+    @get:JsonProperty("index") val index: kotlin.Int? = null,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("message") val message: ChatMessage? = null,

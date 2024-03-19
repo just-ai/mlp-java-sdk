@@ -13,13 +13,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Usage(
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("prompt_tokens") val promptTokens: kotlin.Long? = null,
+    @get:JsonProperty("prompt_tokens") val promptTokens: kotlin.Int? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("completion_tokens") val completionTokens: kotlin.Long? = null,
+    @get:JsonProperty("completion_tokens") val completionTokens: kotlin.Int? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("total_tokens") val totalTokens: kotlin.Long? = null
+    @get:JsonProperty("total_tokens") val totalTokens: kotlin.Int? = null
 ) {
 
 }
