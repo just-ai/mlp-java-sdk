@@ -38,8 +38,6 @@ components:
       properties:
         model:
           type: string
-          items:
-            type: string
         choices:
           type: array
           items:
