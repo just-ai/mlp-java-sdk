@@ -46,3 +46,6 @@ train.csv
 validation.csv
 
 *.versionsBackup
+
+mlp-datatypes/src/main/kotlin/*
+.openapi-generator

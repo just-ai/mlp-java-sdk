@@ -69,7 +69,7 @@
                             <groupId>${project.groupId}</groupId>
                             <artifactId>mlp-datatypes</artifactId>
                             <artifactVersion>${project.version}</artifactVersion>
-                            <output>${project.basedir}/src/main/kotlin</output>
+                            <output>${project.basedir}</output>
                             <generateSupportingFiles>false</generateSupportingFiles>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>

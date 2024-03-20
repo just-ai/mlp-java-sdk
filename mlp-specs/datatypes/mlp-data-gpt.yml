@@ -29,6 +29,9 @@ components:
 
     ChatMessage:
       type: object
+      required:
+        - role
+        - content
       properties:
         role:
           $ref: '#/components/schemas/ChatRole'
@@ -37,6 +40,8 @@ components:
 
     ChatCompletionResult:
       type: object
+      required:
+        - choices
       properties:
         model:
           type: string
@@ -49,6 +54,8 @@ components:
 
     ChatCompletionChoice:
       type: object
+      required:
+        - index
       properties:
         index:
           type: integer
@@ -64,6 +71,10 @@ components:
 
     Usage:
       type: object
+      required:
+        - prompt_tokens
+        - completion_tokens
+        - total_tokens
       properties:
         prompt_tokens:
           type: integer
