@@ -63,7 +63,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/../mlp-specs/datatypes/mlp-data-gpt.yml</inputSpec>
+                            <inputSpec>${project.basedir}/src/main/resources/datatypes/mlp-data-gpt.yml</inputSpec>
                             <!--                            <generatorName>kotlin-spring</generatorName>-->
                             <generatorName>kotlin-spring</generatorName>
                             <groupId>${project.groupId}</groupId>
