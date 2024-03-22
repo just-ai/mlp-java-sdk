@@ -1,9 +1,5 @@
 package com.mlp.sdk.datatypes.aiproxy
 
-import com.mlp.sdk.datatypes.chatgpt.ChatCompletionRequest
-import com.mlp.sdk.datatypes.chatgpt.ChatCompletionResult
-
-
 data class AiProxyRequest(
     val chat: ChatCompletionRequest? = null,
     val completion: CompletionRequest? = null,

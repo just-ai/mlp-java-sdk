@@ -1,20 +1,21 @@
 package client
 
+import com.mlp.api.datatypes.chatgpt.ChatCompletionRequest
+import com.mlp.api.datatypes.chatgpt.ChatCompletionResult
+import com.mlp.api.datatypes.chatgpt.ChatMessage
+import com.mlp.api.datatypes.chatgpt.ChatRole
 import com.mlp.sdk.MlpClientSDK
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.Payload
-import com.mlp.sdk.datatypes.aiproxy.AiProxyRequest
-import com.mlp.sdk.datatypes.aiproxy.AiProxyResponse
-import com.mlp.sdk.datatypes.chatgpt.*
 import com.mlp.sdk.utils.JSON
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val clientSDK = MlpClientSDK(context = systemContext)
 
-    val request = ChatCompletionSimpleRequest(
+    val request = ChatCompletionRequest(
             stream = true,
-            messages = listOf(ChatMessage(ChatCompletionRole.user, "Привет"))
+            messages = listOf(ChatMessage(ChatRole.user, "Привет"))
         )
 
     val flow = clientSDK.predictStream("1000002", "test-action", Payload(JSON.stringify(request)))
