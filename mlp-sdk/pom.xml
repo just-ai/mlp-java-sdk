@@ -36,6 +36,11 @@
             <artifactId>logback-classic</artifactId>
             <version>1.2.11</version>
         </dependency>
+        <dependency>
+            <groupId>com.mlp</groupId>
+            <artifactId>mlp-datatypes</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.mlp</groupId>

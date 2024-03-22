@@ -11,7 +11,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>chat-gpt-client</artifactId>
+    <artifactId>ai-proxy-client</artifactId>
 
     <properties>
         <logback.version>1.2.6</logback.version>
@@ -22,11 +22,6 @@
             <groupId>com.mlp</groupId>
             <artifactId>mlp-sdk</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.mlp</groupId>
-            <artifactId>mlp-datatypes</artifactId>
-            <version>dev-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
