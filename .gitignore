@@ -47,5 +47,5 @@ validation.csv
 
 *.versionsBackup
 
-mlp-datatypes/src/main/kotlin/*
+!mlp-datatypes/src/main/kotlin/**/DatatypeRegistry.kt
 .openapi-generator

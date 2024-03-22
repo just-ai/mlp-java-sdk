@@ -15,7 +15,7 @@
     <properties>
         <java.version>1.8</java.version>
 
-        <openapi-generator-maven.version>6.5.0</openapi-generator-maven.version>
+        <openapi-generator-maven.version>7.4.0</openapi-generator-maven.version>
     </properties>
 
     <dependencies>
@@ -66,6 +66,7 @@
                             <inputSpec>${project.basedir}/src/main/resources/datatypes/mlp-data-gpt.yml</inputSpec>
                             <!--                            <generatorName>kotlin-spring</generatorName>-->
                             <generatorName>kotlin-spring</generatorName>
+                            <templateDirectory>${project.basedir}/src/main/resources/template</templateDirectory>
                             <groupId>${project.groupId}</groupId>
                             <artifactId>mlp-datatypes</artifactId>
                             <artifactVersion>${project.version}</artifactVersion>
