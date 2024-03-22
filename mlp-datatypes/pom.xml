@@ -23,7 +23,7 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
-            <scope>provided</scope>
+<!--            <scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -65,8 +65,7 @@
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/datatypes/mlp-data-gpt.yml</inputSpec>
                             <!--                            <generatorName>kotlin-spring</generatorName>-->
-                            <generatorName>kotlin-spring</generatorName>
-                            <templateDirectory>${project.basedir}/src/main/resources/template</templateDirectory>
+                            <generatorName>kotlin-server</generatorName>
                             <groupId>${project.groupId}</groupId>
                             <artifactId>mlp-datatypes</artifactId>
                             <artifactVersion>${project.version}</artifactVersion>
