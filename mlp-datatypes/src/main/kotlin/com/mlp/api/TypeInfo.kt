@@ -8,22 +8,23 @@ interface TypeInfoBase {
 }
 
 object TypeInfo {
-
     private val nameCache = ConcurrentHashMap<Class<*>, String>()
 
-    fun canonicalName(clazz: Class<*>): String {
-        return nameCache.computeIfAbsent(clazz, this::findCanonicalName)
+    fun canonicalName(clazz: Class<*>): String? {
+        return nameCache.computeIfAbsent(clazz, this::findCanonicalName).let { if (it == "") null else it }
     }
 
-    inline fun <reified T> canonicalName(): String {
+    inline fun <reified T> canonicalName(): String? {
         return canonicalName(T::class.java)
     }
 
     private fun findCanonicalName(clazz: Class<*>): String {
-        val c = Class.forName("${clazz.packageName}.type_info")
+        return kotlin.runCatching {
+            val c = Class.forName("${clazz.packageName}.type_info")
 
-        val typeInfo = c.declaredFields.find { it.name == "INSTANCE" }!!.get(null) as TypeInfoBase
+            val typeInfo = c.declaredFields.find { it.name == "INSTANCE" }!!.get(null) as TypeInfoBase
 
-        return typeInfo.canonicalUrl + "#/" + clazz.simpleName
+            typeInfo.canonicalUrl + "#/" + clazz.simpleName
+        }.getOrDefault("")
     }
 }
