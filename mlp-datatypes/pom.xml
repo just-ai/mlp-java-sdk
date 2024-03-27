@@ -65,7 +65,7 @@
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/datatypes/mlp-data-gpt.yml</inputSpec>
                             <!--                            <generatorName>kotlin-spring</generatorName>-->
-                            <generatorName>kotlin-server</generatorName>
+                            <generatorName>kotlin-spring</generatorName>
                             <groupId>${project.groupId}</groupId>
                             <artifactId>mlp-datatypes</artifactId>
                             <artifactVersion>${project.version}</artifactVersion>

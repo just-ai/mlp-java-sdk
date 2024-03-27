@@ -38,6 +38,21 @@ components:
         content:
           type: string
 
+    ChatCompletionConfig:
+      type: object
+      properties:
+        model:
+          type: string
+        stream:
+          type: boolean
+        max_tokens:
+          type: number
+        temperature:
+          type: number
+          format: double
+# TODO: support codegen
+#      additionalProperties: true
+
     ChatCompletionResult:
       type: object
       required:
