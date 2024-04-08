@@ -135,16 +135,19 @@ class Connector(
                 if (grpcChannel.isShutdownStateOrNull()) {
                     val connected = tryConnectOrShutdown()
                     if (connected) {
-                        progressiveDelay = 100L
                         lastActiveTime = now()
+                        progressiveDelay = 100L
+                        logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel was connected")
                     } else {
                         progressiveDelay = min(progressiveDelay * 2, 5_000L)
+                        logger.debug("${this@Connector}: increase progressiveDelay to $progressiveDelay")
                     }
                 }
 
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
                     progressiveDelay = 100L
+                    logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel is active")
                 }
 
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
@@ -178,15 +181,15 @@ class Connector(
     private suspend fun tryConnectOrShutdown(): Boolean {
         logger.debug("${this@Connector}: creating new grpc channel ...")
         val newGrpcChannel = GrpcChannel(context)
-        runCatching {
+
+        return runCatching {
             newGrpcChannel.tryConnect()
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
-            return true
+            true
         }.onFailure {
             logger.error("${this@Connector}: cannot create new grpc channel", it)
             newGrpcChannel.shutdownNow()
-        }
-        return false
+        }.getOrDefault(false)
     }
 
     override fun toString() = "Connector(id='$id', url='$targetUrl')"
