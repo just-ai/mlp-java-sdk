@@ -11,7 +11,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mlp-client-generator</artifactId>
-    <version>gpt-chat-SNAPSHOT</version>
 
     <properties>
         <openapi-generator-maven.version>6.5.0</openapi-generator-maven.version>
