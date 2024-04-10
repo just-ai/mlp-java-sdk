@@ -6,6 +6,69 @@ servers:
 - url: https://app.caila.io
   description: Generated server url
 paths:
+  /api/mlpgate/account/{account}/request/{requestId}/mark/{mark}:
+    put:
+      tags:
+      - archive-endpoint
+      operationId: saveMark
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: mark
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags:
+      - archive-endpoint
+      operationId: deleteMark
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: mark
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
   /p/{accountField}/{modelField}:
     get:
       tags:
@@ -422,6 +485,126 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccessTokenData'
+  /api/mlpgate/account/{account}/server/template:
+    get:
+      tags:
+      - resource-group-servers-endpoint
+      operationId: getOwnTemplates
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServerTemplateData'
+    post:
+      tags:
+      - resource-group-servers-endpoint
+      operationId: addServerTemplate
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUpdateServerTemplateData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerTemplateData'
+  /api/mlpgate/account/{account}/server/template/{templateId}:
+    post:
+      tags:
+      - resource-group-servers-endpoint
+      operationId: updateServerTemplate
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUpdateServerTemplateData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerTemplateData'
+    delete:
+      tags:
+      - resource-group-servers-endpoint
+      operationId: deleteServerTemplate
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
   /api/mlpgate/account/{account}/resource-groups:
     get:
       tags:
@@ -2319,6 +2502,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelBillingSettingsData'
+  /api/mlpgate/account/{account}/model/{model}/archive:
+    post:
+      tags:
+      - model-endpoint
+      operationId: updateModelArchiveSettings
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelArchiveSettingsData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelArchiveSettingsData'
   /api/mlpgate/account/{account}/model-group:
     get:
       tags:
@@ -4580,7 +4800,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ResourceGroupServerData'
+                  $ref: '#/components/schemas/ServerTemplateData'
   /api/mlpgate/account/{account}/resource-groups/{groupName}/server/status:
     get:
       tags:
@@ -7143,6 +7363,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ModelDump'
+        serverTemplates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerTemplateDump'
     DataImageDump:
       required:
       - dataPath
@@ -7220,6 +7444,22 @@ components:
           - private
           - public
           - restricted
+    ModelArchiveSettingsData:
+      required:
+      - enabled
+      - encryptionEnabled
+      - numberOfArchivedRequests
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        numberOfArchivedRequests:
+          type: integer
+          format: int64
+        encryptionEnabled:
+          type: boolean
+        rsaPemPublicKey:
+          type: string
     ModelAutoScalingConfiguration:
       required:
       - minInstanceCount
@@ -7308,6 +7548,9 @@ components:
           format: int64
     ModelDump:
       required:
+      - archiveEnabled
+      - archiveEncryptionEnabled
+      - asArchiveSettingsData
       - asBillingSettingsData
       - asHttpSettingsData
       - asPublicSettingsData
@@ -7316,6 +7559,7 @@ components:
       - image
       - isHttpEnabled
       - name
+      - numberOfArchivedRequests
       - predictConfigs
       type: object
       properties:
@@ -7444,12 +7688,23 @@ components:
           format: int32
         mainPageEndpoint:
           type: string
+        archiveEnabled:
+          type: boolean
+        numberOfArchivedRequests:
+          type: integer
+          format: int64
+        archiveEncryptionEnabled:
+          type: boolean
+        archiveEncryptionPublicKey:
+          type: string
         asHttpSettingsData:
           $ref: '#/components/schemas/ModelHttpSettingsData'
         asPublicSettingsData:
           $ref: '#/components/schemas/ModelPublicSettingsData'
         asBillingSettingsData:
           $ref: '#/components/schemas/ModelBillingSettingsData'
+        asArchiveSettingsData:
+          $ref: '#/components/schemas/ModelArchiveSettingsData'
     ModelGroupDump:
       required:
       - name
@@ -7557,6 +7812,59 @@ components:
           type: string
         isDefault:
           type: boolean
+    ServerCapacityData:
+      required:
+      - cpu
+      - disk
+      - gpuModels
+      - memory
+      type: object
+      properties:
+        cpu:
+          type: string
+        memory:
+          type: string
+        disk:
+          type: string
+        gpuModels:
+          type: array
+          items:
+            type: string
+    ServerTemplateDump:
+      required:
+      - configuration
+      - description
+      - name
+      - tarifficationPrice
+      - type
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+          - DOCKER
+          - KUBERNETES
+          - HOSTING_SERVER
+          - SHARED_RESOURCE_QUOTA
+        capacity:
+          $ref: '#/components/schemas/ServerCapacityData'
+        description:
+          type: string
+        configuration:
+          type: string
+        tarifficationPrice:
+          type: number
+        tarifficationPeriod:
+          type: string
+          enum:
+          - SECOND
+          - MINUTE
+          - HOUR
+          - DAY
+          - MONTH
+          - YEAR
     AccountConfigDump:
       required:
       - accountName
@@ -7677,6 +7985,80 @@ components:
           type: string
         creationDate:
           type: string
+    CreateUpdateServerTemplateData:
+      required:
+      - description
+      - name
+      - rawConfiguration
+      - tarifficationPrice
+      - type
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+          - DOCKER
+          - KUBERNETES
+          - HOSTING_SERVER
+          - SHARED_RESOURCE_QUOTA
+        capacity:
+          $ref: '#/components/schemas/ServerCapacityData'
+        description:
+          type: string
+        rawConfiguration:
+          type: string
+        tarifficationPrice:
+          type: number
+        tarifficationPeriod:
+          type: string
+          enum:
+          - SECOND
+          - MINUTE
+          - HOUR
+          - DAY
+          - MONTH
+          - YEAR
+    ServerTemplateData:
+      required:
+      - description
+      - id
+      - name
+      - rawConfiguration
+      - tarifficationPrice
+      - type
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+          - DOCKER
+          - KUBERNETES
+          - HOSTING_SERVER
+          - SHARED_RESOURCE_QUOTA
+        capacity:
+          $ref: '#/components/schemas/ServerCapacityData'
+        description:
+          type: string
+        rawConfiguration:
+          type: string
+        tarifficationPrice:
+          type: number
+        tarifficationPeriod:
+          type: string
+          enum:
+          - SECOND
+          - MINUTE
+          - HOUR
+          - DAY
+          - MONTH
+          - YEAR
     CreateResourceGroupData:
       required:
       - name
@@ -7790,31 +8172,30 @@ components:
           type: string
         rawConfiguration:
           type: string
-    Quantity:
-      type: object
-      properties:
-        number:
+        tarifficationPrice:
           type: number
-        format:
+        tarifficationPeriod:
           type: string
           enum:
-          - DECIMAL_EXPONENT
-          - DECIMAL_SI
-          - BINARY_SI
+          - SECOND
+          - MINUTE
+          - HOUR
+          - DAY
+          - MONTH
+          - YEAR
     ResourceGroupServerData:
       required:
       - id
       - isAutoCreated
       - name
       - rawConfiguration
+      - tarifficationPrice
       type: object
       properties:
         id:
           type: integer
           format: int64
         name:
-          type: string
-        price:
           type: string
         description:
           type: string
@@ -7823,39 +8204,18 @@ components:
         rawConfiguration:
           type: string
         templateCapacity:
-          $ref: '#/components/schemas/Resources'
-    Resources:
-      required:
-      - baseInstanceCount
-      - cpu
-      - derivedInstanceCount
-      - disk
-      - gpu
-      - podsCount
-      - ram
-      - strictlyNegativeOrZero
-      type: object
-      properties:
-        cpu:
-          $ref: '#/components/schemas/Quantity'
-        ram:
-          $ref: '#/components/schemas/Quantity'
-        disk:
-          $ref: '#/components/schemas/Quantity'
-        gpu:
-          type: integer
-          format: int32
-        baseInstanceCount:
-          type: integer
-          format: int32
-        derivedInstanceCount:
-          type: integer
-          format: int32
-        podsCount:
-          type: integer
-          format: int32
-        strictlyNegativeOrZero:
-          type: boolean
+          $ref: '#/components/schemas/ServerCapacityData'
+        tarifficationPrice:
+          type: number
+        tarifficationPeriod:
+          type: string
+          enum:
+          - SECOND
+          - MINUTE
+          - HOUR
+          - DAY
+          - MONTH
+          - YEAR
     CopyResourceGroupServer:
       required:
       - serverName
@@ -8180,6 +8540,7 @@ components:
           format: int64
     ModelInfoData:
       required:
+      - archiveSettings
       - autoScalingConfiguration
       - batchesConfig
       - billingSettings
@@ -8315,6 +8676,8 @@ components:
           $ref: '#/components/schemas/ModelBillingSettingsData'
         httpSettings:
           $ref: '#/components/schemas/ModelHttpSettingsData'
+        archiveSettings:
+          $ref: '#/components/schemas/ModelArchiveSettingsData'
         restrictedImageAccess:
           type: boolean
         lastActivity:
@@ -8822,11 +9185,17 @@ components:
           type: string
     FrontendSettings:
       required:
+      - isArchiveEnabled
       - isBillingEnabled
       - isExtendedLanding
+      - isSystemAccount
       type: object
       properties:
+        isSystemAccount:
+          type: boolean
         isBillingEnabled:
+          type: boolean
+        isArchiveEnabled:
           type: boolean
         isExtendedLanding:
           type: boolean
@@ -9021,14 +9390,13 @@ components:
       - rawConfiguration
       - resources
       - status
+      - tarifficationPrice
       type: object
       properties:
         id:
           type: integer
           format: int64
         name:
-          type: string
-        price:
           type: string
         status:
           type: string
@@ -9039,13 +9407,24 @@ components:
           - UNAVAILABLE
           - DELETING
         resources:
-          $ref: '#/components/schemas/Resources'
+          $ref: '#/components/schemas/ServerCapacityData'
         description:
           type: string
         isAutoCreated:
           type: boolean
         rawConfiguration:
           type: string
+        tarifficationPrice:
+          type: number
+        tarifficationPeriod:
+          type: string
+          enum:
+          - SECOND
+          - MINUTE
+          - HOUR
+          - DAY
+          - MONTH
+          - YEAR
     Measurement:
       required:
       - ts
