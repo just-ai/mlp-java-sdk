@@ -14,7 +14,7 @@ class FitService(
 
     private val storage = StorageFactory.getStorage(context)
 
-    override fun fit(data: FitDatasetData,
+    override suspend fun fit(data: FitDatasetData,
                      config: FitConfigData?,
                      modelDir: String,
                      previousModelDir: String?,

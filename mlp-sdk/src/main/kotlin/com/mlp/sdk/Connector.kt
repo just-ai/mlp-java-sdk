@@ -288,7 +288,7 @@ class Connector(
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $id: body case is null")
-                else -> logger.debug("Could not find request bodyCase with type ${request.bodyCase}")
+                else -> logger.debug("Could not find request bodyCase with type {}", request.bodyCase)
             }
         }
 

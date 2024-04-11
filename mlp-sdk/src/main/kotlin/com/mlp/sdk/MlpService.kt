@@ -14,32 +14,32 @@ abstract class MlpService : WithExecutionContext {
         throw NotImplementedError()
     }
 
-    open fun predict(req: Payload, config: Payload?): MlpResponse {
+    open suspend fun predict(req: Payload, config: Payload?): MlpResponse {
         return predict(req)
     }
 
-    open fun predict(req: Payload): MlpResponse {
+    open suspend fun predict(req: Payload): MlpResponse {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
     }
 
-    open fun fit(
+    open suspend fun fit(
         train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
         targetServiceInfo: ServiceInfoProto, dataset: DatasetInfoProto, percentageConsumer: suspend (Int) -> Unit
     ): MlpResponse =
         fit(train, targets, config, modelDir, previousModelDir, targetServiceInfo, dataset)
 
-    open fun fit(
+    open suspend fun fit(
         train: Payload, targets: Payload?, config: Payload?, modelDir: String, previousModelDir: String?,
         targetServiceInfo: ServiceInfoProto, dataset: DatasetInfoProto
     ): MlpResponse {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "fit"))
     }
 
-    open fun ext(methodName: String, params: Map<String, Payload>): MlpResponse {
+    open suspend fun ext(methodName: String, params: Map<String, Payload>): MlpResponse {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "ext"))
     }
 
-    open fun batch(requests: List<Payload>, config: Payload?): List<MlpResponse> {
+    open suspend fun batch(requests: List<Payload>, config: Payload?): List<MlpResponse> {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "batch"))
     }
 }

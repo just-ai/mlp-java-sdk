@@ -28,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -134,6 +135,16 @@ class MlpClientSDK(
     ) =
         predict(account, model, Payload("", data), config?.let { Payload("", it) }, timeout, authToken).data
 
+    suspend fun predictStream(
+        account: String,
+        model: String,
+        data: Payload,
+        config: Payload? = null,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken()
+    ): Flow<ClientResponseProto> =
+        sendRequestPayloadStream(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
+
     suspend fun predict(
         account: String,
         model: String,
@@ -166,6 +177,10 @@ class MlpClientSDK(
 
     private fun ensureDefaultToken() = requireNotNull(connectionToken) {
         "Set authToken in environment variables, or in init method, or directly in predict method"
+    }
+
+    private fun sendRequestPayloadStream(request: ClientRequestProto, timeout: Duration? = null): Flow<ClientResponseProto> {
+        return stub.processResponseStream(request)
     }
 
     private suspend fun sendRequestPayload(request: ClientRequestProto, timeout: Duration? = null): RawPayload {
