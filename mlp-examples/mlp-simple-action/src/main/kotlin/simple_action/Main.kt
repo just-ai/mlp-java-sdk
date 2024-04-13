@@ -16,7 +16,7 @@ data class SimpleTestActionRequest(
 
 
 /*
- * @param context - контекст из env переменных
+ * @param context - контекст для запуска в JVM процессе инстанса mlp-sdk
  * MlpPredictServiceBase - класс для реализации predict метода
  * predict метод позволяет принимать/отправлять запросы в Caila.io
  */
@@ -49,7 +49,7 @@ class SimpleTestAction(
 
 /*
  * Запуск сервиса
- * systemContext - контекст из env переменных
+ * systemContext - контекст для запуска в JVM процессе инстанса mlp-sdk
  */
 fun main() {
     val actionSDK = MlpServiceSDK({ SimpleTestAction(systemContext) })
