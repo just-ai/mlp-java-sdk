@@ -4,30 +4,35 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.mlp.api.datatypes.chatgpt.ChatMessage
 import com.mlp.api.datatypes.chatgpt.ChatCompletionChoice
 
+// You can use com.theokanning sdk data types
 data class AiProxyRequest(
-    val chat: AIProxyChatCompletionRequest? = null,
-    val completion: CompletionRequest? = null,
-    val edit: EditRequest? = null,
-    val embedding: EmbeddingRequest? = null,
-    val moderation: ModerationRequest? = null,
-    val audioTranscribe: CreateTranscriptionRequest? = null,
-    val audioTranslate: CreateTranslationRequest? = null,
-    val image: CreateImageRequest? = null,
-    val imageEdit: CreateImageEditRequest? = null,
-    val imageVariation: CreateImageVariationRequest? = null
+    val chat: Any? = null,
+    val edit: Any? = null,
+    val image: Any? = null,
+    val imageEdit: Any? = null,
+    val embedding: Any? = null,
+    val moderation: Any? = null,
+    val completion: Any? = null,
+    val fineTuning: FineTuningRequest? = null,
+    val audioTranslate: Any? = null,
+    val imageVariation: Any? = null,
+    val audioTranscribe: Any? = null,
 )
 
+// You can use com.theokanning sdk data types
 data class AiProxyResponse(
-    val chat: AIProxyChatCompletionResult? = null,
-    val completion: CompletionResult? = null,
-    val edit: EditResult? = null,
-    val embedding: EmbeddingResult? = null,
-    val moderation: ModerationResult? = null,
-    val audioTranscribe: SttResult? = null,
-    val audioTranslate: SttResult? = null,
-    val image: ImageResult? = null,
-    val imageEdit: ImageResult? = null,
-    val imageVariation: ImageResult? = null
+    val chat: Any? = null,
+    val edit: Any? = null,
+    val image: Any? = null,
+    val imageEdit: Any? = null,
+    val embedding: Any? = null,
+    val completion: Any? = null,
+    val moderation: Any? = null,
+    val fineTuning: FineTuningResult? = null,
+    val audioTranslate: Any? = null,
+    val imageVariation: Any? = null,
+    val audioTranscribe: Any? = null,
+    val spentMicroCents: Long?
 )
 
 data class AIProxyChatCompletionRequest(
