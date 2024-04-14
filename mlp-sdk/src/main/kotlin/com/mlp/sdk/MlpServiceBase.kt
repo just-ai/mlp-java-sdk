@@ -1,6 +1,7 @@
 package com.mlp.sdk
 
 import com.mlp.api.ApiClient
+import com.mlp.api.TypeInfo
 import com.mlp.api.client.*
 import com.mlp.gate.*
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
@@ -107,20 +108,33 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
 
 }
 
-fun <R> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerator<R> {
+fun <R: Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerator<R> {
     val requestId = MDC.get("gateRequestId").toLong()
     val connectorId = MDC.get("connectorId").toLong()
 
     return MlpServiceBase.ResultGenerator { resultAndFinish ->
+        val payload = when (resultAndFinish.result) {
+            is PayloadProto -> resultAndFinish.result
+            is Payload -> PayloadProto.newBuilder()
+                .setJson(resultAndFinish.result.data)
+                .setDataType(resultAndFinish.result.dataType).build()
+
+            is RawPayload -> PayloadProto.newBuilder()
+                .setJson(resultAndFinish.result.data)
+                .setDataType(resultAndFinish.result.dataType).build()
+
+            else -> PayloadProto.newBuilder()
+                .setJson(JSON.stringify(resultAndFinish.result))
+                .setDataType(TypeInfo.canonicalName(resultAndFinish.result.javaClass)).build()
+        }
+
         val builder = ServiceToGateProto.newBuilder()
             .setRequestId(requestId)
             .setPartialPredict(
                 PartialPredictResponseProto.newBuilder()
                     .setFinish(resultAndFinish.last)
                     .setData(
-                        PayloadProto.newBuilder()
-                            .setJson(JSON.stringify(resultAndFinish.result))
-                            .setDataType("json") // TODO: fill reference to data-schema
+                        payload
                     )
             )
         if (resultAndFinish.price != null) {
