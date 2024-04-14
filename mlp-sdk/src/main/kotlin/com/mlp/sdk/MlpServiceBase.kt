@@ -86,27 +86,7 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
     }
 
     fun createGenerator(): ResultGenerator<R> {
-        val requestId = MDC.get("gateRequestId").toLong()
-        val connectorId = MDC.get("connectorId").toLong()
-
-        return ResultGenerator<R> { resultAndFinish ->
-            val builder = ServiceToGateProto.newBuilder()
-                .setRequestId(requestId)
-                .setPartialPredict(
-                    PartialPredictResponseProto.newBuilder()
-                        .setFinish(resultAndFinish.last)
-                        .setData(
-                            PayloadProto.newBuilder()
-                                .setJson(JSON.stringify(resultAndFinish.result))
-                                .setDataType("json") // TODO: fill reference to data-schema
-                        )
-                )
-            if (resultAndFinish.price != null) {
-                builder.putHeaders("Z-custom-billing", resultAndFinish.price.toString())
-            }
-
-            sdk.send(connectorId, builder.build())
-        }
+        return com.mlp.sdk.createGenerator<R>(sdk)
     }
 
     data class ResultAndFinish<R>(
@@ -126,6 +106,31 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
     abstract suspend fun predict(request: P, config: C?): R?
 
 }
+
+fun <R> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerator<R> {
+    val requestId = MDC.get("gateRequestId").toLong()
+    val connectorId = MDC.get("connectorId").toLong()
+
+    return MlpServiceBase.ResultGenerator { resultAndFinish ->
+        val builder = ServiceToGateProto.newBuilder()
+            .setRequestId(requestId)
+            .setPartialPredict(
+                PartialPredictResponseProto.newBuilder()
+                    .setFinish(resultAndFinish.last)
+                    .setData(
+                        PayloadProto.newBuilder()
+                            .setJson(JSON.stringify(resultAndFinish.result))
+                            .setDataType("json") // TODO: fill reference to data-schema
+                    )
+            )
+        if (resultAndFinish.price != null) {
+            builder.putHeaders("Z-custom-billing", resultAndFinish.price.toString())
+        }
+
+        sdk.send(connectorId, builder.build())
+    }
+}
+
 
 abstract class MlpFitServiceBase<F: Any, FC: Any>(
     fitDataExample: F,

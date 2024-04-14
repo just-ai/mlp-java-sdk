@@ -136,8 +136,10 @@ class Connector(
                     val connected = tryConnectOrShutdown()
                     if (connected) {
                         lastActiveTime = now()
+                        if (progressiveDelay != 100L) {
+                            logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel was connected")
+                        }
                         progressiveDelay = 100L
-                        logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel was connected")
                     } else {
                         progressiveDelay = min(progressiveDelay * 2, 5_000L)
                         logger.debug("${this@Connector}: increase progressiveDelay to $progressiveDelay")
@@ -146,8 +148,10 @@ class Connector(
 
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
-                    progressiveDelay = 100L
+                    if (progressiveDelay != 100L) {
                     logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel is active")
+                        }
+                    progressiveDelay = 100L
                 }
 
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
