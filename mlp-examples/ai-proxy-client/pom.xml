@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.mlp</groupId>
         <artifactId>mlp-java-sdk</artifactId>
-        <version>1.12.7-SNAPSHOT</version>
+        <version>dev-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>chat-gpt-client</artifactId>
+    <artifactId>ai-proxy-client</artifactId>
 
     <properties>
         <logback.version>1.2.6</logback.version>

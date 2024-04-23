@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>com.mlp</groupId>
+        <artifactId>mlp-java-sdk</artifactId>
+        <version>dev-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>mlp-datatypes</artifactId>
+
+    <properties>
+        <java.version>1.8</java.version>
+
+        <openapi-generator-maven.version>7.4.0</openapi-generator-maven.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.16.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>2.1.7</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <sourceDirectory>src/main/kotlin</sourceDirectory>
+
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.6.2</version>
+            </extension>
+        </extensions>
+
+        <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-maven.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/datatypes/mlp-data-gpt.yml</inputSpec>
+                            <!--                            <generatorName>kotlin-spring</generatorName>-->
+                            <generatorName>kotlin-spring</generatorName>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>mlp-datatypes</artifactId>
+                            <artifactVersion>${project.version}</artifactVersion>
+                            <output>${project.basedir}</output>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateApiTests>false</generateApiTests>
+                            <!--<configHelp>true</configHelp>-->
+                            <typeMappings>
+                                <mapping>date-time=java.time.Instant</mapping>
+                                <mapping>DateTime=java.time.Instant</mapping>
+                                <mapping>BigDecimal = java.math.BigDecimal</mapping>
+                            </typeMappings>
+                            <configOptions>
+<!--                                <useTags>true</useTags>-->
+<!--                                <java8>true</java8>-->
+<!--                                <sourceFolder>/</sourceFolder>-->
+<!--                                <serviceInterface>false</serviceInterface>-->
+<!--                                <skipDefaultInterface>false</skipDefaultInterface>-->
+                                <useBeanValidation>false</useBeanValidation>
+                            </configOptions>
+                            <modelPackage>com.mlp.api.datatypes.chatgpt</modelPackage>
+<!--                            <addCompileSourceRoot>false</addCompileSourceRoot>-->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <configuration>
+                    <jvmTarget>${java.version}</jvmTarget>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-compiler-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    <source>9</source>-->
+<!--                    <target>9</target>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+        </plugins>
+    </build>
+</project>
+

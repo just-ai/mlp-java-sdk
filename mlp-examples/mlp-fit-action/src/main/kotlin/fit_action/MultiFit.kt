@@ -14,7 +14,7 @@ class FitService(
 
     private val storage = StorageFactory.getStorage(context)
 
-    override fun fit(data: FitDatasetData,
+    override suspend fun fit(data: FitDatasetData,
                      config: FitConfigData?,
                      modelDir: String,
                      previousModelDir: String?,
@@ -53,8 +53,8 @@ class PredictService(
         JSON.parse(configDataStr, FitConfigData::class.java)
     }
 
-    override fun predict(request: PredictRequestData): PredictResponseData {
-        val res = modelData.map[request.text] ?: return PredictResponseData("no entry")
+    override fun predict(req: PredictRequestData): PredictResponseData {
+        val res = modelData.map[req.text] ?: return PredictResponseData("no entry")
         val res2 = if (configData.upper) res.uppercase() else res.lowercase()
         return PredictResponseData(res2)
     }

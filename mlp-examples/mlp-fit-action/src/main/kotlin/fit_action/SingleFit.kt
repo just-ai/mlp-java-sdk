@@ -5,7 +5,6 @@ import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.MlpException
 import com.mlp.sdk.MlpExecutionContext
 import com.mlp.sdk.MlpServiceBase
-import com.mlp.sdk.WithExecutionContext
 import com.mlp.sdk.storage.StorageFactory
 import com.mlp.sdk.utils.JSON
 
@@ -26,7 +25,7 @@ class SingleFit(
         loadState()
     }
 
-    override fun fit(data: FitDatasetData,
+    override suspend fun fit(data: FitDatasetData,
                      config: FitConfigData?,
                      modelDir: String,
                      previousModelDir: String?,
@@ -49,15 +48,15 @@ class SingleFit(
         configData = JSON.parse(configDataStr, FitConfigData::class.java)
     }
 
-    override fun predict(request: PredictRequestData, config: Unit?): PredictResponseData {
+    override suspend fun predict(request: PredictRequestData, config: Unit?): PredictResponseData {
         val model = modelData
-        val config = configData
-        if (model == null || config == null) {
+        val fitConfig = configData
+        if (model == null || fitConfig == null) {
             throw MlpException("model doesn't have saved state")
         }
 
         val res = model.map[request.text] ?: return PredictResponseData("no entry")
-        val res2 = if (config.upper) res.uppercase() else res.lowercase()
+        val res2 = if (fitConfig.upper) res.uppercase() else res.lowercase()
         return PredictResponseData(res2)
     }
 

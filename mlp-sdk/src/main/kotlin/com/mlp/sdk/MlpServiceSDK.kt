@@ -13,6 +13,11 @@ class MlpServiceSDK(
     dispatcher: CoroutineDispatcher? = null
 ) : WithExecutionContext, WithState() {
 
+    init {
+        if (action is MlpServiceBase<*,*,*,*,*>) {
+            action.sdk = this
+        }
+    }
     /**
      * @param actionProvider Function that provides the MlpService, given an InstanceContext.
      * @param config Optional configuration for the MlpService; defaults to null.

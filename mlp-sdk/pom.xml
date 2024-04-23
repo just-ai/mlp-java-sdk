@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.mlp</groupId>
         <artifactId>mlp-java-sdk</artifactId>
-        <version>1.12.7-SNAPSHOT</version>
+        <version>dev-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -35,6 +35,11 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mlp</groupId>
+            <artifactId>mlp-datatypes</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

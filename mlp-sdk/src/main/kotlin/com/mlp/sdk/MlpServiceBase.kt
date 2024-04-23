@@ -1,11 +1,13 @@
 package com.mlp.sdk
 
 import com.mlp.api.ApiClient
+import com.mlp.api.TypeInfo
 import com.mlp.api.client.*
 import com.mlp.gate.*
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.utils.JSON
-import java.lang.RuntimeException
+import kotlinx.coroutines.runBlocking
+import org.slf4j.MDC
 
 abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
     val fitDataExample: F,
@@ -14,6 +16,8 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
     val predictConfigExample: C,
     val predictResponseExample: R,
 ): MlpService() {
+
+    lateinit var sdk: MlpServiceSDK
 
     final override fun getDescriptor(): ServiceDescriptorProto {
         return ServiceDescriptorProto.newBuilder()
@@ -37,7 +41,7 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
             .build()
     }
 
-    final override fun fit(
+    final override suspend fun fit(
         train: Payload,
         targets: Payload?,
         config: Payload?,
@@ -60,23 +64,85 @@ abstract class MlpServiceBase<F: Any, FC: Any, P: Any, C: Any, R: Any>(
         )
     }
 
-    abstract fun fit(data: F, config: FC?, modelDir: String, previousModelDir: String?, targetServiceInfo: ServiceInfoProto,
+    abstract suspend fun fit(data: F, config: FC?, modelDir: String, previousModelDir: String?, targetServiceInfo: ServiceInfoProto,
                      dataset: DatasetInfoProto)
 
-    override fun predict(req: Payload, conf: Payload?): MlpResponse {
-        val request = JSON.parse(req.data, predictRequestExample.javaClass)
+    override suspend fun predict(req: Payload, config: Payload?): MlpResponse {
+        // парсим request и config.
+        val request = JSON.parse(req.data, predictRequestExample.javaClass) // TODO: handle datatype
 
-        val config = if (conf != null && predictConfigExample !is Unit) {
-            JSON.parse(conf.data, predictConfigExample.javaClass)
+        val conf = if (config != null && predictConfigExample !is Unit) {
+            JSON.parse(config.data, predictConfigExample.javaClass)
         } else null
 
-        val res = this.predict(request, config)
+        // вызываем predict
+        val res = this.predict(request, conf)
 
-        return Payload(JSON.stringify(res))
+        // в зависимости от того, создали ли генератор стрим, возвращаем ответ либо сразу, либо возвращаем пустой ответ
+        return if (res != null) {
+            Payload(data = JSON.stringify(res), dataType = "json") // TODO: fill datatype
+        } else {
+            MlpPartialBinaryResponse() // возвращаем пустоту, далее ответы будут публиковаться в стрим-генератор
+        }
     }
 
-    abstract fun predict(request: P, config: C?): R
+    fun createGenerator(): ResultGenerator<R> {
+        return com.mlp.sdk.createGenerator<R>(sdk)
+    }
 
+    data class ResultAndFinish<R>(
+        val result: R,
+        val price: Long?,
+        val last: Boolean,
+    )
+
+    class ResultGenerator<R>(
+        private val publisher: suspend (ResultAndFinish<R>) -> Unit
+    ) {
+        suspend fun next(result: R, last: Boolean, price: Long? = null) {
+            publisher(ResultAndFinish(result, price, last))
+        }
+    }
+
+    abstract suspend fun predict(request: P, config: C?): R?
+
+}
+
+fun <R: Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerator<R> {
+    val requestId = MDC.get("gateRequestId").toLong()
+    val connectorId = MDC.get("connectorId").toLong()
+
+    return MlpServiceBase.ResultGenerator { resultAndFinish ->
+        val payload = when (resultAndFinish.result) {
+            is PayloadProto -> resultAndFinish.result
+            is Payload -> PayloadProto.newBuilder()
+                .setJson(resultAndFinish.result.data)
+                .setDataType(resultAndFinish.result.dataType).build()
+
+            is RawPayload -> PayloadProto.newBuilder()
+                .setJson(resultAndFinish.result.data)
+                .setDataType(resultAndFinish.result.dataType).build()
+
+            else -> PayloadProto.newBuilder()
+                .setJson(JSON.stringify(resultAndFinish.result))
+                .setDataType(TypeInfo.canonicalName(resultAndFinish.result.javaClass)).build()
+        }
+
+        val builder = ServiceToGateProto.newBuilder()
+            .setRequestId(requestId)
+            .setPartialPredict(
+                PartialPredictResponseProto.newBuilder()
+                    .setFinish(resultAndFinish.last)
+                    .setData(
+                        payload
+                    )
+            )
+        if (resultAndFinish.price != null) {
+            builder.putHeaders("Z-custom-billing", resultAndFinish.price.toString())
+        }
+
+        sdk.send(connectorId, builder.build())
+    }
 }
 
 
@@ -85,7 +151,7 @@ abstract class MlpFitServiceBase<F: Any, FC: Any>(
     fitConfigExample: FC,
 ): MlpServiceBase<F, FC, String, Unit, String>(fitDataExample, fitConfigExample, "", Unit, "") {
 
-    final override fun predict(request: String, config: Unit?): String {
+    final override suspend fun predict(request: String, config: Unit?): String? {
         throw RuntimeException("Not implemented yet")
     }
 }
@@ -95,13 +161,13 @@ abstract class MlpPredictServiceBase<P: Any, R: Any>(
     predictResponseExample: R,
 ): MlpServiceBase<String, String, P, Unit, R>("", "", predictRequestExample, Unit, predictResponseExample) {
 
-    final override fun fit(data: String, config: String?, modelDir: String, previousModelDir: String?, targetServiceInfo: ServiceInfoProto,
+    final override suspend fun fit(data: String, config: String?, modelDir: String, previousModelDir: String?, targetServiceInfo: ServiceInfoProto,
                      dataset: DatasetInfoProto) {
         throw RuntimeException("Predict service doesn't support fit method")
     }
 
-    override fun predict(req: P, conf: Unit?): R {
-        return predict(req)
+    override suspend fun predict(request: P, config: Unit?): R? {
+        return predict(request, config)
     }
 
     abstract fun predict(req: P): R
@@ -114,7 +180,7 @@ abstract class MlpPredictWithConfigServiceBase<P: Any, C: Any, R: Any>(
     predictResponseExample: R,
 ): MlpServiceBase<String, String, P, C, R>("", "", predictRequestExample, predictConfigExample, predictResponseExample) {
 
-    final override fun fit(data: String, config: String?, modelDir: String, previousModelDir: String?, targetServiceInfo: ServiceInfoProto,
+    final override suspend fun fit(data: String, config: String?, modelDir: String, previousModelDir: String?, targetServiceInfo: ServiceInfoProto,
                            dataset: DatasetInfoProto) {
         throw RuntimeException("Predict service doesn't support fit method")
     }

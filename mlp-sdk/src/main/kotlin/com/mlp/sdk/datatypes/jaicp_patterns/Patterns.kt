@@ -18,6 +18,11 @@ data class PatternsFitData(
     val patterns: List<PatternData>
 )
 
+data class PatternsFitConfigData(
+    val markup: String? = null,
+    val ner: List<String>? = null
+)
+
 data class PatternsRequestData(
     val text: String,
     val activate: List<String>? = null,
