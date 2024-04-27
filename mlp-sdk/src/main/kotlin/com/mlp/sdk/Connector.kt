@@ -149,8 +149,8 @@ class Connector(
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
                     if (progressiveDelay != 100L) {
-                    logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel is active")
-                        }
+                        logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel is active")
+                    }
                     progressiveDelay = 100L
                 }
 
