@@ -5,12 +5,13 @@
     <packaging>pom</packaging>
     <modules>
         <module>mlp-client-generator</module>
+        <module>mlp-datatypes</module>
         <module>mlp-sdk</module>
         <module>mlp-examples/mlp-fit-action</module>
         <module>mlp-examples/mlp-simple-action</module>
         <module>mlp-examples/mlp-client-app</module>
         <module>mlp-examples/mlp-rest-app</module>
-        <module>mlp-examples/chat-gpt-client</module>
+        <module>mlp-examples/ai-proxy-client</module>
     </modules>
 
     <groupId>com.mlp</groupId>

@@ -17,13 +17,14 @@ pipeline {
         stage('Prepare') {
             steps {
                 script {
-                    manager.addShortText("${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}")
+                    RESULT_BRANCH = env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH
+                    manager.addShortText("${RESULT_BRANCH}")
                     echo "${env.gitlabBranch}"
                 }
                 updateGitlabCommitStatus name: "build", state: "running"
 
                 git url: "git@gitlab.just-ai.com:ml-platform-pub/mlp-java-sdk.git",
-                        branch: "${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}",
+                        branch: "${RESULT_BRANCH}",
                         credentialsId: 'bitbucket_key'
             }
         }
@@ -51,7 +52,7 @@ pipeline {
             }
             steps {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
-                    sh """mvn versions:set -DnewVersion=${env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH}-SNAPSHOT"""
+                    sh """mvn versions:set -DnewVersion=${RESULT_BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
                     sh """mvn deploy -P nexus-open"""
                 }
@@ -59,61 +60,61 @@ pipeline {
         }
 
         stage('Rebuild MLP Services') {
+            when {
+                expression { RESULT_BRANCH in ['dev','stable','release'] }
+            }
             steps {
                 parallel (
-                    "build justgpt" : {
-                        build job: "justgpt-build/${params.BRANCH}", wait: false
-                    },
                     "build mlp-ai-proxy" : {
-                        build job: "mlp-ai-proxy/${params.BRANCH}", wait: false
+                        build job: "mlp-ai-proxy/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-aimyvoice-proxy-service" : {
-                        build job: "mlp-aimyvoice-proxy-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-aimyvoice-proxy-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-censorship-bot" : {
-                        build job: "mlp-censorship-bot-build/${params.BRANCH}", wait: false
+                        build job: "mlp-censorship-bot-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-chat-service" : {
-                        build job: "mlp-chat-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-chat-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-chit-chat-service" : {
-                        build job: "mlp-chit-chat-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-chit-chat-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-cloud-dalle-service" : {
-                        build job: "mlp-cloud-dalle-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-cloud-dalle-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-cloud-whisper-service" : {
-                        build job: "mlp-cloud-whisper-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-cloud-whisper-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-cross-validation-service" : {
-                        build job: "mlp-cross-validation-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-cross-validation-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-faq-service" : {
-                        build job: "mlp-faq-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-faq-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-gpt-mock" : {
-                        build job: "mlp-gpt-mock-build/${params.BRANCH}", wait: false
+                        build job: "mlp-gpt-mock-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-intents" : {
-                        build job: "mlp-intents-build/${params.BRANCH}", wait: false
+                        build job: "mlp-intents-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-justgpt-facade" : {
-                        build job: "mlp-justgpt-facade-build/${params.BRANCH}", wait: false
+                        build job: "mlp-justgpt-facade-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-kaldi-asr-service" : {
-                        build job: "mlp-kaldi-asr-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-kaldi-asr-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-loadtest-service" : {
-                        build job: "mlp-loadtest-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-loadtest-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-service-proxy" : {
-                        build job: "mlp-service-proxy-build/${params.BRANCH}", wait: false
+                        build job: "mlp-service-proxy-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-summary-service" : {
-                        build job: "mlp-summary-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-summary-service-build/${RESULT_BRANCH}", wait: false
                     },
                     "build mlp-vectorize-service" : {
-                        build job: "mlp-vectorize-service-build/${params.BRANCH}", wait: false
+                        build job: "mlp-vectorize-service-build/${RESULT_BRANCH}", wait: false
                     },
                 )
             }

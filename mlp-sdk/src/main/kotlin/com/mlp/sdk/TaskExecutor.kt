@@ -17,14 +17,9 @@ import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
+import kotlinx.coroutines.*
 import java.util.concurrent.Executors.newFixedThreadPool
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.slf4j.MDCContext
-import kotlinx.coroutines.withContext
 import org.slf4j.MDC
 
 class TaskExecutor (
@@ -35,7 +30,7 @@ class TaskExecutor (
 ) : WithExecutionContext, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config, context)
-    private val scope = CoroutineScope(dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
+    private val scope = CoroutineScope( SupervisorJob() + (dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher()))
     internal lateinit var connectorsPool: ConnectorsPool
 
     fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, tracker: TimeTracker) {

@@ -23,7 +23,7 @@ class SingleFit(
         loadState()
     }
 
-    override fun fit(
+    override suspend fun fit(
         data: FitDatasetData,
         config: FitConfigData?,
         modelDir: String,
@@ -55,7 +55,7 @@ class SingleFit(
         configData = JSON.parse(configDataStr, FitConfigData::class.java)
     }
 
-    override fun predict(request: PredictRequestData, config: Unit?): PredictResponseData {
+    override suspend fun predict(request: PredictRequestData, config: Unit?): PredictResponseData {
         val model = modelData
         val conf = configData
         if (model == null || conf == null) {

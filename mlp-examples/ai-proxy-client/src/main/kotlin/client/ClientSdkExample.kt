@@ -1,12 +1,14 @@
 package client
 
+import com.mlp.api.datatypes.chatgpt.ChatCompletionRequest
+import com.mlp.api.datatypes.chatgpt.ChatMessage
+import com.mlp.api.datatypes.chatgpt.ChatRole
 import com.mlp.sdk.MlpClientSDK
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
+import com.mlp.sdk.Payload
+import com.mlp.sdk.datatypes.aiproxy.AIProxyChatCompletionRequest
 import com.mlp.sdk.datatypes.aiproxy.AiProxyRequest
 import com.mlp.sdk.datatypes.aiproxy.AiProxyResponse
-import com.mlp.sdk.datatypes.chatgpt.ChatCompletionRequest
-import com.mlp.sdk.datatypes.chatgpt.ChatCompletionRole
-import com.mlp.sdk.datatypes.chatgpt.ChatMessage
 import com.mlp.sdk.utils.JSON
 import kotlinx.coroutines.runBlocking
 
@@ -21,9 +23,9 @@ fun main() = runBlocking {
     val clientSDK = MlpClientSDK(context = systemContext)
 
     val request = AiProxyRequest(
-        chat = ChatCompletionRequest(
+        chat = AIProxyChatCompletionRequest(
             model = "gpt-3.5-turbo",
-            messages = listOf(ChatMessage(ChatCompletionRole.user, "Привет")))
+            messages = listOf(ChatMessage(ChatRole.user, "Привет")))
         )
     val response = clientSDK.predict("just-ai", "AI-Proxy", JSON.stringify(request))
 
