@@ -1,0 +1,8 @@
+{
+  "map": {
+    "hello": "Hello world!",
+    "bye": "Good bye!",
+    "test": "Test answer.",
+    "The Ultimate Question of Life, the Universe, and Everything": "42"
+  }
+}

@@ -16,7 +16,7 @@
                 <include>*</include>
             </includes>
             <excludes>
-                <exclude>*:mpl-client-app</exclude>
+                <exclude>*:chat-gpt-client</exclude>
             </excludes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
@@ -24,7 +24,7 @@
             <scope>runtime</scope>
             <outputDirectory>.</outputDirectory>
             <includes>
-                <include>*:mpl-client-app</include>
+                <include>*:chat-gpt-client</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
