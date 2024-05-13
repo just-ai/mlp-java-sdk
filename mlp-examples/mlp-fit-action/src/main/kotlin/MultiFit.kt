@@ -12,7 +12,7 @@ class FitService(
 
 
 
-    override fun fit(
+    override suspend fun fit(
         data: FitDatasetData,
         config: FitConfigData?,
         modelDir: String,
