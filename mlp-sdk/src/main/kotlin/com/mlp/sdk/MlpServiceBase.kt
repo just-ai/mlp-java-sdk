@@ -137,8 +137,10 @@ fun <R: Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerator
                         payload
                     )
             )
-        if (resultAndFinish.price != null) {
-            builder.putHeaders("Z-custom-billing", resultAndFinish.price.toString())
+
+        val billingUnits = resultAndFinish.price ?: BillingUnitsThreadLocal.getUnits()
+        if (billingUnits != null) {
+            builder.putHeaders("Z-custom-billing", billingUnits.toString())
         }
 
         sdk.send(connectorId, builder.build())
