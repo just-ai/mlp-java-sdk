@@ -16,7 +16,7 @@
                 <include>*</include>
             </includes>
             <excludes>
-                <exclude>*:mpl-fit-action</exclude>
+                <exclude>*:mlp-fit-action</exclude>
             </excludes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
@@ -24,7 +24,7 @@
             <scope>runtime</scope>
             <outputDirectory>.</outputDirectory>
             <includes>
-                <include>*:mpl-fit-action</include>
+                <include>*:mlp-fit-action</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
