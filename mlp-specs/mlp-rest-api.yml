@@ -3869,6 +3869,9 @@ paths:
             application/json:
               schema:
                 type: object
+            text/event-stream:
+              schema:
+                type: object
   /api/adapters/chat-gpt:
     post:
       tags:
@@ -3907,6 +3910,9 @@ paths:
           description: OK
           content:
             application/json:
+              schema:
+                type: object
+            text/event-stream:
               schema:
                 type: object
   /api/mlpgate/admin/resource-groups:
@@ -9541,10 +9547,10 @@ components:
         totalPages:
           type: integer
           format: int32
-        first:
-          type: boolean
         pageable:
           $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
         size:
           type: integer
           format: int32
