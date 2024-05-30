@@ -26,6 +26,7 @@ components:
         - system
         - user
         - assistant
+        - marker
 
     ChatMessage:
       type: object

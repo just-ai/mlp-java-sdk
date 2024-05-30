@@ -16,7 +16,7 @@
                 <include>*</include>
             </includes>
             <excludes>
-                <exclude>*:mpl-simple-action</exclude>
+                <exclude>*:mlp-rest-app</exclude>
             </excludes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
@@ -24,7 +24,7 @@
             <scope>runtime</scope>
             <outputDirectory>.</outputDirectory>
             <includes>
-                <include>*:mpl-simple-action</include>
+                <include>*:mlp-rest-app</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>

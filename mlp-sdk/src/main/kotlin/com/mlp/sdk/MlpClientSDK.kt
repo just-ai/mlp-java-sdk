@@ -141,9 +141,13 @@ class MlpClientSDK(
         data: Payload,
         config: Payload? = null,
         timeout: Duration? = null,
-        authToken: String = ensureDefaultToken()
+        authToken: String = ensureDefaultToken(),
+        requestHeaders: Map<String, String> = emptyMap()
     ): Flow<ClientResponseProto> =
-        sendRequestPayloadStream(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
+        sendRequestPayloadStream(
+            buildPredictRequest(account, model, data, config, timeout, authToken, requestHeaders),
+            timeout
+        )
 
     suspend fun predict(
         account: String,
@@ -298,7 +302,8 @@ class MlpClientSDK(
         data: Payload,
         config: Payload?,
         timeout: Duration?,
-        authToken: String
+        authToken: String,
+        requestHeaders: Map<String, String> = emptyMap()
     ): ClientRequestProto {
         val builder = ClientRequestProto.newBuilder()
 
@@ -321,6 +326,8 @@ class MlpClientSDK(
                     }
                 }
             )
+
+        builder.putAllHeaders(requestHeaders)
 
         if (MDC.get("requestId") != null)
             builder.putHeaders("Z-requestId", MDC.get("requestId"))
