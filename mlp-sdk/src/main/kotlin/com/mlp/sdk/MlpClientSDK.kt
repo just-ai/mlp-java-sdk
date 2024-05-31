@@ -72,8 +72,8 @@ class MlpClientSDK(
             .enableRetry()
             .maxRetryAttempts(MAX_VALUE)
             .maxInboundMessageSize(MAX_VALUE)
-            .keepAliveTime(10, TimeUnit.SECONDS)
-            .keepAliveTimeout(30, TimeUnit.SECONDS)
+            .keepAliveTime(30, TimeUnit.SECONDS)
+            .keepAliveTimeout(10, TimeUnit.SECONDS)
             .keepAliveWithoutCalls(true)
 
         if (!config.grpcSecure)
