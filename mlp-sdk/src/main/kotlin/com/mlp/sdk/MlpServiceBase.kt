@@ -169,7 +169,7 @@ abstract class MlpPredictServiceBase<P: Any, R: Any>(
     }
 
     override suspend fun predict(request: P, config: Unit?): R? {
-        return predict(request, config)
+        return predict(request)
     }
 
     abstract fun predict(req: P): R
