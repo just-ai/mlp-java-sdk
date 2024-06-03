@@ -3907,15 +3907,15 @@ paths:
           application/json:
             schema:
               type: string
-          text/event-stream:
-            schema:
-              type: string
         required: true
       responses:
         "200":
           description: OK
           content:
             application/json:
+              schema:
+                type: object
+            text/event-stream:
               schema:
                 type: object
   /api/mlpgate/admin/resource-groups:
