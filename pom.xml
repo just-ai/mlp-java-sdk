@@ -32,7 +32,7 @@
 
         <kotlin.version>1.8.22</kotlin.version>
         <coroutines.version>1.6.4</coroutines.version>
-        <grpc.kotlin.version>1.2.0</grpc.kotlin.version>
+        <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
 
         <!-- The version is the latest found here: https://search.maven.org/artifact/io.grpc/grpc-protobuf -->
         <!-- IMPORTANT: currently we support max 1.39.0 -->
