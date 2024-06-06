@@ -19,6 +19,7 @@ import java.time.Instant.now
 import java.util.concurrent.Executors.defaultThreadFactory
 import java.util.concurrent.Executors.newSingleThreadExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
@@ -72,9 +73,9 @@ class MlpClientSDK(
             .enableRetry()
             .maxRetryAttempts(MAX_VALUE)
             .maxInboundMessageSize(MAX_VALUE)
-            .keepAliveTime(120, TimeUnit.SECONDS)
-            .keepAliveTimeout(30, TimeUnit.SECONDS)
-            .keepAliveWithoutCalls(true)
+            .keepAliveTime(config.keepAliveTimeSeconds, SECONDS)
+            .keepAliveTimeout(config.keepAliveTimeoutSeconds, SECONDS)
+            .keepAliveWithoutCalls(config.keepAliveWithoutCalls)
 
         if (!config.grpcSecure)
             channelBuilder.usePlaintext()
