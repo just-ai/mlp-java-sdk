@@ -35,7 +35,8 @@
                             <artifactId>mlp-rest-client</artifactId>
                             <artifactVersion>${project.version}</artifactVersion>
                             <output>${project.build.directory}/api-client</output>
-                            <templateDirectory>${project.basedir}/src/main/resources/Java/libraries/resttemplate</templateDirectory>
+                            <templateDirectory>${project.basedir}/src/main/resources/Java/libraries/resttemplate
+                            </templateDirectory>
                             <configOptions>
                                 <java8>true</java8>
                                 <dateLibrary>java8</dateLibrary>

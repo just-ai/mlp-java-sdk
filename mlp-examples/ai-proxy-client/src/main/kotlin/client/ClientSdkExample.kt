@@ -12,6 +12,13 @@ import com.mlp.sdk.datatypes.aiproxy.AiProxyResponse
 import com.mlp.sdk.utils.JSON
 import kotlinx.coroutines.runBlocking
 
+/*
+ * Предварительно необходимо добавить в env MLP_CLIENT_TOKEN и MLP_REST_URL
+ * 1. Получаем  контекст для запуска в JVM процессе инстанса mlp-sdk
+ * 2. Создаем JSON
+ * 3. Отправляем его в сервис AI-Proxy
+ * 4. Полученный ответ выводим в консоль
+ */
 fun main() = runBlocking {
     val clientSDK = MlpClientSDK(context = systemContext)
 
@@ -20,11 +27,10 @@ fun main() = runBlocking {
             model = "gpt-3.5-turbo",
             messages = listOf(ChatMessage(ChatRole.user, "Привет")))
         )
+    val response = clientSDK.predict("just-ai", "AI-Proxy", JSON.stringify(request))
 
-    val res = clientSDK.predict("just-ai", "AI-Proxy", JSON.stringify(request))
-    val response = JSON.parse<AiProxyResponse>(res)
-
-    println(response)
+    val result = JSON.parse<AiProxyResponse>(response)
+    println(result)
 
     clientSDK.shutdown()
 }
