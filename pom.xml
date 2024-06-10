@@ -16,7 +16,7 @@
 
     <groupId>com.mlp</groupId>
     <artifactId>mlp-java-sdk</artifactId>
-    <version>dev-SNAPSHOT</version>
+    <version>release-1.0.0</version>
 
     <name>mlp-java-sdk</name>
     <description>MLP Java SDK</description>
@@ -78,6 +78,15 @@
             </activation>
             <properties>
                 <snapshotRepo>https://nexus.just-ai.com/repository/maven-snapshots/</snapshotRepo>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>internal-releases</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
                 <releaseRepo>https://nexus.just-ai.com/repository/maven-releases/</releaseRepo>
             </properties>
         </profile>
@@ -86,6 +95,12 @@
             <id>nexus-open</id>
             <properties>
                 <snapshotRepo>https://nexus-open.just-ai.com/repository/maven-snapshots/</snapshotRepo>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>nexus-open-releases</id>
+            <properties>
                 <releaseRepo>https://nexus-open.just-ai.com/repository/maven-releases/</releaseRepo>
             </properties>
         </profile>
