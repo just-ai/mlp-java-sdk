@@ -60,51 +60,43 @@
     </pluginRepositories>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <url>${snapshotRepo}</url>
-        </snapshotRepository>
         <repository>
-            <id>nexus-releases</id>
-            <url>${releaseRepo}</url>
+            <id>nexus</id>
+            <url>${deploymentRepo}</url>
         </repository>
     </distributionManagement>
 
     <profiles>
         <profile>
-            <id>internal</id>
+            <id>internal-snapshot</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <snapshotRepo>https://nexus.just-ai.com/repository/maven-snapshots/</snapshotRepo>
+                <deploymentRepo>https://nexus.just-ai.com/repository/maven-snapshots/</deploymentRepo>
             </properties>
         </profile>
 
         <profile>
-            <id>internal-releases</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <id>internal-release</id>
             <properties>
-                <releaseRepo>https://nexus.just-ai.com/repository/maven-releases/</releaseRepo>
+                <deploymentRepo>https://nexus.just-ai.com/repository/maven-releases/</deploymentRepo>
             </properties>
         </profile>
 
         <profile>
-            <id>nexus-open</id>
+            <id>nexus-open-snapshot</id>
             <properties>
-                <snapshotRepo>https://nexus-open.just-ai.com/repository/maven-snapshots/</snapshotRepo>
+                <deploymentRepo>https://nexus-open.just-ai.com/repository/maven-snapshots/</deploymentRepo>
             </properties>
         </profile>
 
         <profile>
-            <id>nexus-open-releases</id>
+            <id>nexus-open-release</id>
             <properties>
-                <releaseRepo>https://nexus-open.just-ai.com/repository/maven-releases/</releaseRepo>
+                <deploymentRepo>https://nexus-open.just-ai.com/repository/maven-releases/</deploymentRepo>
             </properties>
         </profile>
     </profiles>
-
 
 </project>
