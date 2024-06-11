@@ -54,10 +54,135 @@ pipeline {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
                     sh """mvn versions:set -DnewVersion=${RESULT_BRANCH}-SNAPSHOT"""
                     sh """mvn clean deploy"""
-                    sh """mvn deploy -P nexus-open"""
+                    sh """mvn deploy -P nexus-open-snapshot"""
                 }
             }
         }
+        ///
+        @Grab('com.fasterxml.jackson.core:jackson-databind:2.12.3')
+        import com.fasterxml.jackson.databind.ObjectMapper
+
+        pipeline {
+            agent any
+
+            environment {
+                REPO_URL = 'https://gitlab.just-ai.com/ml-platform-pub/mlp-java-sdk.git'
+                NEXUS_OPEN_URL = 'https://nexus-open.just-ai.com'
+                NEXUS_INTERNAL_URL = 'https://nexus.just-ai.com'
+                RELEASE_BRANCH = 'release'
+                LAST_VERSION_FILE = 'last-released-version'
+            }
+
+            stages {
+                stage('Clone Repository') {
+                    steps {
+                        git branch: env.RELEASE_BRANCH, url: env.REPO_URL
+                    }
+                }
+
+                stage('Check Version') {
+                    steps {
+                        script {
+                        // находим файл last-released-version в каталоге
+                            def lastVersionData = readFile(env.LAST_VERSION_FILE)
+
+                            def objectMapper = new ObjectMapper()
+                            def versionData = objectMapper.readValue(lastVersionData, Map.class)
+
+                            def currentVersion = versionData['currentVersion']
+                            def previousVersions = versionData['previousVersions']
+
+                            if (previousVersions.contains(currentVersion)) {
+                                error "Version ${currentVersion} already in release"
+                            } else {
+                                currentBuild.description = "New version to release: ${currentVersion}"
+                            }
+                        }
+                    }
+                }
+
+                stage('Create Release Branch') {
+                    steps {
+                        script {
+                            def lastVersionData = readFile(env.LAST_VERSION_FILE)
+                            def objectMapper = new ObjectMapper()
+                            def versionData = objectMapper.readValue(lastVersionData, Map.class)
+
+                            def currentVersion = versionData['currentVersion']
+                            sh "git checkout -b release-${currentVersion}"
+                        }
+                    }
+                }
+
+                stage('Update Version') {
+                    steps {
+                        script {
+                            def lastVersionData = readFile(env.LAST_VERSION_FILE)
+                            def objectMapper = new ObjectMapper()
+                            def versionData = objectMapper.readValue(lastVersionData, Map.class)
+
+                            def currentVersion = versionData['currentVersion']
+                            def releaseVersion = "release-${currentVersion}"
+
+                             sh "mvn versions:set -DnewVersion=${releaseVersion}"
+                        }
+                    }
+                }
+
+                stage('Deploy to Nexus Open') {
+                    steps {
+                        script {
+                            sh "mvn clean deploy -P nexus-open-release"
+                        }
+                    }
+                }
+
+                stage('Deploy to Internal Nexus') {
+                    steps {
+                        script {
+                            sh "mvn clean deploy -P internal-release"
+                        }
+                    }
+                }
+
+                stage('Tag Release') {
+                    steps {
+                        script {
+                            def lastVersionData = readFile(env.LAST_VERSION_FILE)
+                            def objectMapper = new ObjectMapper()
+                            def versionData = objectMapper.readValue(lastVersionData, Map.class)
+
+                            def currentVersion = versionData['currentVersion']
+                            def releaseVersion = "release-${currentVersion}"
+                            sh "git tag ${releaseVersion}"
+                        }
+                    }
+                }
+
+                stage('Update Previous Versions') {
+                    steps {
+                        script {
+                            def lastVersionData = readFile(env.LAST_VERSION_FILE)
+                            def objectMapper = new ObjectMapper()
+                            def versionData = objectMapper.readValue(lastVersionData, Map.class)
+
+                            def currentVersion = versionData['currentVersion']
+                            def releaseVersion = "release-${currentVersion}"
+                            versionData['previousVersions'].add(currentVersion)
+
+                            def updatedJson = objectMapper.writeValueAsString(versionData)
+                            writeFile file: env.LAST_VERSION_FILE, text: updatedJson
+                            sh "git add ${env.LAST_VERSION_FILE}"
+                            sh "git commit -m 'Add ${currentVersion} to previous versions'"
+                            sh "git push origin release-${currentVersion}"
+                        }
+                    }
+                }
+            }
+        }
+
+
+        ///
 
         stage('Rebuild MLP Services') {
             when {
