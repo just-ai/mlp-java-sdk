@@ -139,17 +139,7 @@ pipeline {
                 }
             }
         }
-
-
-
-
         ////
-
-
-
-
-
-
         stage('Rebuild MLP Services') {
             when {
                 expression { RESULT_BRANCH in ['dev','stable','release'] }
