@@ -78,15 +78,19 @@
             </activation>
             <properties>
                 <snapshotRepo>https://nexus.just-ai.com/repository/maven-snapshots/</snapshotRepo>
-                <releaseRepo>https://nexus.just-ai.com/repository/maven-releases/</releaseRepo>
+                <deploymentRepositoryArg>
+                    -DaltDeploymentRepository=nexus-snapshots::default::${snapshotRepo}
+                </deploymentRepositoryArg>
             </properties>
         </profile>
 
         <profile>
             <id>nexus-open</id>
             <properties>
-                <snapshotRepo>https://nexus-open.just-ai.com/repository/maven-snapshots/</snapshotRepo>
                 <releaseRepo>https://nexus-open.just-ai.com/repository/maven-releases/</releaseRepo>
+                <deploymentRepositoryArg>
+                    -DaltDeploymentRepository=nexus-releases::default::${releaseRepo}
+                </deploymentRepositoryArg>
             </properties>
         </profile>
     </profiles>

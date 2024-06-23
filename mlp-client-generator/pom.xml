@@ -84,9 +84,7 @@
                             <arguments>
                                 <argument>deploy</argument>
                                 <argument>-DskipTests</argument>
-                                <argument>
-                                    -DaltDeploymentRepository=nexus-snapshots::default::${snapshotRepo}
-                                </argument>
+                                <argument>${deploymentRepositoryArg}</argument>
                             </arguments>
                         </configuration>
                     </execution>
