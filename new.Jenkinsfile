@@ -23,13 +23,17 @@ pipeline {
 
         stage('Set Version') {
             steps {
-                sh "mvn versions:set -DnewVersion=${params.NEW_VERSION} -DgenerateBackupPoms=false"
+                withMaven(maven: 'Maven 3.5', jdk: '11') {
+                    sh "mvn versions:set -DnewVersion=${params.NEW_VERSION} -DgenerateBackupPoms=false"
+                }
             }
         }
 
         stage('Deploy') {
             steps {
-                sh "mvn clean deploy -P ${env.RELEASE_DEPLOY_PROFILE}"
+                withMaven(maven: 'Maven 3.5', jdk: '11') {
+                    sh "mvn clean deploy -P ${env.RELEASE_DEPLOY_PROFILE}"
+                }
             }
         }
 
@@ -48,7 +52,9 @@ pipeline {
 
         stage('Revert to Snapshot Version') {
             steps {
-                sh "mvn versions:set -DnewVersion=dev-SNAPSHOT -DgenerateBackupPoms=false"
+                withMaven(maven: 'Maven 3.5', jdk: '11') {
+                    sh "mvn versions:set -DnewVersion=dev-SNAPSHOT -DgenerateBackupPoms=false"
+                }
             }
         }
 
