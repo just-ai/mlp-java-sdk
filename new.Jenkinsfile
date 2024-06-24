@@ -10,8 +10,8 @@ pipeline {
 
     environment {
         RELEASE_DEPLOY_PROFILE = 'nexus-open-release'
-        GITLAB_REPO = 'https://gitlab.just-ai.com/ml-platform-pub/mlp-java-sdk.git'
-        GITHUB_REPO = 'https://github.com/just-ai/mlp-java-sdk.git'
+        GITLAB_REPO = 'git@gitlab.just-ai.com:ml-platform-pub/mlp-java-sdk.git'
+        GITHUB_REPO = 'git@github.com:just-ai/mlp-java-sdk.git'
     }
 
     stages {
