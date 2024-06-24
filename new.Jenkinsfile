@@ -17,7 +17,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${params.RELEASE_BRANCH}", url: env.GITLAB_REPO
+                git branch: "${params.RELEASE_BRANCH}", url: env.GITLAB_REPO, credentialsId: 'bitbucket_key'
             }
         }
 
