@@ -87,7 +87,6 @@
         <profile>
             <id>nexus-open</id>
             <properties>
-                <snapshotRepo>https://nexus-open.just-ai.com/repository/maven-snapshots/</snapshotRepo>
                 <releaseRepo>https://nexus-open.just-ai.com/repository/maven-releases/</releaseRepo>
                 <deploymentRepositoryArg>
                     -DaltDeploymentRepository=nexus-releases::default::${releaseRepo}
