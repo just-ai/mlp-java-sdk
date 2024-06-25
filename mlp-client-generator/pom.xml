@@ -84,7 +84,9 @@
                             <arguments>
                                 <argument>deploy</argument>
                                 <argument>-DskipTests</argument>
-                                <argument>${deploymentRepositoryArg}</argument>
+                                <argument>
+                                    -DaltDeploymentRepository=nexus::default::${deploymentRepo}
+                                </argument>
                             </arguments>
                         </configuration>
                     </execution>

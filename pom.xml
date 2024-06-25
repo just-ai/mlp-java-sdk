@@ -60,40 +60,43 @@
     </pluginRepositories>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <url>${snapshotRepo}</url>
-        </snapshotRepository>
         <repository>
-            <id>nexus-releases</id>
-            <url>${releaseRepo}</url>
+            <id>nexus</id>
+            <url>${deploymentRepo}</url>
         </repository>
     </distributionManagement>
 
     <profiles>
         <profile>
-            <id>internal</id>
+            <id>internal-snapshot</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <snapshotRepo>https://nexus.just-ai.com/repository/maven-snapshots/</snapshotRepo>
-                <deploymentRepositoryArg>
-                    -DaltDeploymentRepository=nexus-snapshots::default::${snapshotRepo}
-                </deploymentRepositoryArg>
+                <deploymentRepo>https://nexus.just-ai.com/repository/maven-snapshots/</deploymentRepo>
             </properties>
         </profile>
 
         <profile>
-            <id>nexus-open</id>
+            <id>internal-release</id>
             <properties>
-                <releaseRepo>https://nexus-open.just-ai.com/repository/maven-releases/</releaseRepo>
-                <deploymentRepositoryArg>
-                    -DaltDeploymentRepository=nexus-releases::default::${releaseRepo}
-                </deploymentRepositoryArg>
+                <deploymentRepo>https://nexus.just-ai.com/repository/maven-releases/</deploymentRepo>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>nexus-open-snapshot</id>
+            <properties>
+                <deploymentRepo>https://nexus-open.just-ai.com/repository/maven-snapshots/</deploymentRepo>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>nexus-open-release</id>
+            <properties>
+                <deploymentRepo>https://nexus-open.just-ai.com/repository/maven-releases/</deploymentRepo>
             </properties>
         </profile>
     </profiles>
-
 
 </project>

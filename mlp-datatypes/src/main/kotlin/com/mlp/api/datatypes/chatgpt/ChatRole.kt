@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
-*
-* Values: system,user,assistant
+* 
+* Values: system,user,assistant,marker
 */
 enum class ChatRole(val value: kotlin.String) {
 
