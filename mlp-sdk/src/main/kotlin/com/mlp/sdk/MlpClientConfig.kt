@@ -1,5 +1,8 @@
 package com.mlp.sdk
 
+import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_KEEP_ALIVE_TIMEOUT_SECONDS
+import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_KEEP_ALIVE_TIME_SECONDS
+import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_KEEP_ALIVE_WITHOUT_CALLS
 import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_PREDICT_RETRYABLE_ERROR_CODES
 import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_PREDICT_RETRY_BACKOFF_MS
 import com.mlp.sdk.MlpClientConfig.Companion.CLIENT_PREDICT_RETRY_MAX_ATTEMPTS
@@ -11,17 +14,21 @@ import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.utils.ConfigHelper
 
 class MlpClientConfig(
-        val initialGateUrls: List<String>,
-        val restUrl: String?,
-        val clientToken: String?,
+    val initialGateUrls: List<String>,
+    val restUrl: String?,
+    val clientToken: String?,
 
-        val clientPredictTimeoutMs: Long = CLIENT_PREDICT_TIMEOUT_MS,
-        val shutdownConfig: ClientShutdownConfig = ClientShutdownConfig(),
-        val grpcSecure: Boolean = GRPC_SECURE,
-        val maxBackoffSeconds: Long = MAX_BACKOFF_SECONDS,
-        val clientApiGateUrl: String? = null,
-        val clientPredictRetryConfig: ClientPredictRetryConfig = ClientPredictRetryConfig(),
-        val billingToken: String? = null
+    val clientPredictTimeoutMs: Long = CLIENT_PREDICT_TIMEOUT_MS,
+    val shutdownConfig: ClientShutdownConfig = ClientShutdownConfig(),
+    val grpcSecure: Boolean = GRPC_SECURE,
+    val maxBackoffSeconds: Long = MAX_BACKOFF_SECONDS,
+    val clientApiGateUrl: String? = null,
+    val clientPredictRetryConfig: ClientPredictRetryConfig = ClientPredictRetryConfig(),
+    val billingToken: String? = null,
+
+    val keepAliveTimeSeconds: Long = CLIENT_KEEP_ALIVE_TIME_SECONDS,
+    val keepAliveTimeoutSeconds: Long = CLIENT_KEEP_ALIVE_TIMEOUT_SECONDS,
+    val keepAliveWithoutCalls: Boolean = CLIENT_KEEP_ALIVE_WITHOUT_CALLS,
 ) {
 
     companion object {
@@ -34,6 +41,10 @@ class MlpClientConfig(
                 "mlp-action.common.channel-closed-error"
             )
 
+        const val CLIENT_KEEP_ALIVE_TIME_SECONDS: Long = 120
+        const val CLIENT_KEEP_ALIVE_TIMEOUT_SECONDS: Long = 60
+        const val CLIENT_KEEP_ALIVE_WITHOUT_CALLS: Boolean = true
+
         const val GRACEFUL_SHUTDOWN_CLIENT_MS: Long = 10000
         const val GRPC_SECURE: Boolean = true
         const val MAX_BACKOFF_SECONDS: Long = 10L
@@ -45,7 +56,6 @@ class MlpClientConfig(
  */
 fun loadClientConfig(configPath: String? = null): MlpClientConfig =
     loadClientConfig(configPath, systemContext.environment)
-
 
 fun loadClientConfig(configPath: String? = null, environment: Environment): MlpClientConfig {
     val props = ConfigHelper.loadProperties(configPath, environment)
@@ -62,7 +72,11 @@ fun loadClientConfig(configPath: String? = null, environment: Environment): MlpC
         ),
         grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE,
         maxBackoffSeconds = props["MLP_MAX_BACKOFF_SECONDS"]?.toLong() ?: MAX_BACKOFF_SECONDS,
-        clientApiGateUrl = props["MLP_REST_URL"]
+        clientApiGateUrl = props["MLP_REST_URL"],
+
+        keepAliveTimeSeconds = props["MLP_CLIENT_KEEP_ALIVE_TIME_SECONDS"]?.toLong() ?: CLIENT_KEEP_ALIVE_TIME_SECONDS,
+        keepAliveTimeoutSeconds = props["MLP_CLIENT_KEEP_ALIVE_TIMEOUT_SECONDS"]?.toLong() ?: CLIENT_KEEP_ALIVE_TIMEOUT_SECONDS,
+        keepAliveWithoutCalls = props["MLP_CLIENT_KEEP_ALIVE_WITHOUT_CALLS"]?.toBoolean() ?: CLIENT_KEEP_ALIVE_WITHOUT_CALLS,
     )
 }
 
