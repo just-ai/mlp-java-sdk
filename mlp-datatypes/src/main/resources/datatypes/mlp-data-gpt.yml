@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: Datatypes specification for GPT task type
   version: v0
-paths: {}
+paths: { }
 
 components:
   schemas:
@@ -19,6 +19,12 @@ components:
             $ref: '#/components/schemas/ChatMessage'
         stream:
           type: boolean
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+        tool_choice:
+          $ref: '#/components/schemas/ToolChoice'
 
     ChatRole:
       type: string
@@ -27,17 +33,84 @@ components:
         - user
         - assistant
         - marker
+        - tool
 
     ChatMessage:
       type: object
       required:
         - role
-        - content
       properties:
         role:
           $ref: '#/components/schemas/ChatRole'
         content:
           type: string
+        tool_call_id:
+          type: string
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCall'
+
+    Tool:
+      type: object
+      required:
+        - type
+        - function
+      properties:
+        type:
+          $ref: '#/components/schemas/ToolType'
+        function:
+          $ref: '#/components/schemas/Function'
+
+    ToolType:
+      type: string
+      enum:
+        - function
+
+    Function:
+      type: object
+      required:
+        - name
+      properties:
+        description:
+          type: string
+        name:
+          type: string
+        parameters:
+          type: object
+
+    ToolChoice:
+      type: string
+      enum:
+        - none
+        - auto
+        - required
+
+    ToolCall:
+      type: object
+      required:
+        - id
+        - type
+        - function
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/ToolType'
+        function:
+          $ref: '#/components/schemas/FunctionCall'
+
+    FunctionCall:
+      type: object
+      required:
+        - name
+        - arguments
+      properties:
+        name:
+          type: string
+        arguments:
+          type: string
+
 
     ChatCompletionConfig:
       type: object
@@ -51,8 +124,8 @@ components:
         temperature:
           type: number
           format: double
-# TODO: support codegen
-#      additionalProperties: true
+    # TODO: support codegen
+    #      additionalProperties: true
 
     ChatCompletionResult:
       type: object
@@ -65,7 +138,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChatCompletionChoice'
-        usage:  # for streaming=true responses we will fill this field in the last chunk
+        usage: # for streaming=true responses we will fill this field in the last chunk
           $ref: '#/components/schemas/Usage'
 
     ChatCompletionChoice:
@@ -77,13 +150,14 @@ components:
           type: integer
         message: # for streaming=false responses
           $ref: '#/components/schemas/ChatMessage'
-        delta:   # for streaming=true responses
+        delta: # for streaming=true responses
           $ref: '#/components/schemas/ChatMessage'
         finish_reason:
           type: string
           enum:
             - stop
             - length
+            - tool_calls
 
     Usage:
       type: object

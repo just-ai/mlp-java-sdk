@@ -30,12 +30,13 @@ data class ChatCompletionChoice(
 
     /**
     * 
-    * Values: stop,length
+    * Values: stop,length,tool_calls
     */
     enum class FinishReason(val value: kotlin.String) {
 
         @JsonProperty("stop") stop("stop"),
-        @JsonProperty("length") length("length")
+        @JsonProperty("length") length("length"),
+        @JsonProperty("tool_calls") tool_calls("tool_calls")
     }
 
 }
