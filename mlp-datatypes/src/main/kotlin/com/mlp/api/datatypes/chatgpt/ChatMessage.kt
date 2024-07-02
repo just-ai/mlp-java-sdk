@@ -1,33 +1,30 @@
 package com.mlp.api.datatypes.chatgpt
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
-import com.mlp.api.datatypes.chatgpt.ChatRole
-import com.mlp.api.datatypes.chatgpt.ToolCall
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.mlp.api.ChatMessageDeserializer
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 
- * @param role 
- * @param content 
- * @param toolCallId 
- * @param toolCalls 
+ *
+ * @param role
+ * @param content
+ * @param toolCallId
+ * @param toolCalls
  */
-data class ChatMessage(
+@JsonDeserialize(using = ChatMessageDeserializer::class)
+interface ChatMessage {
+    @get:Schema(example = "null")
+    val role: ChatRole
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("role", required = true) val role: ChatRole,
+    @get:Schema(example = "null", description = "")
+    val content: Any?
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("content") val content: kotlin.String? = null,
+    @get:Schema(example = "null", description = "")
+    val toolCallId: kotlin.String?
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("tool_call_id") val toolCallId: kotlin.String? = null,
+    @get:Schema(example = "null", description = "")
+    val toolCalls: kotlin.collections.List<ToolCall>?
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("tool_calls") val toolCalls: kotlin.collections.List<ToolCall>? = null
-) {
 
 }
 
