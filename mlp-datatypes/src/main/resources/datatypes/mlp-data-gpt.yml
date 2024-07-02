@@ -40,8 +40,7 @@ components:
       oneOf:
         - $ref: '#/components/schemas/TextChatMessageContent'
         - $ref: '#/components/schemas/PartsChatMessageContent'
-      discriminator:
-        propertyName: refType
+      x-oaiExpandable: true
 
     TextChatMessageContent:
       type: object
@@ -54,6 +53,8 @@ components:
           type: string
         tool_call_id:
           type: string
+        name:
+          type: string
         tool_calls:
           type: array
           items:
@@ -61,6 +62,8 @@ components:
 
     PartsChatMessageContent:
       type: object
+      required:
+        - role
       properties:
         role:
           $ref: '#/components/schemas/ChatRole'
@@ -68,6 +71,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ContentPart'
+        name:
+          type: string
         tool_call_id:
           type: string
         tool_calls:
@@ -81,31 +86,41 @@ components:
         - $ref: '#/components/schemas/TextContentPart'
         - $ref: '#/components/schemas/ImageContentPart'
       discriminator:
-        propertyName: refType
+        propertyName: type
+        mapping:
+          text: 'TextContentPart'
+          image_url: 'ImageContentPart'
+
+
+    ContentPartType:
+      type: string
+      enum:
+        - text
+        - image_url
 
     TextContentPart:
       type: object
+      allOf:
+        - $ref: '#/components/schemas/ContentPart'
       required:
         - type
         - text
       properties:
         type:
-          type: string
-          enum:
-            - text
+          $ref: '#/components/schemas/ContentPartType'
         text:
           type: string
 
     ImageContentPart:
       type: object
+      allOf:
+        -  $ref: '#/components/schemas/ContentPart'
       required:
         - type
         - image_url
       properties:
         type:
-          type: string
-          enum:
-            - text
+          $ref: '#/components/schemas/ContentPartType'
         image_url:
           type: object
           required:
