@@ -30,7 +30,7 @@ class JsonTests {
             chatCompletionRequest = JSON.parse<ChatCompletionRequest>(body)
         }
         chatCompletionRequest.messages.forEach { message ->
-            assertTrue(message is TextChatMessageContent)
+            assertTrue(message is TextChatMessage)
         }
     }
 
@@ -53,7 +53,6 @@ class JsonTests {
             },
             {
               "role": "assistant",
-              "content": null,
               "tool_calls": [
                 {
                   "id": "call_abc123",
@@ -102,12 +101,12 @@ class JsonTests {
             chatCompletionRequest = JSON.parse<ChatCompletionRequest>(body)
         }
         val userMessage = chatCompletionRequest.messages.first()
-        assertTrue(userMessage is TextChatMessageContent)
+        assertTrue(userMessage is TextChatMessage)
         assertEquals("What's the weather like in Boston today?", userMessage.content)
 
         val toolMessage = chatCompletionRequest.messages[1]
-        assertTrue(userMessage is TextChatMessageContent)
-        val expectedToolMessage = TextChatMessageContent(
+        assertTrue(userMessage is TextChatMessage)
+        val expectedToolMessage = TextChatMessage(
             ChatRole.tool,
             toolCallId = "123456",
             toolCalls = null,
@@ -117,10 +116,10 @@ class JsonTests {
         assertEquals(expectedToolMessage, toolMessage)
 
         val assistantMessage = chatCompletionRequest.messages[2]
-        assertTrue(userMessage is TextChatMessageContent)
-        val expectedAssistantMessage = TextChatMessageContent(
+        assertTrue(userMessage is TextChatMessage)
+        val expectedAssistantMessage = TextChatMessage(
             ChatRole.assistant,
-            content = "null",
+            content = null,
             toolCalls = listOf(
                 ToolCall(
                     id = "call_abc123",
@@ -167,6 +166,10 @@ class JsonTests {
         assertEquals(listOf("celsius", "fahrenheit"), unit["enum"])
 
         assertEquals(listOf("location"), parameters["required"])
+
+        val actualTree = JSON.mapper.readTree(JSON.stringify(chatCompletionRequest))
+        val expectedTree = JSON.mapper.readTree(body)
+        assertEquals(expectedTree, actualTree)
     }
 
     @Test
@@ -200,8 +203,8 @@ class JsonTests {
             chatCompletionRequest = JSON.parse<ChatCompletionRequest>(body)
         }
         val message = chatCompletionRequest.messages.first()
-        assertTrue(message is PartsChatMessageContent)
-        val messageContent = (message as PartsChatMessageContent).content
+        assertTrue(message is PartsChatMessage)
+        val messageContent = (message as PartsChatMessage).content
         assertNotNull(messageContent)
 
         val textContentPart = messageContent!!.get(0)
@@ -247,8 +250,8 @@ class JsonTests {
             chatCompletionResponse = JSON.parse<ChatCompletionResult>(response)
         }
         val message = chatCompletionResponse.choices.first().message
-        assertTrue(message is TextChatMessageContent)
-        val messageContent = (message as TextChatMessageContent).content
+        assertTrue(message is TextChatMessage)
+        val messageContent = (message as TextChatMessage).content
         assertEquals(
             "\n\nThis image shows a wooden boardwalk extending through a lush green marshland.",
             messageContent
