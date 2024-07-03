@@ -84,9 +84,11 @@ components:
 
     ContentPart:
       type: object
-      oneOf:
-        - $ref: '#/components/schemas/TextContentPart'
-        - $ref: '#/components/schemas/ImageContentPart'
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/ContentPartType'
       discriminator:
         propertyName: type
         mapping:
@@ -104,34 +106,32 @@ components:
       type: object
       allOf:
         - $ref: '#/components/schemas/ContentPart'
-      required:
-        - type
-        - text
-      properties:
-        type:
-          $ref: '#/components/schemas/ContentPartType'
-        text:
-          type: string
+        - type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
 
     ImageContentPart:
       type: object
       allOf:
         - $ref: '#/components/schemas/ContentPart'
-      required:
-        - type
-        - image_url
-      properties:
-        type:
-          $ref: '#/components/schemas/ContentPartType'
-        image_url:
-          type: object
-          required:
-            - url
+        - type: object
           properties:
-            url:
-              type: string
-            detail:
-              type: string
+            image_url:
+              $ref: '#/components/schemas/ImageContentPartImageUrl'
+
+
+    ImageContentPartImageUrl:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+        detail:
+          type: string
 
     Tool:
       type: object

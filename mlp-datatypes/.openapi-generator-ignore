@@ -1,3 +1,0 @@
-src/main/kotlin/com/mlp/api/datatypes/chatgpt/ContentPart.kt
-src/main/kotlin/com/mlp/api/datatypes/chatgpt/TextContentPart.kt
-src/main/kotlin/com/mlp/api/datatypes/chatgpt/ImageContentPart.kt
