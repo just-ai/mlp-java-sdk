@@ -1,6 +1,3 @@
-src/main/kotlin/com/mlp/api/datatypes/chatgpt/ChatMessage.kt
 src/main/kotlin/com/mlp/api/datatypes/chatgpt/ContentPart.kt
-src/main/kotlin/com/mlp/api/datatypes/chatgpt/PartsChatMessageContent.kt
-src/main/kotlin/com/mlp/api/datatypes/chatgpt/TextChatMessageContent.kt
 src/main/kotlin/com/mlp/api/datatypes/chatgpt/TextContentPart.kt
 src/main/kotlin/com/mlp/api/datatypes/chatgpt/ImageContentPart.kt

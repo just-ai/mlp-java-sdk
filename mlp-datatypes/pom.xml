@@ -97,6 +97,7 @@
                             </configOptions>
                             <modelPackage>com.mlp.api.datatypes.chatgpt</modelPackage>
 <!--                            <addCompileSourceRoot>false</addCompileSourceRoot>-->
+                            <templateDirectory>${project.basedir}/src/main/resources/kotlin-spring</templateDirectory>
                         </configuration>
                     </execution>
                 </executions>

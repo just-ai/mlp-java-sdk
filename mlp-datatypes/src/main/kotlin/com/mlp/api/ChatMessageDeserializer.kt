@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.mlp.api.datatypes.chatgpt.ChatMessage
 import com.mlp.api.datatypes.chatgpt.ChatRole
 import com.mlp.api.datatypes.chatgpt.ContentPart
-import com.mlp.api.datatypes.chatgpt.PartsChatMessageContent
-import com.mlp.api.datatypes.chatgpt.TextChatMessageContent
+import com.mlp.api.datatypes.chatgpt.PartsChatMessage
+import com.mlp.api.datatypes.chatgpt.TextChatMessage
 import com.mlp.api.datatypes.chatgpt.ToolCall
 
 object ChatMessageDeserializer : JsonDeserializer<ChatMessage>() {
@@ -29,13 +29,13 @@ object ChatMessageDeserializer : JsonDeserializer<ChatMessage>() {
                 object : TypeReference<List<ToolCall>>() {})
         }
 
-        return if (contentNode.isArray) {
+        return if (contentNode?.isArray == true) {
             val content =
                 p.codec.readValue(contentNode.traverse(p.codec), object : TypeReference<List<ContentPart>>() {})
-            PartsChatMessageContent(role, content, name, toolCallId, toolCalls)
+            PartsChatMessage(role, content, toolCallId, name, toolCalls)
         } else {
-            val content = contentNode.asText()
-            TextChatMessageContent(role, content, name, toolCallId, toolCalls)
+            val content = contentNode?.asText()
+            TextChatMessage(role, content, toolCallId, name, toolCalls)
         }
     }
 }

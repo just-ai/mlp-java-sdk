@@ -1,0 +1,5 @@
+{{#requiredVars}}
+{{>openClassReqVar}}{{^-last}},
+{{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}},
+{{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{>openClassOptVar}}{{^-last}},
+{{/-last}}{{/optionalVars}}

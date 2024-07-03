@@ -37,48 +37,50 @@ components:
 
     ChatMessage:
       type: object
+      required:
+        - role
+      properties:
+        role:
+          $ref: '#/components/schemas/ChatRole'
+        content:
+          type: object
+        tool_call_id:
+          type: string
+        name:
+          type: string
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCall'
       oneOf:
-        - $ref: '#/components/schemas/TextChatMessageContent'
-        - $ref: '#/components/schemas/PartsChatMessageContent'
-      x-oaiExpandable: true
+        - $ref: '#/components/schemas/TextChatMessage'
+        - $ref: '#/components/schemas/PartsChatMessage'
+      discriminator:
+        propertyName: content
+      x-openclass: true
+      x-customDeserialization: com.mlp.api.ChatMessageDeserializer
 
-    TextChatMessageContent:
-      type: object
-      required:
-        - role
-      properties:
-        role:
-          $ref: '#/components/schemas/ChatRole'
-        content:
-          type: string
-        tool_call_id:
-          type: string
-        name:
-          type: string
-        tool_calls:
-          type: array
-          items:
-            $ref: '#/components/schemas/ToolCall'
+    TextChatMessage:
+      allOf:
+        - $ref: '#/components/schemas/ChatMessage'
+        - type: object
+          properties:
+            content:
+              type: string
+              x-isInherited: true
+      x-parentIsClass: true
 
-    PartsChatMessageContent:
-      type: object
-      required:
-        - role
-      properties:
-        role:
-          $ref: '#/components/schemas/ChatRole'
-        content:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContentPart'
-        name:
-          type: string
-        tool_call_id:
-          type: string
-        tool_calls:
-          type: array
-          items:
-            $ref: '#/components/schemas/ToolCall'
+    PartsChatMessage:
+      allOf:
+        - $ref: '#/components/schemas/ChatMessage'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentPart'
+              x-isInherited: true
+      x-parentIsClass: true
 
     ContentPart:
       type: object
@@ -114,7 +116,7 @@ components:
     ImageContentPart:
       type: object
       allOf:
-        -  $ref: '#/components/schemas/ContentPart'
+        - $ref: '#/components/schemas/ContentPart'
       required:
         - type
         - image_url
