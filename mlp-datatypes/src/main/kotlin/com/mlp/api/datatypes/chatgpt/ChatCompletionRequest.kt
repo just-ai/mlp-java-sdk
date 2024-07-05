@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param stream 
  * @param tools 
  * @param toolChoice 
+ * @param logprobs 
+ * @param topLogprobs 
  */
 data class ChatCompletionRequest(
 
@@ -31,7 +33,13 @@ data class ChatCompletionRequest(
     @get:JsonProperty("tools") val tools: kotlin.collections.List<Tool>? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("tool_choice") val toolChoice: ToolChoice? = null
+    @get:JsonProperty("tool_choice") val toolChoice: ToolChoice? = null,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("logprobs") val logprobs: kotlin.Boolean? = null,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("top_logprobs") val topLogprobs: kotlin.Int? = null
 ) {
 
 }

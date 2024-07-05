@@ -25,6 +25,10 @@ components:
             $ref: '#/components/schemas/Tool'
         tool_choice:
           $ref: '#/components/schemas/ToolChoice'
+        logprobs:
+          type: boolean
+        top_logprobs:
+          type: integer
 
     ChatRole:
       type: string
@@ -240,6 +244,8 @@ components:
             - stop
             - length
             - tool_calls
+        logprobs:
+          $ref: '#/components/schemas/Logprobs'
 
     Usage:
       type: object
@@ -254,3 +260,39 @@ components:
           type: integer
         total_tokens:
           type: integer
+
+    Logprobs:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogprobContentItem'
+
+    LogprobContentItem:
+      type: object
+      properties:
+        token:
+          type: string
+        logprob:
+          type: number
+        bytes:
+          type: array
+          items:
+            type: integer
+        top_logprobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopLogprobsItem'
+
+    TopLogprobsItem:
+      type: object
+      properties:
+        token:
+          type: string
+        logprob:
+          type: number
+        bytes:
+          type: array
+          items:
+            type: integer
