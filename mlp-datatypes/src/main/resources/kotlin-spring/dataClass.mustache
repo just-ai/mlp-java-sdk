@@ -1,0 +1,64 @@
+/**
+ * {{{description}}}
+{{#vars}}
+ * @param {{name}} {{{description}}}
+{{/vars}}
+ */{{#discriminator}}
+{{#model.vendorExtensions.x-customDeserialization}}@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = {{{model.vendorExtensions.x-customDeserialization}}}::class){{/model.vendorExtensions.x-customDeserialization}}{{^model.vendorExtensions.x-customDeserialization}}{{>typeInfoAnnotation}}{{/model.vendorExtensions.x-customDeserialization}}{{/discriminator}}
+{{#additionalModelTypeAnnotations}}
+    {{{.}}}
+{{/additionalModelTypeAnnotations}}
+{{#discriminator}}{{#model.vendorExtensions.x-openclass}}open class {{model.classname}}(
+{{>openClassVars}}
+){{/model.vendorExtensions.x-openclass}}{{^model.vendorExtensions.x-openclass}}interface {{classname}}{{/model.vendorExtensions.x-openclass}}{{/discriminator}}{{^discriminator}}{{#vendorExtensions.x-openclass}}open {{/vendorExtensions.x-openclass}}{{^vendorExtensions.x-openclass}}{{#hasVars}}data {{/hasVars}}{{/vendorExtensions.x-openclass}}class {{classname}}(
+{{#vendorExtensions.x-openclass}}{{>openClassVars}}{{/vendorExtensions.x-openclass}}{{^vendorExtensions.x-openclass}}{{>dataClassVars}}{{/vendorExtensions.x-openclass}}
+) {{/discriminator}}{{#parent}}: {{{.}}}{{#model.vendorExtensions.x-parentIsClass}}({{#allVars}}{{#isInherited}}{{{name}}}{{^-last}}, {{/-last}}{{/isInherited}}{{#vendorExtensions.x-isInherited}}{{{name}}}{{^-last}}, {{/-last}}{{/vendorExtensions.x-isInherited}}{{/allVars}}){{/model.vendorExtensions.x-parentIsClass}}{{#serializableModel}}, Serializable{{/serializableModel}}{{/parent}}{{#serializableModel}}: Serializable{{/serializableModel}}{
+{{#discriminator}}
+    {{^model.vendorExtensions.x-openclass}}
+    {{#requiredVars}}
+        {{>interfaceReqVar}}
+    {{/requiredVars}}
+    {{#optionalVars}}
+        {{>interfaceOptVar}}
+    {{/optionalVars}}
+    {{/model.vendorExtensions.x-openclass}}
+{{/discriminator}}
+{{#hasEnums}}{{#vars}}{{#isEnum}}
+    /**
+    * {{{description}}}
+    * Values: {{#allowableValues}}{{#enumVars}}{{&name}}{{^-last}},{{/-last}}{{/enumVars}}{{/allowableValues}}
+    */
+    enum class {{{nameInPascalCase}}}(val value: {{#isContainer}}{{#items}}{{{dataType}}}{{/items}}{{/isContainer}}{{^isContainer}}{{{dataType}}}{{/isContainer}}) {
+{{#allowableValues}}{{#enumVars}}
+        @JsonProperty({{{value}}}) {{{name}}}({{{value}}}){{^-last}},{{/-last}}{{/enumVars}}{{/allowableValues}}
+    }
+{{/isEnum}}{{/vars}}{{/hasEnums}}
+{{#serializableModel}}
+    companion object {
+    private const val serialVersionUID: kotlin.Long = 1
+    }
+{{/serializableModel}}
+{{#vendorExtensions.x-openclass}}
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is {{classname}}) return false
+        {{#requiredVars}}
+        if ({{{name}}} != other.{{{name}}}) return false
+        {{/requiredVars}}
+        {{#optionalVars}}
+        if ({{{name}}} != other.{{{name}}}) return false
+        {{/optionalVars}}
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        {{^hasRequired}}{{^hasOptional}}var result = super.hashCode(){{/hasOptional}}{{/hasRequired}}{{#requiredVars}}{{#-first}}var result = {{{name}}}.hashCode(){{/-first}}
+        {{^-first}}result = 31 * result + {{{name}}}.hashCode(){{/-first}}{{/requiredVars}}
+        {{#optionalVars}}{{#-first}}{{^model.hasRequired}}var result = {{{name}}}.hashCode(){{/model.hasRequired}}{{#model.hasRequired}}result = 31 * result + {{{name}}}.hashCode(){{/model.hasRequired}}{{/-first}}
+        {{^-first}}result = 31 * result + {{{name}}}.hashCode(){{/-first}}{{/optionalVars}}
+        return result
+    }
+
+{{/vendorExtensions.x-openclass}}
+}
