@@ -320,3 +320,133 @@ components:
           type: array
           items:
             type: integer
+
+    CompletionRequest:
+      type: object
+      required:
+        - model
+        - prompt
+      properties:
+        model:
+          type: string
+        prompt:
+          type: string
+        suffix:
+          type: string
+          nullable: true
+        max_tokens:
+          type: integer
+          nullable: true
+        temperature:
+          type: number
+          format: double
+          nullable: true
+        top_p:
+          type: number
+          format: double
+          nullable: true
+        n:
+          type: integer
+          nullable: true
+        stream:
+          type: boolean
+          nullable: true
+        logprobs:
+          type: integer
+          nullable: true
+        echo:
+          type: boolean
+          nullable: true
+        stop:
+          type: array
+          items:
+            type: string
+          nullable: true
+        presence_penalty:
+          type: number
+          format: double
+          nullable: true
+        frequency_penalty:
+          type: number
+          format: double
+          nullable: true
+        best_of:
+          type: integer
+          nullable: true
+        logit_bias:
+          type: object
+          additionalProperties:
+            type: integer
+          nullable: true
+        user:
+          type: string
+          nullable: true
+
+    CompletionResult:
+      type: object
+      required:
+        - created
+        - model
+        - usage
+      properties:
+        id:
+          type: string
+          nullable: true
+        object:
+          type: string
+          nullable: true
+        created:
+          type: integer
+          format: int64
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompletionChoice'
+          nullable: true
+        usage:
+          $ref: '#/components/schemas/Usage'
+
+    CompletionChoice:
+      type: object
+      properties:
+        text:
+          type: string
+          nullable: true
+        index:
+          type: integer
+          nullable: true
+        logprobs:
+          $ref: '#/components/schemas/LogProbResult'
+        finish_reason:
+          type: string
+          nullable: true
+
+    LogProbResult:
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            type: string
+          nullable: true
+        token_logprobs:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        top_logprobs:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: number
+              format: double
+          nullable: true
+        textOffset:
+          type: array
+          items:
+            type: integer
+          nullable: true
