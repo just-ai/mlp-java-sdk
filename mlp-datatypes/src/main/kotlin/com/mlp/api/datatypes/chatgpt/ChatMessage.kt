@@ -62,5 +62,9 @@ open class ChatMessage(
         return result
     }
 
+    override fun toString(): String {
+            return "ChatMessage(role=$role, content=$content, toolCallId=$toolCallId, name=$name, toolCalls=$toolCalls)"
+    }
+
 }
 

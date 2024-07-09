@@ -450,3 +450,144 @@ components:
           items:
             type: integer
           nullable: true
+
+    EmbeddingRequest:
+      type: object
+      required:
+        - model
+        - input
+      properties:
+        model:
+          example: "text-embedding-3-small"
+          type: string
+        input:
+          type: object
+        encoding_format:
+          $ref: '#/components/schemas/EmbeddingEncodingFormat'
+        dimensions:
+          type: integer
+          minimum: 1
+        user:
+          type: string
+      oneOf:
+        - $ref: "#/components/schemas/EmbeddingRequestString"
+        - $ref: "#/components/schemas/EmbeddingRequestStringArray"
+        - $ref: "#/components/schemas/EmbeddingRequestIntArray"
+        - $ref: "#/components/schemas/EmbeddingRequestArrayIntArray"
+      x-parent: true
+      x-openclass: true
+      x-customDeserialization: com.mlp.api.EmbeddingRequestDeserializer
+
+    EmbeddingEncodingFormat:
+      type: string
+      enum: [ "float", "base64" ]
+      default: "float"
+
+    EmbeddingRequestString:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: string
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingRequestStringArray:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: array
+              minItems: 1
+              maxItems: 2048
+              items:
+                type: string
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingRequestIntArray:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: array
+              minItems: 1
+              maxItems: 2048
+              items:
+                type: integer
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingRequestArrayIntArray:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: array
+              minItems: 1
+              maxItems: 2048
+              items:
+                type: array
+                minItems: 1
+                items:
+                  type: integer
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Embedding"
+        model:
+          type: string
+        object:
+          type: string
+          enum: [ list ]
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+          required:
+            - prompt_tokens
+            - total_tokens
+      required:
+        - object
+        - model
+        - data
+        - usage
+
+    Embedding:
+      type: object
+      properties:
+        index:
+          type: integer
+        embedding:
+          type: array
+          items:
+            type: number
+        object:
+          type: string
+          enum: [ embedding ]
+          default: embedding
+      required:
+        - index
+        - object
+        - embedding
