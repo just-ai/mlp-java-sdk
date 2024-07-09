@@ -60,7 +60,23 @@ open class EmbeddingRequest(
     }
 
     override fun toString(): String {
-            return "EmbeddingRequest(model=$model, input=$input, encodingFormat=$encodingFormat, dimensions=$dimensions, user=$user)"
+        return "EmbeddingRequest(model=$model, input=$input, encodingFormat=$encodingFormat, dimensions=$dimensions, user=$user)"
+    }
+
+    fun copy(
+        model: kotlin.String = this.model,
+        input: kotlin.Any = this.input,
+        encodingFormat: EmbeddingEncodingFormat? = this.encodingFormat,
+        dimensions: kotlin.Int? = this.dimensions,
+        user: kotlin.String? = this.user
+    ): EmbeddingRequest {
+        return EmbeddingRequest(
+            model,
+            input,
+            encodingFormat,
+            dimensions,
+            user
+        )
     }
 
 }

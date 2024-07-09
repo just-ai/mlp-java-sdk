@@ -63,7 +63,23 @@ open class ChatMessage(
     }
 
     override fun toString(): String {
-            return "ChatMessage(role=$role, content=$content, toolCallId=$toolCallId, name=$name, toolCalls=$toolCalls)"
+        return "ChatMessage(role=$role, content=$content, toolCallId=$toolCallId, name=$name, toolCalls=$toolCalls)"
+    }
+
+    fun copy(
+        role: ChatRole = this.role,
+        content: kotlin.Any? = this.content,
+        toolCallId: kotlin.String? = this.toolCallId,
+        name: kotlin.String? = this.name,
+        toolCalls: kotlin.collections.List<ToolCall>? = this.toolCalls
+    ): ChatMessage {
+        return ChatMessage(
+            role,
+            content,
+            toolCallId,
+            name,
+            toolCalls
+        )
     }
 
 }

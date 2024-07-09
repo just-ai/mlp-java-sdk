@@ -61,7 +61,21 @@
     }
 
     override fun toString(): String {
-            return "{{classname}}({{#requiredVars}}{{{name}}}=${{{name}}}{{^-last}}, {{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}}, {{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{{name}}}=${{{name}}}{{^-last}}, {{/-last}}{{/optionalVars}})"
+        return "{{classname}}({{#requiredVars}}{{{name}}}=${{{name}}}{{^-last}}, {{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}}, {{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{{name}}}=${{{name}}}{{^-last}}, {{/-last}}{{/optionalVars}})"
+    }
+
+    fun copy(
+        {{#requiredVars}}{{{name}}}: {{{dataType}}} = this.{{{name}}}{{^-last}},
+        {{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}},
+        {{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{{name}}}: {{{dataType}}}? = this.{{{name}}}{{^-last}},
+        {{/-last}}{{/optionalVars}}
+    ): {{classname}} {
+        return {{classname}}(
+            {{#requiredVars}}{{{name}}}{{^-last}},
+            {{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}},
+            {{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{{name}}}{{^-last}},
+            {{/-last}}{{/optionalVars}}
+        )
     }
 
 {{/vendorExtensions.x-openclass}}
