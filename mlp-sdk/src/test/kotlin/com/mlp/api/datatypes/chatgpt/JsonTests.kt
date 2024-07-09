@@ -659,13 +659,11 @@ class JsonTests {
         assertDoesNotThrow {
             embeddingResponse = JSON.parse<EmbeddingResponse>(response)
         }
-        assertEquals(EmbeddingResponse.Object.list, embeddingResponse.`object`)
 
         val expectedData = listOf(
             Embedding(
                 0,
-                listOf(0.0023064255, -0.009327292, -0.0028842222).map(Double::toBigDecimal),
-                Embedding.Object.embedding,
+                listOf(0.0023064255, -0.009327292, -0.0028842222).map(Double::toBigDecimal)
             )
         )
         assertEquals(expectedData, embeddingResponse.data)

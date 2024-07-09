@@ -391,10 +391,6 @@ components:
       properties:
         id:
           type: string
-          nullable: true
-        object:
-          type: string
-          nullable: true
         created:
           type: integer
           format: int64
@@ -404,7 +400,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompletionChoice'
-          nullable: true
         usage:
           $ref: '#/components/schemas/Usage'
 
@@ -555,9 +550,6 @@ components:
             $ref: "#/components/schemas/Embedding"
         model:
           type: string
-        object:
-          type: string
-          enum: [ list ]
         usage:
           type: object
           properties:
@@ -583,11 +575,31 @@ components:
           type: array
           items:
             type: number
-        object:
-          type: string
-          enum: [ embedding ]
-          default: embedding
       required:
         - index
         - object
         - embedding
+
+    ListModelsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Model"
+      required:
+        - object
+        - data
+
+    Model:
+      properties:
+        id:
+          type: string
+        created:
+          type: integer
+        owned_by:
+          type: string
+      required:
+        - id
+        - created
+        - owned_by
