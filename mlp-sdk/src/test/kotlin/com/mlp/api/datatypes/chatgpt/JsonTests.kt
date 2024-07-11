@@ -100,6 +100,7 @@ class JsonTests {
         assertDoesNotThrow {
             chatCompletionRequest = JSON.parse<ChatCompletionRequest>(body)
         }
+        assertEquals(ToolChoiceEnum.auto, chatCompletionRequest.toolChoice)
         val userMessage = chatCompletionRequest.messages.first()
         assertTrue(userMessage is TextChatMessage)
         assertEquals("What's the weather like in Boston today?", userMessage.content)
@@ -484,5 +485,62 @@ class JsonTests {
         assertNotNull(choice.logprobs)
         assertEquals(9, choice.logprobs?.content?.size)
         assertEquals(-0.31725305, chatCompletionResponse.choices[0].logprobs?.content?.get(0)?.logprob?.toDouble())
+    }
+
+    @Test
+    fun `should deserialize named function call chatgpt request`() {
+        val body = """
+            {
+              "model": "Qwen/Qwen2-7B-Instruct",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "What's the weather like in Boston today?"
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_current_weather",
+                    "description": "Get the current weather in a given location",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "description": "The city and state, e.g. San Francisco, CA"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "celsius",
+                            "fahrenheit"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "location"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "tool_choice": {
+                "type": "function",
+                "function": {
+                  "name": "get_current_weather"
+                }
+              }
+            }
+        """.trimIndent()
+        lateinit var chatCompletionRequest: ChatCompletionRequest
+        assertDoesNotThrow {
+            chatCompletionRequest = JSON.parse<ChatCompletionRequest>(body)
+        }
+        assertEquals(
+            NamedToolChoice(ToolType.function, NamedToolChoiceFunction("get_current_weather")),
+            chatCompletionRequest.toolChoice
+        )
     }
 }

@@ -98,6 +98,7 @@
                             <modelPackage>com.mlp.api.datatypes.chatgpt</modelPackage>
 <!--                            <addCompileSourceRoot>false</addCompileSourceRoot>-->
                             <templateDirectory>${project.basedir}/src/main/resources/kotlin-spring</templateDirectory>
+                            <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
                         </configuration>
                     </execution>
                 </executions>

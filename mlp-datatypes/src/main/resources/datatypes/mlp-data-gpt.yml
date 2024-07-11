@@ -166,11 +166,35 @@ components:
           type: object
 
     ToolChoice:
+      oneOf:
+        - $ref: '#/components/schemas/ToolChoiceEnum'
+        - $ref: '#/components/schemas/NamedToolChoice'
+      # x-openclass: true
+      # x-customDeserialization: com.mlp.api.ChatMessageDeserializer
+
+    ToolChoiceEnum:
       type: string
       enum:
         - none
         - auto
         - required
+
+    NamedToolChoice:
+      type: object
+      required:
+        - type
+        - function
+      properties:
+        type:
+          $ref: '#/components/schemas/ToolType'
+        function:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+
 
     ToolCall:
       type: object
