@@ -9,6 +9,7 @@ import com.mlp.api.datatypes.chatgpt.NamedToolChoice
 import com.mlp.api.datatypes.chatgpt.NamedToolChoiceFunction
 import com.mlp.api.datatypes.chatgpt.TextChatMessage
 import com.mlp.api.datatypes.chatgpt.Tool
+import com.mlp.api.datatypes.chatgpt.ToolChoiceEnum
 import com.mlp.api.datatypes.chatgpt.ToolType
 import com.mlp.sdk.MlpClientSDK
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
@@ -49,10 +50,7 @@ fun main() = runBlocking {
                     )
                 )
             ),
-            toolChoice = NamedToolChoice( // vllm поддерживает только именованные функции
-                ToolType.function,
-                NamedToolChoiceFunction("getCurrentWeather")
-            )
+            toolChoice = ToolChoiceEnum.auto
         )
     )
     // 3
@@ -70,7 +68,7 @@ fun main() = runBlocking {
 
     val responseMessage = checkNotNull(result.choices.first().message)
 
-    messages.add(responseMessage)
+    messages.add(TextChatMessage(responseMessage.role, "", responseMessage.toolCallId, responseMessage.name, responseMessage.toolCalls, ))
 
     // 5
     if (responseMessage.toolCalls?.isNotEmpty() == true) {
@@ -87,8 +85,7 @@ fun main() = runBlocking {
                 messages.add(
                     TextChatMessage(
                         role = ChatRole.tool,
-                        name = "getCurrentWeather",
-                        // toolCallId = toolCall.id, // vllm error
+                        toolCallId = toolCall.id,
                         content = JSON.stringify(weatherResponse)
                     )
                 )
@@ -115,8 +112,11 @@ fun main() = runBlocking {
         JSON.stringify(newRequest)
     )
 
+    val finalAiProxyResponse = JSON.parse<AiProxyResponse>(finalResponse)
+    val finalChatCompletionResult = JSON.parse<ChatCompletionResult>(JSON.anyToObject(checkNotNull(finalAiProxyResponse.chat)))
+
     println("Final Response:")
-    println(finalResponse)
+    println(finalChatCompletionResult)
 
     clientSDK.shutdown()
 }
