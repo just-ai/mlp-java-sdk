@@ -44,6 +44,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import org.slf4j.MDC
+import kotlin.Long.Companion.MIN_VALUE
 
 class Connector(
     @Volatile
@@ -128,9 +129,7 @@ class Connector(
         var progressiveDelay = 100L
         runCatching {
             while (isActive) {
-                if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
-                    delay(1_000L)
-                }
+                throttleIfUnknownConnectionToken()
 
                 if (grpcChannel.isShutdownStateOrNull()) {
                     val connected = tryConnectOrShutdown()
@@ -148,10 +147,11 @@ class Connector(
 
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
-                    if (progressiveDelay != 100L) {
-                        logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel is active")
-                    }
                     progressiveDelay = 100L
+
+                    if (!executor.isAbleProcessNewJobs(grpcChannel.channelId())) {
+                        logger.error("${this@Connector}: grpc channel is active, but can not process new jobs")
+                    }
                 }
 
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
@@ -169,6 +169,12 @@ class Connector(
         }
 
         logger.debug("${this@Connector}: ... keep connection job has been stopped")
+    }
+
+    private suspend fun throttleIfUnknownConnectionToken() {
+        if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
+            delay(1_000L)
+        }
     }
 
     private suspend fun tryGrpcShutdown() {
@@ -200,6 +206,7 @@ class Connector(
 
     companion object {
         private val lastConnectorId = AtomicLong()
+        private val lastGrpcChannelId = AtomicLong()
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
     }
 
@@ -213,6 +220,7 @@ class Connector(
         private val lastServerHeartbeat = AtomicReference(now())
         private val heartbeatInterval = AtomicReference<Duration>(null)
         private val grpcMutex = Mutex()
+        val grpcChannelId = lastGrpcChannelId.getAndIncrement()
 
         init {
             launchHeartbeatJob()
@@ -243,7 +251,7 @@ class Connector(
                 .processAsync(this)
 
             sendStartServingProto()
-            executor.enableNewTasks(id)
+            executor.enableNewTasks(id, grpcChannelId)
         }
 
         suspend fun send(grpcResponse: ServiceToGateProto) {
@@ -535,6 +543,10 @@ class Connector(
     private fun AtomicReference<GrpcChannel?>.isActiveState() = get()
         ?.state
         ?.active == true
+
+    private fun AtomicReference<GrpcChannel?>.channelId() = get()
+        ?.grpcChannelId
+        ?: MIN_VALUE
 }
 
 private val ServiceInfoProto.asModelInfo

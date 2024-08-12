@@ -33,6 +33,9 @@ class TaskExecutor (
     private val scope = CoroutineScope( SupervisorJob() + (dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher()))
     internal lateinit var connectorsPool: ConnectorsPool
 
+    fun isAbleProcessNewJobs(connectorId: Long) =
+        jobsContainer.isAbleProcessNewJobs(connectorId)
+
     fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, tracker: TimeTracker) {
         launchAndStore(requestId, connectorId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
@@ -138,14 +141,14 @@ class TaskExecutor (
         }
     }
 
-    fun enableNewTasks(id: Long) {
-        logger.info("$this: enable new requests for connector $id")
-        jobsContainer.enableNewOnes(id)
+    fun enableNewTasks(connectorId: Long, grpcChannelId: Long) {
+        logger.info("$this: enable new requests for connector $connectorId")
+        jobsContainer.enableNewOnes(connectorId, grpcChannelId)
     }
 
     fun cancelAll() {
         logger.info("$this: cancel all tasks")
-        runCatching { jobsContainer.cancelAll() }
+        runCatching { jobsContainer.cancelAllForever() }
     }
 
     fun cancelAll(connectorId: Long) {
