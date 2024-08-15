@@ -2,7 +2,6 @@ package com.mlp.api.datatypes.chatgpt
 
 import java.util.Objects
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
 import com.mlp.api.datatypes.chatgpt.ChatMessage
 import com.mlp.api.datatypes.chatgpt.Tool
 import com.mlp.api.datatypes.chatgpt.ToolChoice

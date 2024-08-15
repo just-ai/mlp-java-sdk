@@ -4,7 +4,7 @@
  * @param {{name}} {{{description}}}
 {{/vars}}
  */{{#discriminator}}
-{{#model.vendorExtensions.x-customDeserialization}}@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = {{{model.vendorExtensions.x-customDeserialization}}}::class){{/model.vendorExtensions.x-customDeserialization}}{{^model.vendorExtensions.x-customDeserialization}}{{>typeInfoAnnotation}}{{/model.vendorExtensions.x-customDeserialization}}{{/discriminator}}
+{{^model.vendorExtensions.x-customDeserialization}}{{>typeInfoAnnotation}}{{/model.vendorExtensions.x-customDeserialization}}{{/discriminator}}{{#model.vendorExtensions.x-customDeserialization}}@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = {{{model.vendorExtensions.x-customDeserialization}}}::class){{/model.vendorExtensions.x-customDeserialization}}
 {{#additionalModelTypeAnnotations}}
     {{{.}}}
 {{/additionalModelTypeAnnotations}}
@@ -58,6 +58,24 @@
         {{#optionalVars}}{{#-first}}{{^model.hasRequired}}var result = {{{name}}}.hashCode(){{/model.hasRequired}}{{#model.hasRequired}}result = 31 * result + {{{name}}}.hashCode(){{/model.hasRequired}}{{/-first}}
         {{^-first}}result = 31 * result + {{{name}}}.hashCode(){{/-first}}{{/optionalVars}}
         return result
+    }
+
+    override fun toString(): String {
+        return "{{classname}}({{#requiredVars}}{{{name}}}=${{{name}}}{{^-last}}, {{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}}, {{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{{name}}}=${{{name}}}{{^-last}}, {{/-last}}{{/optionalVars}})"
+    }
+
+    fun copy(
+        {{#requiredVars}}{{{name}}}: {{{dataType}}} = this.{{{name}}}{{^-last}},
+        {{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}},
+        {{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{{name}}}: {{{dataType}}}? = this.{{{name}}}{{^-last}},
+        {{/-last}}{{/optionalVars}}
+    ): {{classname}} {
+        return {{classname}}(
+            {{#requiredVars}}{{{name}}}{{^-last}},
+            {{/-last}}{{/requiredVars}}{{#hasRequired}}{{#hasOptional}},
+            {{/hasOptional}}{{/hasRequired}}{{#optionalVars}}{{{name}}}{{^-last}},
+            {{/-last}}{{/optionalVars}}
+        )
     }
 
 {{/vendorExtensions.x-openclass}}
