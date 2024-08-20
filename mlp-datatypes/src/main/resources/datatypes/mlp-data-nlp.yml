@@ -13,8 +13,52 @@ components:
       properties:
         text:
           type: string
+
+    NamedEntities:
+      type: object
+      required:
+        - entities
+      properties:
+        entities:
+          type: array
+          items:
+            $ref: '#/definitions/NamedEntity'
+          title: Entities
+
+    NamedEntity:
+      type: object
+      required:
+        - value
+        - entity_type
+        - span
+        - entity
+        - source_type
+      properties:
+        entity:
+          type: string
+        entity_type:
+          type: string
+        source_type:
+          type: string
+        span:
+          $ref: '#/definitions/Span'
+        value:
+          type: string
+
+    Span:
+      type: object
+      required:
+      - start_index
+      - end_index
+      properties:
+        end_index:
+          type: integer
+        start_index:
+          type: integer
+
+
     #Deprecated
-    Texts:
+    TextsCollection:
       type: object
       required:
         - texts
@@ -23,3 +67,12 @@ components:
           type: array
           items:
             type: string
+    NamedEntitiesCollection:
+      type: object
+      required:
+        - entities_list
+      properties:
+        entities_list:
+          type: array
+          items:
+            $ref: '#/definitions/NamedEntities'
