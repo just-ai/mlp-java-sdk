@@ -2,6 +2,7 @@ package com.mlp.api.datatypes.chatgpt
 
 import com.mlp.sdk.utils.JSON
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -168,9 +169,7 @@ class JsonTests {
 
         assertEquals(listOf("location"), parameters["required"])
 
-        val actualTree = JSON.mapper.readTree(JSON.stringify(chatCompletionRequest))
-        val expectedTree = JSON.mapper.readTree(body)
-        assertEquals(expectedTree, actualTree)
+        assertEqualsSerialization(chatCompletionRequest, body)
     }
 
     @Test
@@ -542,5 +541,140 @@ class JsonTests {
             NamedToolChoice(ToolType.function, NamedToolChoiceFunction("get_current_weather")),
             chatCompletionRequest.toolChoice
         )
+    }
+
+    @Test
+    fun `should deserialize embeddings request string`() {
+        val body = """
+            {
+              "model": "text-embedding-ada-002",
+              "input": "Это пример текста для генерации эмбеддинга."
+            }
+        """.trimIndent()
+        lateinit var embeddingRequest: EmbeddingRequest
+        assertDoesNotThrow {
+            embeddingRequest = JSON.parse<EmbeddingRequest>(body)
+        }
+        assertInstanceOf(EmbeddingRequestString::class.java, embeddingRequest)
+        assertEquals("Это пример текста для генерации эмбеддинга.", embeddingRequest.input)
+
+        assertEqualsSerialization(embeddingRequest, body)
+    }
+
+    @Test
+    fun `should deserialize embeddings request array of strings`() {
+        val body = """
+            {
+              "model": "text-embedding-ada-002",
+              "input": [
+                "Первый пример текста для генерации эмбеддинга.",
+                "Второй пример текста для генерации эмбеддинга."
+              ]
+            }
+        """.trimIndent()
+        lateinit var embeddingRequest: EmbeddingRequest
+        assertDoesNotThrow {
+            embeddingRequest = JSON.parse<EmbeddingRequest>(body)
+        }
+        assertInstanceOf(EmbeddingRequestStringArray::class.java, embeddingRequest)
+        val expectedInput = listOf(
+            "Первый пример текста для генерации эмбеддинга.",
+            "Второй пример текста для генерации эмбеддинга."
+        )
+        assertEquals(expectedInput, embeddingRequest.input)
+
+        assertEqualsSerialization(embeddingRequest, body)
+    }
+
+    @Test
+    fun `should deserialize embeddings request array of ints`() {
+        val body = """
+            {
+              "model": "text-embedding-ada-002",
+              "input": [1, 2, 3, 4, 5]
+            }
+        """.trimIndent()
+        lateinit var embeddingRequest: EmbeddingRequest
+        assertDoesNotThrow {
+            embeddingRequest = JSON.parse<EmbeddingRequest>(body)
+        }
+        assertInstanceOf(EmbeddingRequestIntArray::class.java, embeddingRequest)
+        val expectedInput = listOf(1, 2, 3, 4, 5)
+        assertEquals(expectedInput, embeddingRequest.input)
+
+        assertEqualsSerialization(embeddingRequest, body)
+    }
+
+    @Test
+    fun `should deserialize embeddings request array of arrays of ints`() {
+        val body = """
+            {
+              "model": "text-embedding-ada-002",
+              "input": [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]
+              ]
+            }
+        """.trimIndent()
+        lateinit var embeddingRequest: EmbeddingRequest
+        assertDoesNotThrow {
+            embeddingRequest = JSON.parse<EmbeddingRequest>(body)
+        }
+        assertInstanceOf(EmbeddingRequestArrayIntArray::class.java, embeddingRequest)
+        val expectedInput = listOf(
+            listOf(1, 2, 3),
+            listOf(4, 5, 6),
+            listOf(7, 8, 9)
+        )
+        assertEquals(expectedInput, embeddingRequest.input)
+
+        assertEqualsSerialization(embeddingRequest, body)
+    }
+
+    @Test
+    fun `should deserialize embeddings response`() {
+        val response = """
+            {
+              "object": "list",
+              "data": [
+                {
+                  "object": "embedding",
+                  "embedding": [
+                    0.0023064255,
+                    -0.009327292,
+                    -0.0028842222
+                  ],
+                  "index": 0
+                }
+              ],
+              "model": "text-embedding-ada-002",
+              "usage": {
+                "prompt_tokens": 8,
+                "total_tokens": 8
+              }
+            }
+        """.trimIndent()
+        lateinit var embeddingResponse: EmbeddingResponse
+        assertDoesNotThrow {
+            embeddingResponse = JSON.parse<EmbeddingResponse>(response)
+        }
+
+        val expectedData = listOf(
+            Embedding(
+                0,
+                listOf(0.0023064255, -0.009327292, -0.0028842222).map(Double::toBigDecimal)
+            )
+        )
+        assertEquals(expectedData, embeddingResponse.data)
+
+        assertEquals("text-embedding-ada-002", embeddingResponse.model)
+        assertEquals(EmbeddingResponseUsage(8, 8), embeddingResponse.usage)
+    }
+
+    private inline fun <reified T> assertEqualsSerialization(model: T, expectedJsonString: String) {
+        val actualTree = JSON.mapper.readTree(JSON.stringify(model))
+        val expectedTree = JSON.mapper.readTree(expectedJsonString)
+        assertEquals(expectedTree, actualTree)
     }
 }

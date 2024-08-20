@@ -69,78 +69,7 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mlpgateway/account/{account}/model/{model}/predict:
-    post:
-      tags:
-      - process-endpoint
-      operationId: predict
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: model
-        in: path
-        description: Model id or model name
-        required: true
-        schema:
-          type: string
-      - name: configId
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int64
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: string
-  /api/mlpgate/clicks:
-    post:
-      tags:
-      - click-history-endpoint
-      operationId: saveClick
-      parameters:
-      - name: visitorId
-        in: cookie
-        required: false
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ClickHistoryData'
-        required: true
-      responses:
-        "200":
-          description: OK
-  /api/mlpgate/account/{account}/model/{model}/tts:
+  /api/mlpgateway/account/{account}/model/{model}/tts:
     get:
       tags:
       - process-endpoint
@@ -238,7 +167,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResponseBodyEmitter'
       deprecated: true
-  /api/mlpgate/account/{account}/model/{model}/predict-with-config:
+  /api/mlpgateway/account/{account}/model/{model}/predict:
+    post:
+      tags:
+      - process-endpoint
+      operationId: predict
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: configId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+  /api/mlpgateway/account/{account}/model/{model}/predict-with-config:
     post:
       tags:
       - process-endpoint
@@ -275,7 +247,7 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mlpgate/account/{account}/model/{model}/predict-with-config-v2:
+  /api/mlpgateway/account/{account}/model/{model}/predict-with-config-v2:
     post:
       tags:
       - process-endpoint
@@ -312,7 +284,7 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mlpgate/account/{account}/model/{model}/predict-with-config-v2-stream:
+  /api/mlpgateway/account/{account}/model/{model}/predict-with-config-v2-stream:
     post:
       tags:
       - process-endpoint
@@ -349,81 +321,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResponseBodyEmitter'
-  /api/mlpgate/account/{account}/model/{model}/fit:
-    post:
-      tags:
-      - process-endpoint
-      operationId: fit
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: model
-        in: path
-        description: Model id or model name
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FitRequestData'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JobStatusData'
-  /api/mlpgate/account/{account}/model/{model}/fit-v2:
-    post:
-      tags:
-      - process-endpoint
-      operationId: fit_v2
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: model
-        in: path
-        description: Model id or model name
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Fit2RequestData'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JobStatusData'
-  /api/mlpgate/account/{account}/model/{model}/ext:
+  /api/mlpgateway/account/{account}/model/{model}/ext:
     post:
       tags:
       - process-endpoint
@@ -460,43 +358,6 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/mlpgate/account/{account}/model/{model}/cross-validation:
-    post:
-      tags:
-      - process-endpoint
-      operationId: crossValidation
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: model
-        in: path
-        description: Model id or model name
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CrossValidationRequestData'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JobStatusData'
   /api/mlpcore/task/{taskId}/stop:
     post:
       tags:
@@ -549,6 +410,55 @@ paths:
       responses:
         "200":
           description: OK
+  /api/mlpcore/sendContactRequest:
+    post:
+      tags:
+      - manual-management-endpoint
+      operationId: sendEmail
+      parameters:
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManagementRequestData'
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/mlpcore/clicks:
+    post:
+      tags:
+      - click-history-endpoint
+      operationId: saveClick
+      parameters:
+      - name: visitorId
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClickHistoryData'
+        required: true
+      responses:
+        "200":
+          description: OK
   /api/mlpcore/admin/system-config/account/{account}/data:
     get:
       tags:
@@ -580,6 +490,11 @@ paths:
       operationId: restoreAccountDataDump
       parameters:
       - name: dryRun
+        in: query
+        required: true
+        schema:
+          type: boolean
+      - name: noErrors
         in: query
         required: true
         schema:
@@ -669,6 +584,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DifferenceIAccountConfigDump'
+  /api/mlpcore/admin/minio/delete-empty-users:
+    post:
+      tags:
+      - admin-endpoint
+      operationId: deleteEmptyMinioUsers
+      parameters:
+      - name: count
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: dryRun
+        in: query
+        required: true
+        schema:
+          type: boolean
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyUsersResponse'
+  /api/mlpcore/admin/instances/rolling-update:
+    post:
+      tags:
+      - admin-endpoint
+      operationId: rollingUpdateAllInstances
+      parameters:
+      - name: onlyK8s
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/mlpcore/admin/account/{account}/limits:
     post:
       tags:
@@ -2049,6 +2019,45 @@ paths:
       responses:
         "200":
           description: OK
+  /api/mlpcore/account/{account}/model/{model}/instance/{instanceId}/metadata:
+    post:
+      tags:
+      - model-instance-endpoint
+      operationId: updateInstanceMetadata
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceMetadata'
+        required: true
+      responses:
+        "200":
+          description: OK
   /api/mlpcore/account/{account}/model/{model}/instance/{instanceId}/heartbeat:
     post:
       tags:
@@ -2146,6 +2155,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelHttpSettingsData'
+  /api/mlpcore/account/{account}/model/{model}/fit:
+    post:
+      tags:
+      - process-endpoint
+      operationId: fit
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FitRequestData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusData'
+  /api/mlpcore/account/{account}/model/{model}/fit-v2:
+    post:
+      tags:
+      - process-endpoint
+      operationId: fit_v2
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Fit2RequestData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusData'
   /api/mlpcore/account/{account}/model/{model}/fit-config:
     get:
       tags:
@@ -2463,6 +2546,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInfoData'
+  /api/mlpcore/account/{account}/model/{model}/cross-validation:
+    post:
+      tags:
+      - process-endpoint
+      operationId: crossValidation
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: model
+        in: path
+        description: Model id or model name
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrossValidationRequestData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusData'
   /api/mlpcore/account/{account}/model/{model}/clone:
     post:
       tags:
@@ -4584,6 +4704,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheckHistoryResult'
+  /api/mlpcore/catalog-category:
+    get:
+      tags:
+      - model-endpoint
+      operationId: getCatalogCategories
+      parameters:
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogCategoryData'
   /api/mlpcore/admin/accounts:
     get:
       tags:
@@ -4595,6 +4734,12 @@ paths:
         required: false
         schema:
           type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
       - name: MLP-API-KEY
         in: header
         description: token to use instead of a session
@@ -6946,31 +7091,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ParaphrasingStatus'
-  /api/mlpcore/account/{account}/catalog-category:
-    get:
-      tags:
-      - model-endpoint
-      operationId: getCatalogCategories
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CatalogCategoryData'
   /api/mlpcore/account/{account}/application/{application}/token:
     get:
       tags:
@@ -7701,32 +7821,6 @@ paths:
           description: OK
 components:
   schemas:
-    ClickHistoryData:
-      required:
-      - eventType
-      - pageUrl
-      type: object
-      properties:
-        creationTime:
-          type: integer
-          format: int64
-        accountId:
-          type: integer
-          format: int64
-        entityId:
-          type: integer
-          format: int64
-        entityType:
-          type: string
-        pageUrl:
-          type: string
-        description:
-          type: string
-        eventType:
-          type: string
-        elementId:
-          type: integer
-          format: int64
     AudioFormatOptions:
       type: object
       properties:
@@ -7768,6 +7862,8 @@ components:
           type: object
         data:
           type: object
+        dataType:
+          type: string
     Predict2RequestData:
       required:
       - data
@@ -7777,61 +7873,8 @@ components:
           type: string
         data:
           type: string
-    FitRequestData:
-      required:
-      - datasetId
-      type: object
-      properties:
-        config:
-          $ref: '#/components/schemas/JsonNode'
-        configId:
-          type: integer
-          format: int64
-        datasetId:
-          type: integer
-          format: int64
-        billingToken:
+        dataType:
           type: string
-    JsonNode:
-      type: object
-    JobStatusData:
-      required:
-      - accountId
-      - done
-      - jobId
-      - jobType
-      - state
-      type: object
-      properties:
-        accountId:
-          type: integer
-          format: int64
-        jobId:
-          type: integer
-          format: int64
-        jobType:
-          type: string
-        state:
-          type: string
-        done:
-          type: boolean
-        error:
-          type: boolean
-        errorMessage:
-          type: string
-    Fit2RequestData:
-      required:
-      - datasetId
-      type: object
-      properties:
-        config:
-          type: string
-        configId:
-          type: integer
-          format: int64
-        datasetId:
-          type: integer
-          format: int64
     ExtendedRequestData:
       required:
       - methodName
@@ -7844,43 +7887,41 @@ components:
           type: object
           additionalProperties:
             type: string
-    CrossValidationRequestData:
+    ManagementRequestData:
       required:
-      - datasetId
-      - minIntentSizeToDivide
-      - parts
+      - contacts
       type: object
       properties:
-        baseModelAccountId:
-          type: integer
-          format: int64
-        baseModelId:
-          type: integer
-          format: int64
-        targetModelAccountId:
-          type: integer
-          format: int64
-        targetModelName:
+        contacts:
           type: string
-        fitConfig:
-          $ref: '#/components/schemas/JsonNode'
-        fitConfigId:
+        comment:
+          type: string
+    ClickHistoryData:
+      required:
+      - eventType
+      - pageUrl
+      type: object
+      properties:
+        creationTime:
           type: integer
           format: int64
-        datasetId:
+        accountId:
           type: integer
           format: int64
-        predictConfig:
-          $ref: '#/components/schemas/JsonNode'
-        predictConfigId:
+        entityId:
           type: integer
           format: int64
-        parts:
+        entityType:
+          type: string
+        pageUrl:
+          type: string
+        description:
+          type: string
+        eventType:
+          type: string
+        elementId:
           type: integer
-          format: int32
-        minIntentSizeToDivide:
-          type: integer
-          format: int32
+          format: int64
     AccountDataDump:
       type: object
       properties:
@@ -7940,8 +7981,70 @@ components:
         targetPath:
           type: string
     DifferenceIAccountDataDump:
+      required:
+      - errors
       type: object
       properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              cause:
+                type: object
+                properties:
+                  stackTrace:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        classLoaderName:
+                          type: string
+                        moduleName:
+                          type: string
+                        moduleVersion:
+                          type: string
+                        methodName:
+                          type: string
+                        fileName:
+                          type: string
+                        lineNumber:
+                          type: integer
+                          format: int32
+                        className:
+                          type: string
+                        nativeMethod:
+                          type: boolean
+                  message:
+                    type: string
+                  localizedMessage:
+                    type: string
+              stackTrace:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    classLoaderName:
+                      type: string
+                    moduleName:
+                      type: string
+                    moduleVersion:
+                      type: string
+                    methodName:
+                      type: string
+                    fileName:
+                      type: string
+                    lineNumber:
+                      type: integer
+                      format: int32
+                    className:
+                      type: string
+                    nativeMethod:
+                      type: boolean
+              message:
+                type: string
+              localizedMessage:
+                type: string
         before:
           $ref: '#/components/schemas/AccountDataDump'
         after:
@@ -8003,6 +8106,7 @@ components:
           type: string
     ModelAutoScalingConfiguration:
       required:
+      - active
       - minInstanceCount
       type: object
       properties:
@@ -8033,6 +8137,8 @@ components:
         scaleDownCpuThresholdMilliCores:
           type: integer
           format: int32
+        active:
+          type: boolean
     ModelBatchesData:
       required:
       - batchSize
@@ -8139,6 +8245,10 @@ components:
         fitTemplateModelName:
           type: string
         composite:
+          type: boolean
+        prototype:
+          type: boolean
+        rejectRequestsIfInactive:
           type: boolean
         fittable:
           type: boolean
@@ -8460,12 +8570,88 @@ components:
           type: integer
           format: int32
     DifferenceIAccountConfigDump:
+      required:
+      - errors
       type: object
       properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              cause:
+                type: object
+                properties:
+                  stackTrace:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        classLoaderName:
+                          type: string
+                        moduleName:
+                          type: string
+                        moduleVersion:
+                          type: string
+                        methodName:
+                          type: string
+                        fileName:
+                          type: string
+                        lineNumber:
+                          type: integer
+                          format: int32
+                        className:
+                          type: string
+                        nativeMethod:
+                          type: boolean
+                  message:
+                    type: string
+                  localizedMessage:
+                    type: string
+              stackTrace:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    classLoaderName:
+                      type: string
+                    moduleName:
+                      type: string
+                    moduleVersion:
+                      type: string
+                    methodName:
+                      type: string
+                    fileName:
+                      type: string
+                    lineNumber:
+                      type: integer
+                      format: int32
+                    className:
+                      type: string
+                    nativeMethod:
+                      type: boolean
+              message:
+                type: string
+              localizedMessage:
+                type: string
         before:
           $ref: '#/components/schemas/AccountConfigDump'
         after:
           $ref: '#/components/schemas/AccountConfigDump'
+    EmptyUsersResponse:
+      required:
+      - empty
+      - withContent
+      type: object
+      properties:
+        empty:
+          type: array
+          items:
+            type: string
+        withContent:
+          type: array
+          items:
+            type: string
     AccountInfoData:
       required:
       - accountId
@@ -8652,6 +8838,8 @@ components:
         cooldownPeriodMinutes:
           type: integer
           format: int32
+        reserveResourceGroupName:
+          type: string
     ResourceGroupEssentialData:
       required:
       - access
@@ -8911,6 +9099,10 @@ components:
           format: int64
         composite:
           type: boolean
+        prototype:
+          type: boolean
+        rejectRequestsIfInactive:
+          type: boolean
         config:
           type: string
         env:
@@ -9158,6 +9350,10 @@ components:
           format: int64
         composite:
           type: boolean
+        prototype:
+          type: boolean
+        rejectRequestsIfInactive:
+          type: boolean
         taskType:
           type: string
         trainingModelAccountId:
@@ -9356,6 +9552,69 @@ components:
         configId:
           type: integer
           format: int64
+    InstanceMetadata:
+      type: object
+      properties:
+        version:
+          type: integer
+          format: int64
+        hostname:
+          type: string
+    FitRequestData:
+      required:
+      - datasetId
+      type: object
+      properties:
+        config:
+          $ref: '#/components/schemas/JsonNode'
+        configId:
+          type: integer
+          format: int64
+        datasetId:
+          type: integer
+          format: int64
+        billingToken:
+          type: string
+    JsonNode:
+      type: object
+    JobStatusData:
+      required:
+      - accountId
+      - done
+      - jobId
+      - jobType
+      - state
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        jobId:
+          type: integer
+          format: int64
+        jobType:
+          type: string
+        state:
+          type: string
+        done:
+          type: boolean
+        error:
+          type: boolean
+        errorMessage:
+          type: string
+    Fit2RequestData:
+      required:
+      - datasetId
+      type: object
+      properties:
+        config:
+          type: string
+        configId:
+          type: integer
+          format: int64
+        datasetId:
+          type: integer
+          format: int64
     ExternalConnectionInfoData:
       required:
       - connected
@@ -9375,6 +9634,11 @@ components:
           type: object
           additionalProperties:
             type: string
+        hostname:
+          type: string
+        version:
+          type: integer
+          format: int64
     ModelInstancePK:
       required:
       - accountId
@@ -9391,6 +9655,43 @@ components:
         instanceId:
           type: integer
           format: int64
+    CrossValidationRequestData:
+      required:
+      - datasetId
+      - minIntentSizeToDivide
+      - parts
+      type: object
+      properties:
+        baseModelAccountId:
+          type: integer
+          format: int64
+        baseModelId:
+          type: integer
+          format: int64
+        targetModelAccountId:
+          type: integer
+          format: int64
+        targetModelName:
+          type: string
+        fitConfig:
+          $ref: '#/components/schemas/JsonNode'
+        fitConfigId:
+          type: integer
+          format: int64
+        datasetId:
+          type: integer
+          format: int64
+        predictConfig:
+          $ref: '#/components/schemas/JsonNode'
+        predictConfigId:
+          type: integer
+          format: int64
+        parts:
+          type: integer
+          format: int32
+        minIntentSizeToDivide:
+          type: integer
+          format: int32
     AliasData:
       required:
       - id
@@ -9442,15 +9743,6 @@ components:
         groupId:
           type: integer
           format: int64
-    ManagementRequestData:
-      required:
-      - contacts
-      type: object
-      properties:
-        contacts:
-          type: string
-        comment:
-          type: string
     DeprecatedDatasetInfoWithContentData:
       required:
       - name
@@ -9824,6 +10116,26 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CheckResult'
+    CatalogCategoryData:
+      required:
+      - categories
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskTypeToModelsCount'
+    TaskTypeToModelsCount:
+      required:
+      - modelsCount
+      - taskTypeName
+      type: object
+      properties:
+        taskTypeName:
+          type: string
+        modelsCount:
+          type: integer
+          format: int32
     StatLogData:
       required:
       - accountId
@@ -10407,26 +10719,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DataImageInfoData'
-    CatalogCategoryData:
-      required:
-      - categories
-      type: object
-      properties:
-        categories:
-          type: array
-          items:
-            $ref: '#/components/schemas/TaskTypeToModelsCount'
-    TaskTypeToModelsCount:
-      required:
-      - modelsCount
-      - taskTypeName
-      type: object
-      properties:
-        taskTypeName:
-          type: string
-        modelsCount:
-          type: integer
-          format: int32
     ModelInstance:
       required:
       - connectionToken
@@ -10478,6 +10770,11 @@ components:
         hostingServerId:
           type: string
         serverId:
+          type: integer
+          format: int64
+        hostname:
+          type: string
+        serviceVersion:
           type: integer
           format: int64
         status:
