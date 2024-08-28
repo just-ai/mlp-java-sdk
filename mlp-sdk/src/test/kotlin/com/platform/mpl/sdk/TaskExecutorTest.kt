@@ -42,7 +42,7 @@ class TaskExecutorTest {
             delay(100)
             taskExecutor.ext(ExtendedRequestProto.getDefaultInstance(), 1, connectorId_2)
         }
-        taskExecutor.gracefulShutdownAll(connectorId_1)
+        taskExecutor.gracefulShutdownAll(connectorId_1, Long.MAX_VALUE)
 
         delay(1000)
 
