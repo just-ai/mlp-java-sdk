@@ -151,7 +151,7 @@ class Connector(
                     lastActiveTime = now()
                     progressiveDelay = 100L
 
-                    if (!executor.isAbleProcessNewJobs(grpcChannel.channelId())) {
+                    if (!executor.isAbleProcessNewJobs(connectorId, grpcChannel.grpcChannelId())) {
                         logger.error("${this@Connector}: grpc channel is active, but can not process new jobs")
                     }
                 }
@@ -294,10 +294,10 @@ class Connector(
             when (request.bodyCase) {
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
-                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, tracker)
-                FIT -> executor.fit(request.fit, request.requestId, connectorId)
-                EXT -> executor.ext(request.ext, request.requestId, connectorId)
-                BATCH -> executor.batch(request.batch, request.requestId, connectorId)
+                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker)
+                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId)
+                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId)
+                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId)
                 ERROR -> processError(request.error)
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
@@ -546,7 +546,7 @@ class Connector(
         ?.state
         ?.active == true
 
-    private fun AtomicReference<GrpcChannel?>.channelId() = get()
+    private fun AtomicReference<GrpcChannel?>.grpcChannelId() = get()
         ?.grpcChannelId
         ?: MIN_VALUE
 }

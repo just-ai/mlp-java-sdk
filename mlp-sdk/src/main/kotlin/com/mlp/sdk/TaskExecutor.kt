@@ -33,11 +33,11 @@ class TaskExecutor (
     private val scope = CoroutineScope( SupervisorJob() + (dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher()))
     internal lateinit var connectorsPool: ConnectorsPool
 
-    fun isAbleProcessNewJobs(connectorId: Long) =
-        jobsContainer.isAbleProcessNewJobs(connectorId)
+    fun isAbleProcessNewJobs(connectorId: Long, grpcChannelId: Long) =
+        jobsContainer.isAbleProcessNewJobs(connectorId, grpcChannelId)
 
-    fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, tracker: TimeTracker) {
-        launchAndStore(requestId, connectorId) {
+    fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long, tracker: TimeTracker) {
+        launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
             val dataPayload = requireNotNull(request.data.asPayload) { "Payload data" }
 
@@ -61,8 +61,8 @@ class TaskExecutor (
         }
     }
 
-    fun fit(request: FitRequestProto, requestId: Long, connectorId: Long) {
-        launchAndStore(requestId, connectorId) {
+    fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
+        launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val trainPayload = request.trainData.asPayload
@@ -94,8 +94,8 @@ class TaskExecutor (
         }
     }
 
-    fun ext(request: ExtendedRequestProto, requestId: Long, connectorId: Long) {
-        launchAndStore(requestId, connectorId) {
+    fun ext(request: ExtendedRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
+        launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val methodName = requireNotNull(request.methodName) { "methodName" }
@@ -119,8 +119,8 @@ class TaskExecutor (
         }
     }
 
-    fun batch(request: BatchRequestProto, requestId: Long, connectorId: Long) {
-        launchAndStore(requestId, connectorId) {
+    fun batch(request: BatchRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
+        launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val data = request.dataList
@@ -172,6 +172,7 @@ class TaskExecutor (
     private fun launchAndStore(
         requestId: Long,
         connectorId: Long,
+        grpcChannelId: Long,
         block: suspend () -> Unit
     ) {
         val ctx = MDC.getCopyOfContextMap()
@@ -185,7 +186,7 @@ class TaskExecutor (
             jobsContainer.remove(connectorId, requestId)
         }
 
-        val added = jobsContainer.put(connectorId, requestId, job)
+        val added = jobsContainer.put(connectorId, grpcChannelId, requestId, job)
 
         if (added) {
             job.start()

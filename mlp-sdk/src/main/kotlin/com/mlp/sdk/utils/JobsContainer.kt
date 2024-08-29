@@ -20,17 +20,17 @@ class JobsContainer(
 
     private val containers = ConcurrentHashMap<Long, ConnectorContainer>()
 
-    fun isAbleProcessNewJobs(connectorId: Long): Boolean {
+    fun isAbleProcessNewJobs(connectorId: Long, grpcChannelId: Long): Boolean {
         val container = containers.get(connectorId) ?: return true
-        return container.ableToProcessNewJobs.get()
+        return container.ableToProcessNewJobs.get() && container.isGrpcChannelActual(grpcChannelId)
     }
 
-    fun put(connectorId: Long, requestId: Long, job: Job): Boolean {
+    fun put(connectorId: Long, grpcChannelId: Long, requestId: Long, job: Job): Boolean {
         val connectorContainer = containers.computeIfAbsent(connectorId) {
             ConnectorContainer(ConcurrentHashMap<Long, Job>())
         }
 
-        return if (isAbleProcessNewJobs(connectorId)) {
+        return if (isAbleProcessNewJobs(connectorId, grpcChannelId)) {
             connectorContainer.requestJobMap[requestId] = job
             true
         } else {
@@ -79,9 +79,10 @@ class JobsContainer(
     fun enableNewOnes(connectorId: Long, grpcChannelId: Long) {
         containers[connectorId]
             ?.let {
-                if (it.isGrpcChannelOutdated(grpcChannelId))
+                val changed = it.outDateGrpcChannelId(grpcChannelId)
+                if (changed)
                     return
-                
+
                 it.ableToProcessNewJobs.set(true)
                 logger.info("$this: enable new tasks of connector $connectorId with actual id is ${it.actualGrpcChannel.get()}")
             }
@@ -89,7 +90,8 @@ class JobsContainer(
     
     private fun ConnectorContainer.disableNewOnes(grpcChannelId: Long) = this
         .let {
-            if (it.isGrpcChannelOutdated(grpcChannelId))
+            val changed = it.outDateGrpcChannelId(grpcChannelId)
+            if (changed)
                 return@let null
 
             it.ableToProcessNewJobs.set(false)
@@ -97,13 +99,13 @@ class JobsContainer(
             it
         }
 
-    private fun ConnectorContainer.isGrpcChannelOutdated(grpcChannelId: Long): Boolean {
+    private fun ConnectorContainer.outDateGrpcChannelId(grpcChannelId: Long): Boolean {
         while (true) {
             val localActualGrpcChannel = actualGrpcChannel.get()
 
             if (localActualGrpcChannel > grpcChannelId) {
                 // no changed of able property
-                return true
+                return false
             }
 
             if (localActualGrpcChannel < grpcChannelId) {
@@ -114,7 +116,11 @@ class JobsContainer(
             break
         }
 
-        return false
+        return true
+    }
+
+    private fun ConnectorContainer.isGrpcChannelActual(grpcChannelId: Long): Boolean {
+        return actualGrpcChannel.get() <= grpcChannelId
     }
 
     private fun ConnectorContainer.cancelAll() = requestJobMap
