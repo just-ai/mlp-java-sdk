@@ -30,6 +30,7 @@ fun main() {
         "platform-vectorizer-ru-test",
         JSON.stringify(request),
         null,
+        null,
         null
     )
 
