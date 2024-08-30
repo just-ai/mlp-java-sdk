@@ -3,6 +3,7 @@ package client
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.MlpRestClient
 import com.mlp.sdk.utils.JSON
+
 /*
  Дата классы для запроса и ответа от сервиса platform-vectorizer-ru-test
  */
@@ -29,6 +30,7 @@ fun main() {
         "just-ai",
         "platform-vectorizer-ru-test",
         JSON.stringify(request),
+        null,
         null,
         null
     )
