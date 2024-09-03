@@ -140,4 +140,4 @@ data class ModelInfo(
     val modelName: String,
 )
 
-const val SDK_VERSION = 1
+const val SDK_VERSION = 1L
