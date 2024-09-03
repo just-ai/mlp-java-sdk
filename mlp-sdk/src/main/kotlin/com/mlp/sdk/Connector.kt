@@ -63,7 +63,8 @@ class Connector(
             StartServingProto.newBuilder()
                 .setConnectionToken(pool.token)
                 .setHostname(context.environment["HOSTNAME"] ?: "localhost")
-                .setVersion(1) // It depends on sdk version
+                .setVersion(SDK_VERSION)
+                .setImage(context.environment["IMAGE_NAME"] ?: "")
                 .setServiceDescriptor(executor.action.getDescriptor())
                 .build()
         )
