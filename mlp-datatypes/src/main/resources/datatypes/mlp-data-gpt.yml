@@ -105,6 +105,7 @@ components:
       enum:
         - text
         - image_url
+        - tool_use
 
     TextContentPart:
       type: object
