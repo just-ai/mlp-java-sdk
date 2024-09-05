@@ -43,7 +43,7 @@ fun loadActionConfig(configPath: String? = null): MlpServiceConfig =
 fun loadActionConfig(configPath: String? = null, environment: Environment): MlpServiceConfig {
     val props = ConfigHelper.loadProperties(configPath, environment)
     return MlpServiceConfig(
-        initialGateUrls = props["MLP_GRPC_HOST"]!!.split(",:"),
+        initialGateUrls = props["MLP_GRPC_HOST"]!!.split(","),
         connectionToken = props["MLP_SERVICE_TOKEN"]!!,
         threadPoolSize = props["MLP_THREAD_POOL_SIZE"]?.toInt()
             ?: DEFAULT_THREAD_POOL_SIZE,
