@@ -1,0 +1,3 @@
+src/main/kotlin/com/mlp/api/datatypes/chatgpt/ToolChoice.kt
+src/main/kotlin/com/mlp/api/datatypes/chatgpt/ToolChoiceEnum.kt
+src/main/kotlin/com/mlp/api/datatypes/chatgpt/NamedToolChoice.kt

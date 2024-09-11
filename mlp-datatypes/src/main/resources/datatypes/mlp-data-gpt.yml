@@ -166,11 +166,35 @@ components:
           type: object
 
     ToolChoice:
+      oneOf:
+        - $ref: '#/components/schemas/ToolChoiceEnum'
+        - $ref: '#/components/schemas/NamedToolChoice'
+      # x-openclass: true
+      # x-customDeserialization: com.mlp.api.ChatMessageDeserializer
+
+    ToolChoiceEnum:
       type: string
       enum:
         - none
         - auto
         - required
+
+    NamedToolChoice:
+      type: object
+      required:
+        - type
+        - function
+      properties:
+        type:
+          $ref: '#/components/schemas/ToolType'
+        function:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+
 
     ToolCall:
       type: object
@@ -296,3 +320,286 @@ components:
           type: array
           items:
             type: integer
+
+    CompletionRequest:
+      type: object
+      required:
+        - model
+        - prompt
+      properties:
+        model:
+          type: string
+        prompt:
+          type: string
+        suffix:
+          type: string
+          nullable: true
+        max_tokens:
+          type: integer
+          nullable: true
+        temperature:
+          type: number
+          format: double
+          nullable: true
+        top_p:
+          type: number
+          format: double
+          nullable: true
+        n:
+          type: integer
+          nullable: true
+        stream:
+          type: boolean
+          nullable: true
+        logprobs:
+          type: integer
+          nullable: true
+        echo:
+          type: boolean
+          nullable: true
+        stop:
+          type: array
+          items:
+            type: string
+          nullable: true
+        presence_penalty:
+          type: number
+          format: double
+          nullable: true
+        frequency_penalty:
+          type: number
+          format: double
+          nullable: true
+        best_of:
+          type: integer
+          nullable: true
+        logit_bias:
+          type: object
+          additionalProperties:
+            type: integer
+          nullable: true
+        user:
+          type: string
+          nullable: true
+
+    CompletionResult:
+      type: object
+      required:
+        - created
+        - model
+        - usage
+      properties:
+        id:
+          type: string
+        created:
+          type: integer
+          format: int64
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompletionChoice'
+        usage:
+          $ref: '#/components/schemas/Usage'
+
+    CompletionChoice:
+      type: object
+      properties:
+        text:
+          type: string
+          nullable: true
+        index:
+          type: integer
+          nullable: true
+        logprobs:
+          $ref: '#/components/schemas/LogProbResult'
+        finish_reason:
+          type: string
+          nullable: true
+
+    LogProbResult:
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            type: string
+          nullable: true
+        token_logprobs:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        top_logprobs:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: number
+              format: double
+          nullable: true
+        textOffset:
+          type: array
+          items:
+            type: integer
+          nullable: true
+
+    EmbeddingRequest:
+      type: object
+      required:
+        - model
+        - input
+      properties:
+        model:
+          example: "text-embedding-3-small"
+          type: string
+        input:
+          type: object
+        encoding_format:
+          $ref: '#/components/schemas/EmbeddingEncodingFormat'
+        dimensions:
+          type: integer
+          minimum: 1
+        user:
+          type: string
+      oneOf:
+        - $ref: "#/components/schemas/EmbeddingRequestString"
+        - $ref: "#/components/schemas/EmbeddingRequestStringArray"
+        - $ref: "#/components/schemas/EmbeddingRequestIntArray"
+        - $ref: "#/components/schemas/EmbeddingRequestArrayIntArray"
+      x-parent: true
+      x-openclass: true
+      x-customDeserialization: com.mlp.api.EmbeddingRequestDeserializer
+
+    EmbeddingEncodingFormat:
+      type: string
+      enum: [ "float", "base64" ]
+      default: "float"
+
+    EmbeddingRequestString:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: string
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingRequestStringArray:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: array
+              minItems: 1
+              maxItems: 2048
+              items:
+                type: string
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingRequestIntArray:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: array
+              minItems: 1
+              maxItems: 2048
+              items:
+                type: integer
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingRequestArrayIntArray:
+      allOf:
+        - $ref: "#/components/schemas/EmbeddingRequest"
+        - type: object
+          required:
+            - input
+          properties:
+            input:
+              type: array
+              minItems: 1
+              maxItems: 2048
+              items:
+                type: array
+                minItems: 1
+                items:
+                  type: integer
+              x-isInherited: true
+      x-parentIsClass: true
+
+    EmbeddingResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Embedding"
+        model:
+          type: string
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+          required:
+            - prompt_tokens
+            - total_tokens
+      required:
+        - object
+        - model
+        - data
+        - usage
+
+    Embedding:
+      type: object
+      properties:
+        index:
+          type: integer
+        embedding:
+          type: array
+          items:
+            type: number
+      required:
+        - index
+        - object
+        - embedding
+
+    ListModelsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Model"
+      required:
+        - object
+        - data
+
+    Model:
+      properties:
+        id:
+          type: string
+        created:
+          type: integer
+        owned_by:
+          type: string
+      required:
+        - id
+        - created
+        - owned_by
