@@ -17,6 +17,10 @@ import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.utils.JSON
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.transform
 import org.slf4j.MDC
 
 abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
@@ -106,6 +110,32 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         }
     }
 
+    override fun streamPredict(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
+        val pToCFlow = stream.map { req ->
+            // парсим request и config.
+            val request =
+                JSON.parseOrThrowBadRequestMlpException(req.payload.stringData(), predictRequestExample.javaClass) // TODO: handle datatype
+            val config = req.config
+
+            val conf = if (config != null && predictConfigExample !is Unit) {
+                JSON.parseOrThrowBadRequestMlpException(config.data, predictConfigExample.javaClass)
+            } else null
+            request to conf
+        }
+
+        var lastResponse: R? = null
+        return this.streamPredict(pToCFlow).transform {
+            if (lastResponse != null) {
+                emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = "json"), false))
+            }
+            lastResponse = it
+        }.onCompletion {
+            if (it == null) {
+                emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = "json"), true))
+            }
+        }
+    }
+
     fun createGenerator(): ResultGenerator<R> {
         return com.mlp.sdk.createGenerator<R>(sdk)
     }
@@ -125,6 +155,8 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
     }
 
     abstract suspend fun predict(request: P, config: C?): R?
+
+    abstract fun streamPredict(stream: Flow<Pair<P, C?>>): Flow<R?>
 
     private fun <T> JSON.parseOrThrowBadRequestMlpException(json: String, clazz: Class<T>): T = try {
         parse(json, clazz)
@@ -183,6 +215,10 @@ abstract class MlpFitServiceBase<F : Any, FC : Any>(
     final override suspend fun predict(request: String, config: Unit?): String? {
         throw RuntimeException("Not implemented yet")
     }
+
+    final override fun streamPredict(stream: Flow<Pair<String, Unit?>>): Flow<String?> {
+        throw RuntimeException("Not implemented yet")
+    }
 }
 
 abstract class MlpPredictServiceBase<P : Any, R : Any>(
@@ -203,6 +239,10 @@ abstract class MlpPredictServiceBase<P : Any, R : Any>(
 
     override suspend fun predict(request: P, config: Unit?): R? {
         return predict(request)
+    }
+
+    override fun streamPredict(stream: Flow<Pair<P, Unit?>>): Flow<R?> {
+        return stream.map { predict(it.first, it.second) }
     }
 
     abstract fun predict(req: P): R

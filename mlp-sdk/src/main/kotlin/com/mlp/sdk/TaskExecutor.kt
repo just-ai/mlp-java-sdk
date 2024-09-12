@@ -9,6 +9,8 @@ import com.mlp.gate.ExtendedResponseProto
 import com.mlp.gate.FitRequestProto
 import com.mlp.gate.FitResponseProto
 import com.mlp.gate.FitStatusProto
+import com.mlp.gate.PartialPredictRequestProto
+import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.gate.PredictResponseProto
@@ -17,12 +19,26 @@ import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
-import kotlinx.coroutines.*
-import java.util.concurrent.Executors.newFixedThreadPool
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.slf4j.MDCContext
+import kotlinx.coroutines.withContext
 import org.slf4j.MDC
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors.newFixedThreadPool
+import kotlin.coroutines.cancellation.CancellationException
 
-class TaskExecutor (
+class TaskExecutor(
     val action: MlpService,
     val config: MlpServiceConfig,
     dispatcher: CoroutineDispatcher?,
@@ -30,6 +46,7 @@ class TaskExecutor (
 ) : WithExecutionContext, WithState(ACTIVE) {
 
     private val jobsContainer = JobsContainer(config, context)
+    private val channelsContainer = ConcurrentHashMap<Long, Channel<PayloadWithConfig>>() // requestId to Channel
     private val scope = CoroutineScope( SupervisorJob() + (dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher()))
     internal lateinit var connectorsPool: ConnectorsPool
 
@@ -43,7 +60,7 @@ class TaskExecutor (
 
             runCatching {
                 when (val responsePayload = action.predict(dataPayload, request.config.asPayload)) {
-                    is Payload -> responseBuilder.setPredict(responsePayload)
+                    is PayloadInterface -> responseBuilder.setPredict(responsePayload)
                     is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload)
                     is MlpResponseException -> throw responsePayload.exception
                     is MlpPartialBinaryResponse -> return@launchAndStore
@@ -59,6 +76,45 @@ class TaskExecutor (
             runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                 .onFailure { logger.error("Error while sending predict response", it) }
         }
+    }
+
+    suspend fun streamPredict(request: PartialPredictRequestProto, requestId: Long, connectorId: Long) {
+        val dataPayload = requireNotNull(request.data?.asPayloadInterface) { "Payload data" }
+        val config = request.config?.asPayload
+        val channel = channelsContainer.computeIfAbsent(requestId) {
+            val channel = Channel<PayloadWithConfig>()
+            launchAndStore(requestId, connectorId) {
+                runCatching {
+                    action.streamPredict(channel.consumeAsFlow()).onCompletion {
+                        logger.info("Finish processing stream flow")
+                        channel.close(it)
+                        channelsContainer.remove(requestId)
+                    }.catch {
+                        logger.error("Error while processing stream predict request", it)
+                        val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                        responseBuilder.setError(it.asErrorProto)
+                        runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+                            .onFailure { logger.error("Error while sending predict response", it) }
+                    }.collect { response ->
+                        val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                        responseBuilder.setPartialPredict(response.payload, response.last)
+                        runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+                            .onFailure { logger.error("Error while sending predict response", it) }
+                    }
+                }.onFailure {
+                    logger.error("Error while processing predict request", it)
+                    channel.close(it)
+                    channelsContainer.remove(requestId)
+                    val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                    responseBuilder.setError(it.asErrorProto)
+                    runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+                        .onFailure { logger.error("Error while sending predict response", it) }
+                }
+            }
+            channel
+        }
+
+        channel.send(PayloadWithConfig(dataPayload, config))
     }
 
     fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
@@ -78,7 +134,8 @@ class TaskExecutor (
                         connectorsPool.send(connectorId, proto)
                     }
                 }
-                action.fit(trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir,
+                action.fit(
+                    trainPayload, targetsPayload, configPayload, modelDir, request.previousModelDir,
                     request.targetServiceInfo,
                     request.datasetInfo,
                     percentageConsumer
@@ -104,7 +161,7 @@ class TaskExecutor (
 
             runCatching {
                 when (val responsePayload = action.ext(methodName, params)) {
-                    is Payload -> responseBuilder.setExt(responsePayload)
+                    is PayloadInterface -> responseBuilder.setExt(responsePayload)
                     is RawPayload -> responseBuilder.setExt(responsePayload.asPayload)
                     is MlpResponseException -> throw responsePayload.exception
                     is MlpPartialBinaryResponse -> throw NotImplementedError()
@@ -198,26 +255,39 @@ class TaskExecutor (
     override fun toString() = "ActionTaskExecutor(action=$action)"
 }
 
-internal val Payload.asProto
-    get() = PayloadProto.newBuilder().apply {
-        json = data
-        dataType?.let { dataType = it }
+internal val PayloadInterface.asProto
+    get() = PayloadProto.newBuilder().also { builder ->
+        when (this) {
+            is Payload -> builder.setJson(data)
+            is ProtobufPayload -> builder.setProtobuf(data)
+        }
+        dataType?.let { builder.dataType = it }
     }
 
 private val PayloadProto.asPayload: Payload
     get() = Payload(dataType, json)
 
-private fun Builder.setPredict(prediction: Payload) {
+private val PayloadProto.asPayloadInterface: PayloadInterface
+    get() = if (hasJson()) Payload(dataType, json) else ProtobufPayload(dataType, protobuf)
+
+private fun Builder.setPredict(prediction: PayloadInterface) {
     BillingUnitsThreadLocal.getUnits()?.also {
         putHeaders("Z-custom-billing", it.toString())
     }
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
 }
 
+private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolean) {
+    BillingUnitsThreadLocal.getUnits()?.also {
+        putHeaders("Z-custom-billing", it.toString())
+    }
+    setPartialPredict(PartialPredictResponseProto.newBuilder().setData(prediction.asProto).setFinish(last))
+}
+
 private fun Builder.setFit() =
     setFit(FitResponseProto.newBuilder())
 
-private fun Builder.setExt(extResult: Payload) =
+private fun Builder.setExt(extResult: PayloadInterface) =
     setExt(ExtendedResponseProto.newBuilder().setData(extResult.asProto))
 
 private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<Long>): Builder {
@@ -226,7 +296,7 @@ private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<
         .map { (data, requestId) ->
             val builder = BatchPayloadResponseProto.newBuilder().setRequestId(requestId)
             when (data) {
-                is Payload -> builder.setPredict(PredictResponseProto.newBuilder().setData(data.asProto))
+                is PayloadInterface -> builder.setPredict(PredictResponseProto.newBuilder().setData(data.asProto))
                 is MlpResponseException -> builder.setError(data.exception.asErrorProto)
                 is MlpPartialBinaryResponse -> builder.setError(
                     ApiErrorProto.newBuilder()
@@ -234,6 +304,7 @@ private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<
                         .setMessage(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.message)
                         .setStatus(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.status)
                 )
+
                 is RawPayload -> builder.setError(
                     ApiErrorProto.newBuilder()
                         .setCode(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.code)
