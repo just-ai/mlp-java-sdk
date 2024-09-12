@@ -1,0 +1,10 @@
+openapi: 3.0.1
+info:
+  title: Common datatypes specification
+  version: v0
+paths: { }
+
+components:
+  schemas:
+    JsonObject:
+      type: object
