@@ -15,7 +15,7 @@ SECRET=$(LC_CTYPE=C tr -dc 'a-z0-9' </dev/urandom | head -c 24)
 
 IMAGE=docker-pub.caila.io/caila-public/$SERVICE_NAME-$SECRET:$BRANCH_NAME_LOWER
 
-DOCKER_BUILDKIT=1 docker build . -t "$IMAGE"
+DOCKER_BUILDKIT=1 docker build --build-arg IMAGE_NAME=$IMAGE . -t "$IMAGE"
 
 echo "$IMAGE"
 

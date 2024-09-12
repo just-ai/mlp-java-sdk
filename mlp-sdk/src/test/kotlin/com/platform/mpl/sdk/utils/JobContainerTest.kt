@@ -26,9 +26,9 @@ class JobContainerTest {
 
         val jobsContainer = JobsContainer(config(100, 100), systemContext)
 
-        jobsContainer.launch(1, 10, coroutineScope.launch { increment(number, 150) })
+        jobsContainer.launch(1, 1, 10, coroutineScope.launch { increment(number, 150) })
 
-        jobsContainer.cancel(1)
+        jobsContainer.cancel(1, 1)
 
         delay(200)
 
@@ -41,22 +41,22 @@ class JobContainerTest {
 
         val jobsContainer = JobsContainer(config(300, 100), systemContext)
 
-        jobsContainer.launch(1, 1, coroutineScope.launch { increment(number) })
-        jobsContainer.launch(1, 2, coroutineScope.launch { increment(number) })
-        jobsContainer.launch(1, 3, coroutineScope.launch { increment(number, 400) })
-        jobsContainer.launch(2, 4, coroutineScope.launch { increment(number) })
+        jobsContainer.launch(1, 1, 1, coroutineScope.launch { increment(number) })
+        jobsContainer.launch(1, 1, 2, coroutineScope.launch { increment(number) })
+        jobsContainer.launch(1, 1, 3, coroutineScope.launch { increment(number, 400) })
+        jobsContainer.launch(2, 2, 4, coroutineScope.launch { increment(number) })
 
-        jobsContainer.gracefulShutdownByConnector(1)
+        jobsContainer.gracefulShutdownByConnector(1, 1)
 
         delay(100)
 
         assertEquals(3, number.get())
     }
 
-    suspend fun JobsContainer.launch(containerId: Long, requestId: Long, job: Job, delayMs: Long = 0): Job {
+    suspend fun JobsContainer.launch(containerId: Long, grpcChannelId: Long, requestId: Long, job: Job, delayMs: Long = 0): Job {
         delay(delayMs)
 
-        put(containerId, requestId, job)
+        put(containerId, requestId, grpcChannelId, job)
         return job
     }
 
