@@ -79,8 +79,8 @@ class JobsContainer(
     }
 
     fun enableNewOnes(connectorId: Long, grpcChannelId: Long) {
-        containers[connectorId]
-            ?.let {
+        containers.computeIfAbsent(connectorId) { ConnectorContainer(ConcurrentHashMap<Long, Job>()) }
+            .let {
                 it.actualGrpcChannels += grpcChannelId
                 logger.info("$this: enable new tasks of connector $connectorId grpc channel $grpcChannelId")
             }
