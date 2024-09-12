@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentHashMap.KeySetView
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.Long.Companion.MAX_VALUE
@@ -22,7 +23,7 @@ class JobsContainer(
 
     fun isAbleProcessNewJobs(connectorId: Long, grpcChannelId: Long): Boolean {
         val container = containers.get(connectorId) ?: return true
-        return container.ableToProcessNewJobs.get() && container.isGrpcChannelActual(grpcChannelId)
+        return !container.disabledAllNewRequests.get() && container.isGrpcChannelActual(grpcChannelId)
     }
 
     fun put(connectorId: Long, grpcChannelId: Long, requestId: Long, job: Job): Boolean {
@@ -52,7 +53,8 @@ class JobsContainer(
 
     fun cancelAllForever() {
         containers.forEach {
-            it.value.disableNewOnes(MAX_VALUE)?.cancelAll()
+            it.value.disabledAllNewRequests.set(true)
+            it.value.cancelAll()
         }
     }
 
@@ -79,48 +81,19 @@ class JobsContainer(
     fun enableNewOnes(connectorId: Long, grpcChannelId: Long) {
         containers[connectorId]
             ?.let {
-                val changed = it.outDateGrpcChannelId(grpcChannelId)
-                if (changed)
-                    return
-
-                it.ableToProcessNewJobs.set(true)
-                logger.info("$this: enable new tasks of connector $connectorId with actual id is ${it.actualGrpcChannel.get()}")
+                it.actualGrpcChannels += grpcChannelId
+                logger.info("$this: enable new tasks of connector $connectorId grpc channel $grpcChannelId")
             }
     }
-    
+
     private fun ConnectorContainer.disableNewOnes(grpcChannelId: Long) = this
-        .let {
-            val changed = it.outDateGrpcChannelId(grpcChannelId)
-            if (changed)
-                return@let null
-
-            it.ableToProcessNewJobs.set(false)
-            logger.info("$this: disable new tasks of connector with actual id is ${it.actualGrpcChannel.get()}")
-            it
+        .also {
+            it.actualGrpcChannels.remove(grpcChannelId)
+            logger.info("$this: disable new tasks of connector grpc channel $grpcChannelId")
         }
-
-    private fun ConnectorContainer.outDateGrpcChannelId(grpcChannelId: Long): Boolean {
-        while (true) {
-            val localActualGrpcChannel = actualGrpcChannel.get()
-
-            if (localActualGrpcChannel > grpcChannelId) {
-                // no changed of able property
-                return false
-            }
-
-            if (localActualGrpcChannel < grpcChannelId) {
-                val changed = actualGrpcChannel.compareAndSet(localActualGrpcChannel, grpcChannelId)
-                if (changed) break
-            }
-
-            break
-        }
-
-        return true
-    }
 
     private fun ConnectorContainer.isGrpcChannelActual(grpcChannelId: Long): Boolean {
-        return actualGrpcChannel.get() <= grpcChannelId
+        return grpcChannelId in actualGrpcChannels
     }
 
     private fun ConnectorContainer.cancelAll() = requestJobMap
@@ -130,6 +103,6 @@ class JobsContainer(
 
 data class ConnectorContainer(
     val requestJobMap: ConcurrentHashMap<Long, Job>,
-    val actualGrpcChannel: AtomicLong = AtomicLong(MIN_VALUE),
-    val ableToProcessNewJobs: AtomicBoolean = AtomicBoolean(true)
+    val actualGrpcChannels: KeySetView<Long, Boolean> = ConcurrentHashMap.newKeySet(),
+    val disabledAllNewRequests: AtomicBoolean = AtomicBoolean(false)
 )
