@@ -156,7 +156,9 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
 
     abstract suspend fun predict(request: P, config: C?): R?
 
-    abstract fun streamPredictPayloadToConfig(stream: Flow<Pair<P, C?>>): Flow<R?>
+    open fun streamPredictPayloadToConfig(stream: Flow<Pair<P, C?>>): Flow<R?> {
+        return stream.map { predict(it.first, it.second) }
+    }
 
     private fun <T> JSON.parseOrThrowBadRequestMlpException(json: String, clazz: Class<T>): T = try {
         parse(json, clazz)
@@ -239,10 +241,6 @@ abstract class MlpPredictServiceBase<P : Any, R : Any>(
 
     override suspend fun predict(request: P, config: Unit?): R? {
         return predict(request)
-    }
-
-    override fun streamPredictPayloadToConfig(stream: Flow<Pair<P, Unit?>>): Flow<R?> {
-        return stream.map { predict(it.first, it.second) }
     }
 
     abstract fun predict(req: P): R
