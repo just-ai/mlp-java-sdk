@@ -124,7 +124,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         }
 
         var lastResponse: R? = null
-        return this.streamPredict(pToCFlow).transform {
+        return this.streamPredictPayloadToConfig(pToCFlow).transform {
             if (lastResponse != null) {
                 emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = "json"), false))
             }
@@ -156,7 +156,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
 
     abstract suspend fun predict(request: P, config: C?): R?
 
-    abstract fun streamPredict(stream: Flow<Pair<P, C?>>): Flow<R?>
+    abstract fun streamPredictPayloadToConfig(stream: Flow<Pair<P, C?>>): Flow<R?>
 
     private fun <T> JSON.parseOrThrowBadRequestMlpException(json: String, clazz: Class<T>): T = try {
         parse(json, clazz)
@@ -216,7 +216,7 @@ abstract class MlpFitServiceBase<F : Any, FC : Any>(
         throw RuntimeException("Not implemented yet")
     }
 
-    final override fun streamPredict(stream: Flow<Pair<String, Unit?>>): Flow<String?> {
+    final override fun streamPredictPayloadToConfig(stream: Flow<Pair<String, Unit?>>): Flow<String?> {
         throw RuntimeException("Not implemented yet")
     }
 }
@@ -241,7 +241,7 @@ abstract class MlpPredictServiceBase<P : Any, R : Any>(
         return predict(request)
     }
 
-    override fun streamPredict(stream: Flow<Pair<P, Unit?>>): Flow<R?> {
+    override fun streamPredictPayloadToConfig(stream: Flow<Pair<P, Unit?>>): Flow<R?> {
         return stream.map { predict(it.first, it.second) }
     }
 
