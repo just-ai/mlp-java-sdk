@@ -293,11 +293,11 @@ class Connector(
             when (request.bodyCase) {
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
-                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, tracker)
-                PARTIALPREDICT -> scope.launch { executor.streamPredict(request.partialPredict, request.requestId, connectorId) }
-                FIT -> executor.fit(request.fit, request.requestId, connectorId)
-                EXT -> executor.ext(request.ext, request.requestId, connectorId)
-                BATCH -> executor.batch(request.batch, request.requestId, connectorId)
+                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker)
+                PARTIALPREDICT -> scope.launch { executor.streamPredict(request.partialPredict, request.requestId, connectorId, grpcChannelId) }
+                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId)
+                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId)
+                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId)
                 ERROR -> processError(request.error)
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")

@@ -78,12 +78,12 @@ class TaskExecutor(
         }
     }
 
-    suspend fun streamPredict(request: PartialPredictRequestProto, requestId: Long, connectorId: Long) {
+    suspend fun streamPredict(request: PartialPredictRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
         val dataPayload = requireNotNull(request.data?.asPayloadInterface) { "Payload data" }
         val config = request.config?.asPayload
         val channel = channelsContainer.computeIfAbsent(requestId) {
             val channel = Channel<PayloadWithConfig>()
-            launchAndStore(requestId, connectorId) {
+            launchAndStore(requestId, connectorId, grpcChannelId) {
                 runCatching {
                     action.streamPredict(channel.consumeAsFlow()).onCompletion {
                         logger.info("Finish processing stream flow")
