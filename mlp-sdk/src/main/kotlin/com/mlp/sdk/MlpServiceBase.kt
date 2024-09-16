@@ -130,9 +130,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
             }
             lastResponse = it
         }.onCompletion {
-            if (it == null) {
-                emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = "json"), true))
-            }
+            emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = "json"), true))
         }
     }
 

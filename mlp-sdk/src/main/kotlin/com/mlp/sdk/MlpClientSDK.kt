@@ -21,6 +21,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -221,8 +223,16 @@ class MlpClientSDK(
         timeout: Duration? = null,
         authToken: String = ensureDefaultToken(),
     ): Flow<PayloadInterface> {
-        val clientRequestFlow = stream.map {
-            buildPartialPredict(account, model, it.payload, it.config, timeout, authToken)
+        var lastPayload: PayloadWithConfig? = null
+        val clientRequestFlow = stream.transform {
+            if (lastPayload != null) {
+                emit(buildPartialPredict(account, model, lastPayload!!.payload, lastPayload!!.config, timeout, authToken))
+            }
+            lastPayload = it
+        }.onCompletion {
+            if (lastPayload != null) {
+                emit(buildPartialPredict(account, model, lastPayload!!.payload, lastPayload!!.config, timeout, authToken, last = true))
+            }
         }
         return sendStream(clientRequestFlow)
     }
@@ -259,21 +269,24 @@ class MlpClientSDK(
     }
 
     private fun sendStream(requests: Flow<ClientRequestProto>): Flow<PayloadInterface> {
-        return stub.processStream(requests).map { response ->
+        val flow = stub.processStream(requests)
+        return flow.map { response ->
             when {
                 response.hasPredict() -> {
-                    if (response.predict.data.hasJson()) {
-                        Payload(dataType = null, data = response.predict.data.json)
+                    val data = response.predict.data
+                    if (data.hasJson()) {
+                        Payload(dataType = data.dataType, data = data.json)
                     } else {
-                        ProtobufPayload(dataType = null, data = response.predict.data.protobuf)
+                        ProtobufPayload(dataType = data.dataType, data = data.protobuf)
                     }
                 }
 
                 response.hasPartialPredict() -> {
-                    if (response.partialPredict.data.hasJson()) {
-                        Payload(dataType = null, data = response.predict.data.json)
+                    val data = response.partialPredict.data
+                    if (data.hasJson()) {
+                        Payload(dataType = data.dataType, data = data.json)
                     } else {
-                        ProtobufPayload(dataType = null, data = response.predict.data.protobuf)
+                        ProtobufPayload(dataType = data.dataType, data = data.protobuf)
                     }
                 }
 
@@ -508,7 +521,8 @@ class MlpClientSDK(
         config: Payload?,
         timeout: Duration?,
         authToken: String,
-        requestHeaders: Map<String, String> = emptyMap()
+        requestHeaders: Map<String, String> = emptyMap(),
+        last: Boolean = false,
     ): ClientRequestProto {
         val builder = ClientRequestProto.newBuilder()
 
@@ -534,6 +548,7 @@ class MlpClientSDK(
                             .setJson(config.data)
                             .build()
                     }
+                    this.finish = last
                 }
             )
 

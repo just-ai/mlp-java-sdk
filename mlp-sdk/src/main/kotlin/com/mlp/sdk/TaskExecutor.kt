@@ -24,19 +24,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import kotlinx.coroutines.withContext
 import org.slf4j.MDC
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors.newFixedThreadPool
-import kotlin.coroutines.cancellation.CancellationException
 
 class TaskExecutor(
     val action: MlpService,
@@ -78,19 +77,19 @@ class TaskExecutor(
         }
     }
 
-    suspend fun streamPredict(request: PartialPredictRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
-        val dataPayload = requireNotNull(request.data?.asPayloadInterface) { "Payload data" }
-        val config = request.config?.asPayload
+    fun streamPredict(request: PartialPredictRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
         val channel = channelsContainer.computeIfAbsent(requestId) {
             val channel = Channel<PayloadWithConfig>()
             launchAndStore(requestId, connectorId, grpcChannelId) {
                 runCatching {
-                    action.streamPredict(channel.consumeAsFlow()).onCompletion {
-                        logger.info("Finish processing stream flow")
+                    action.streamPredict(channel.receiveAsFlow()).onStart {
+                        logger.info("requestId: $requestId Start processing stream flow")
+                    }.onCompletion {
+                        logger.info("requestId: $requestId Finish processing stream flow")
                         channel.close(it)
                         channelsContainer.remove(requestId)
                     }.catch {
-                        logger.error("Error while processing stream predict request", it)
+                        logger.error("requestId: $requestId Error while processing stream predict request", it)
                         val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                         responseBuilder.setError(it.asErrorProto)
                         runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
@@ -114,7 +113,13 @@ class TaskExecutor(
             channel
         }
 
-        channel.send(PayloadWithConfig(dataPayload, config))
+        if (request.hasData()) {
+            val dataPayload = requireNotNull(request.data?.asPayloadInterface) { "Payload data" }
+            val config = request.config?.asPayload
+            runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
+        } else if (request.finish) {
+            channel.close()
+        }
     }
 
     fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
