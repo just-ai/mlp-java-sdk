@@ -117,9 +117,9 @@ class TaskExecutor(
             val dataPayload = requireNotNull(request.data?.asPayloadInterface) { "Payload data" }
             val config = request.config?.asPayload
             runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
-        } else if (request.finish) {
-            channel.close()
         }
+
+        if (request.finish) channel.close()
     }
 
     fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {

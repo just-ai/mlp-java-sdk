@@ -16,6 +16,8 @@ import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
+import com.mlp.sdk.datatypes.asr.common.AsrRequest
+import com.mlp.sdk.datatypes.asr.common.RecognitionConfig
 import com.mlp.sdk.utils.JSON
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -112,9 +114,32 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
 
     override fun streamPredict(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
         val pToCFlow = stream.map { req ->
-            // парсим request и config.
-            val request =
-                JSON.parseOrThrowBadRequestMlpException(req.payload.stringData(), predictRequestExample.javaClass) // TODO: handle datatype
+            val request = when (req.payload.dataType) {
+                AsrRequest.ASR_DATATYPE -> {
+                    if (predictRequestExample !is AsrRequest) {
+                        throw MlpException(
+                            MlpError(
+                                CommonErrorCode.BAD_REQUEST,
+                                "message" to "Unsupported datatype ${AsrRequest.ASR_DATATYPE}."
+                            )
+                        )
+                    }
+
+                    val audioContent = (req.payload as? ProtobufPayload)?.data
+                        ?: throw MlpException(
+                            MlpError(
+                                CommonErrorCode.BAD_REQUEST,
+                                "message" to "Unsupported payload body for asr datatype. Use protobuf body instead of json."
+                            )
+                        )
+                    val config = req.config?.let { JSON.parseOrThrowBadRequestMlpException(it.data, RecognitionConfig::class.java) }
+                    @Suppress("UNCHECKED_CAST")
+                    AsrRequest(audioContent, config) as P
+                }
+
+                else -> JSON.parseOrThrowBadRequestMlpException(req.payload.stringData(), predictRequestExample.javaClass)
+            }
+
             val config = req.config
 
             val conf = if (config != null && predictConfigExample !is Unit) {
@@ -125,12 +150,13 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
 
         var lastResponse: R? = null
         return this.streamPredictPayloadToConfig(pToCFlow).transform {
-            if (lastResponse != null) {
-                emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = "json"), false))
+            lastResponse?.let { lr ->
+                emit(StreamPayloadInterface(Payload(data = JSON.stringify(lr), dataType = TypeInfo.canonicalName(lr.javaClass)), false))
             }
             lastResponse = it
         }.onCompletion {
-            emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = "json"), true))
+            val dataType = lastResponse?.let { lr -> TypeInfo.canonicalName(lr.javaClass) } ?: "json"
+            emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = dataType), true))
         }
     }
 

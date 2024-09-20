@@ -8,6 +8,10 @@ import com.mlp.gate.PartialPredictRequestProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
+import com.mlp.sdk.datatypes.asr.common.AsrRequest
+import com.mlp.sdk.datatypes.asr.common.AsrResponse
+import com.mlp.sdk.utils.JSON
+import com.mlp.sdk.utils.JSON.parseOrThrowBadRequestMlpException
 import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -216,25 +220,37 @@ class MlpClientSDK(
             timeout
         )
 
-    suspend fun streamPredict(
+    fun streamPredict(
         account: String,
         model: String,
         stream: Flow<PayloadWithConfig>,
         timeout: Duration? = null,
         authToken: String = ensureDefaultToken(),
     ): Flow<PayloadInterface> {
-        var lastPayload: PayloadWithConfig? = null
-        val clientRequestFlow = stream.transform {
-            if (lastPayload != null) {
-                emit(buildPartialPredict(account, model, lastPayload!!.payload, lastPayload!!.config, timeout, authToken))
-            }
-            lastPayload = it
-        }.onCompletion {
-            if (lastPayload != null) {
-                emit(buildPartialPredict(account, model, lastPayload!!.payload, lastPayload!!.config, timeout, authToken, last = true))
-            }
+        val clientRequestFlow = stream.map {
+            buildPartialPredict(account, model, it.payload, it.config, timeout, authToken)
         }
         return sendStream(clientRequestFlow)
+    }
+
+    fun asrPredict(
+        account: String,
+        model: String,
+        stream: Flow<AsrRequest>,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken(),
+    ): Flow<AsrResponse> {
+        val clientRequestFlow = stream.map {
+            val data = ProtobufPayload(dataType = AsrRequest.ASR_DATATYPE, it.audioContent)
+            val config = it.config?.let { conf -> Payload(JSON.stringify(conf)) }
+            buildPartialPredict(account, model, data, config, timeout, authToken)
+        }
+        return sendStream(clientRequestFlow).map {
+            when (it) {
+                is Payload -> JSON.parseOrThrowBadRequestMlpException(it.data, AsrResponse::class.java)
+                is ProtobufPayload -> JSON.parseOrThrowBadRequestMlpException(it.data.toStringUtf8(), AsrResponse::class.java)
+            }
+        }
     }
 
     fun extBlocking(
@@ -522,7 +538,6 @@ class MlpClientSDK(
         timeout: Duration?,
         authToken: String,
         requestHeaders: Map<String, String> = emptyMap(),
-        last: Boolean = false,
     ): ClientRequestProto {
         val builder = ClientRequestProto.newBuilder()
 
@@ -548,7 +563,6 @@ class MlpClientSDK(
                             .setJson(config.data)
                             .build()
                     }
-                    this.finish = last
                 }
             )
 
