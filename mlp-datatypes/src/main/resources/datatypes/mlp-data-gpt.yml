@@ -98,6 +98,7 @@ components:
         mapping:
           text: 'TextContentPart'
           image_url: 'ImageContentPart'
+          tool_use: 'ToolContentPart'
 
 
     ContentPartType:
@@ -105,6 +106,7 @@ components:
       enum:
         - text
         - image_url
+        - tool_use
 
     TextContentPart:
       type: object
@@ -125,6 +127,23 @@ components:
           properties:
             image_url:
               $ref: '#/components/schemas/ImageContentPartImageUrl'
+
+    ToolContentPart:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ContentPart'
+        - type: object
+          required:
+            - id
+            - name
+            - input
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            input:
+              type: string
 
 
     ImageContentPartImageUrl:
