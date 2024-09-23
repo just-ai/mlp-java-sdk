@@ -23,7 +23,7 @@ abstract class MlpService : WithExecutionContext {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
     }
 
-    open fun streamPredict(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
+    open suspend fun streamPredict(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "streamPredict"))
     }
 

@@ -39,7 +39,7 @@ class AsrAction(
         "как ты"
     )
 
-    override fun streamPredictPayloadToConfig(stream: Flow<Pair<AsrRequest, Unit?>>): Flow<AsrResponse?> {
+    override suspend fun streamPredictPayloadToConfig(stream: Flow<Pair<AsrRequest, Unit?>>): Flow<AsrResponse?> {
         return stream.map { (req, _) ->
             val text = (if (req.config?.languageCode == "ru-RU") russianResponses else defaultResponses).random()
             AsrResponse(
