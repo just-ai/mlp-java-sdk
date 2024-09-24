@@ -39,7 +39,7 @@ class AsrAction(
         "как ты"
     )
 
-    override suspend fun streamPredictPayloadToConfig(stream: Flow<Pair<AsrRequest, Unit?>>): Flow<AsrResponse?> {
+    override suspend fun streamPredict(stream: Flow<Pair<AsrRequest, Unit?>>): Flow<AsrResponse?> {
         return stream.map { (req, _) ->
             val text = (if (req.config?.languageCode == "ru-RU") russianResponses else defaultResponses).random()
             AsrResponse(
@@ -63,7 +63,7 @@ class AsrAction(
      * 3. В Ваш сервис в Caila.io отправляется Response
      */
     override fun predict(req: AsrRequest): AsrResponse = runBlocking {
-        return@runBlocking streamPredictPayloadToConfig(flowOf(req to null)).first()!!
+        return@runBlocking streamPredict(flowOf(req to null)).first()!!
     }
 
     /**

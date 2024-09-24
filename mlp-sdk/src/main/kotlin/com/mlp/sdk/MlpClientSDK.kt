@@ -1,5 +1,8 @@
 package com.mlp.sdk
 
+import com.mlp.gate.AsrRequestProto
+import com.mlp.gate.ClientAsrRequestProto
+import com.mlp.gate.ClientAsrResponseProto
 import com.mlp.gate.ClientRequestProto
 import com.mlp.gate.ClientResponseProto
 import com.mlp.gate.ExtendedRequestProto
@@ -251,6 +254,12 @@ class MlpClientSDK(
                 is ProtobufPayload -> JSON.parseOrThrowBadRequestMlpException(it.data.toStringUtf8(), AsrResponse::class.java)
             }
         }
+    }
+
+    fun asrPredict(
+        stream: Flow<ClientAsrRequestProto>,
+    ): Flow<ClientAsrResponseProto> {
+        return stub.processRecognition(stream)
     }
 
     fun extBlocking(

@@ -112,7 +112,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         }
     }
 
-    override suspend fun streamPredict(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
+    override suspend fun streamPredictRaw(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
         val pToCFlow = stream.map { req ->
             val request = when (req.payload.dataType) {
                 AsrRequest.ASR_DATATYPE -> {
@@ -149,7 +149,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         }
 
         var lastResponse: R? = null
-        return this.streamPredictPayloadToConfig(pToCFlow).transform {
+        return this.streamPredict(pToCFlow).transform {
             lastResponse?.let { lr ->
                 emit(StreamPayloadInterface(Payload(data = JSON.stringify(lr), dataType = TypeInfo.canonicalName(lr.javaClass)), false))
             }
@@ -180,7 +180,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
 
     abstract suspend fun predict(request: P, config: C?): R?
 
-    open suspend fun streamPredictPayloadToConfig(stream: Flow<Pair<P, C?>>): Flow<R?> {
+    open suspend fun streamPredict(stream: Flow<Pair<P, C?>>): Flow<R?> {
         return stream.map { predict(it.first, it.second) }
     }
 
@@ -242,7 +242,7 @@ abstract class MlpFitServiceBase<F : Any, FC : Any>(
         throw RuntimeException("Not implemented yet")
     }
 
-    final override suspend fun streamPredictPayloadToConfig(stream: Flow<Pair<String, Unit?>>): Flow<String?> {
+    final override suspend fun streamPredict(stream: Flow<Pair<String, Unit?>>): Flow<String?> {
         throw RuntimeException("Not implemented yet")
     }
 }

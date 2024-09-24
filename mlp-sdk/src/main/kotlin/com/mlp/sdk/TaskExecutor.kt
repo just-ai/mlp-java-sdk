@@ -82,7 +82,7 @@ class TaskExecutor(
             val channel = Channel<PayloadWithConfig>()
             launchAndStore(requestId, connectorId, grpcChannelId) {
                 runCatching {
-                    action.streamPredict(channel.receiveAsFlow()).onStart {
+                    action.streamPredictRaw(channel.receiveAsFlow()).onStart {
                         logger.info("requestId: $requestId Start processing stream flow")
                     }.onCompletion {
                         logger.info("requestId: $requestId Finish processing stream flow")
