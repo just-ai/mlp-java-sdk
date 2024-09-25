@@ -126,7 +126,7 @@ internal val getCurrentWeatherParameters = JSON.mapper.createObjectNode().apply 
     putObject("properties").apply {
         putObject("location")
             .put("type", "string")
-            .put("description", "The city and state, e.g. Moscow")
+            .put("description", "Город, например, Москва")
 
         putObject("unit")
             .put("type", "string")
@@ -136,7 +136,6 @@ internal val getCurrentWeatherParameters = JSON.mapper.createObjectNode().apply 
 }
 
 private val weatherMap = mapOf(
-    "saint-petersburg" to 284.15,
     "saint petersburg" to 284.15,
     "санкт-петербург" to 284.15
 )

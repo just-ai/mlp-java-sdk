@@ -38,10 +38,12 @@ class AsrAction(
         "я в порядке",
         "как ты"
     )
+    private var lastLanguageCode: String? = null
 
     override suspend fun streamPredict(stream: Flow<Pair<AsrRequest, Unit?>>): Flow<AsrResponse?> {
         return stream.map { (req, _) ->
-            val text = (if (req.config?.languageCode == "ru-RU") russianResponses else defaultResponses).random()
+            req.config?.languageCode?.let { lastLanguageCode = it }
+            val text = (if (lastLanguageCode == "ru-RU") russianResponses else defaultResponses).random()
             AsrResponse(
                 chunks = listOf(
                     SpeechRecognitionChunk(

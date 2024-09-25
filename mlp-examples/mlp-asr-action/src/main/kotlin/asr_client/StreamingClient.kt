@@ -2,6 +2,8 @@ package asr_client
 
 import com.google.protobuf.kotlin.toByteStringUtf8
 import com.mlp.gate.AsrRequestProto
+import com.mlp.gate.asrRequestProto
+import com.mlp.gate.recognitionConfig
 import com.mlp.sdk.MlpClientSDK
 import com.mlp.sdk.MlpExecutionContext
 import com.mlp.sdk.Payload
@@ -28,16 +30,16 @@ fun main() = runBlocking {
     }
 
     val flowProto = flow {
-        val config = AsrRequestProto.newBuilder()
-            .setConfig(
-                com.mlp.gate.RecognitionConfig.newBuilder()
-                    .setLanguageCode(lang.random())
-            ).build()
+        val config = asrRequestProto {
+            config = recognitionConfig {
+                languageCode = lang.random()
+            }
+        }
         emit(config)
         for (i in 1..10) {
-            val asrRequestProto = AsrRequestProto.newBuilder()
-                .setAudioContent("$i".toByteStringUtf8())
-                .build()
+            val asrRequestProto = asrRequestProto {
+                audioContent = "$i".toByteStringUtf8()
+            }
             emit(asrRequestProto)
         }
     }
