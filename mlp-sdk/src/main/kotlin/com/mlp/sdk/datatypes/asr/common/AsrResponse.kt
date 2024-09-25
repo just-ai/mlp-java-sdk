@@ -6,7 +6,11 @@ data class AsrResponse(
     val chunks: List<SpeechRecognitionChunk> = emptyList(),
     val final: Boolean? = null,
     val providerSpecific: String = ""
-)
+) {
+    companion object {
+        const val DATATYPE = "https://caila.io/specs/mlp-data-asr.proto#AsrResponseProto"
+    }
+}
 
 data class SpeechRecognitionChunk(
     val alternatives: List<SpeechRecognitionAlternative> = emptyList(),

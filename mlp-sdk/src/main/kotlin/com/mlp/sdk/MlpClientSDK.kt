@@ -28,8 +28,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -244,7 +242,7 @@ class MlpClientSDK(
         authToken: String = ensureDefaultToken(),
     ): Flow<AsrResponse> {
         val clientRequestFlow = stream.map {
-            val data = ProtobufPayload(dataType = AsrRequest.ASR_DATATYPE, it.audioContent)
+            val data = ProtobufPayload(dataType = AsrRequest.DATATYPE, it.audioContent)
             val config = it.config?.let { conf -> Payload(JSON.stringify(conf)) }
             buildPartialPredict(account, model, data, config, timeout, authToken)
         }
@@ -256,10 +254,22 @@ class MlpClientSDK(
         }
     }
 
-    fun asrPredict(
-        stream: Flow<ClientAsrRequestProto>,
+    fun asrPredictProto(
+        account: String,
+        model: String,
+        stream: Flow<AsrRequestProto>,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken(),
     ): Flow<ClientAsrResponseProto> {
-        return stub.processRecognition(stream)
+        val clientAsrRequestFlow = stream.map {
+            ClientAsrRequestProto.newBuilder()
+                .setAccount(account)
+                .setModel(model)
+                .setAuthToken(authToken)
+                .setAsr(it)
+                .build()
+        }
+        return stub.processRecognition(clientAsrRequestFlow)
     }
 
     fun extBlocking(

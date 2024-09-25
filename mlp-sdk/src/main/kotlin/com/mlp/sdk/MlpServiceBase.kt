@@ -115,12 +115,12 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
     override suspend fun streamPredictRaw(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
         val pToCFlow = stream.map { req ->
             val request = when (req.payload.dataType) {
-                AsrRequest.ASR_DATATYPE -> {
+                AsrRequest.DATATYPE -> {
                     if (predictRequestExample !is AsrRequest) {
                         throw MlpException(
                             MlpError(
                                 CommonErrorCode.BAD_REQUEST,
-                                "message" to "Unsupported datatype ${AsrRequest.ASR_DATATYPE}."
+                                "message" to "Unsupported datatype ${AsrRequest.DATATYPE}."
                             )
                         )
                     }
