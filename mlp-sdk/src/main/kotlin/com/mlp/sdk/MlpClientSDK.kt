@@ -115,9 +115,19 @@ class MlpClientSDK(
         data: String,
         config: String? = null,
         timeout: Duration? = null,
-        authToken: String = ensureDefaultToken()
-    ) =
-        runBlocking { predict(account, model, data, config, timeout, authToken) }
+        authToken: String = ensureDefaultToken(),
+        requestHeaders: Map<String, String> = emptyMap()
+    ) = runBlocking {
+        predict(
+            account,
+            model,
+            data,
+            config,
+            timeout,
+            authToken,
+            requestHeaders
+        )
+    }
 
     fun predictBlocking(
         account: String,
@@ -125,9 +135,19 @@ class MlpClientSDK(
         data: Payload,
         config: Payload? = null,
         timeout: Duration? = null,
-        authToken: String = ensureDefaultToken()
-    ) =
-        runBlocking { predict(account, model, data, config, timeout, authToken) }
+        authToken: String = ensureDefaultToken(),
+        requestHeaders: Map<String, String> = emptyMap()
+    ) = runBlocking {
+        predict(
+            account,
+            model,
+            data,
+            config,
+            timeout,
+            authToken,
+            requestHeaders
+        )
+    }
 
     suspend fun predict(
         account: String,
@@ -135,9 +155,18 @@ class MlpClientSDK(
         data: String,
         config: String? = null,
         timeout: Duration? = null,
-        authToken: String = ensureDefaultToken()
+        authToken: String = ensureDefaultToken(),
+        requestHeaders: Map<String, String> = emptyMap()
     ) =
-        predict(account, model, Payload("", data), config?.let { Payload("", it) }, timeout, authToken).data
+        predict(
+            account,
+            model,
+            Payload("", data),
+            config?.let { Payload("", it) },
+            timeout,
+            authToken,
+            requestHeaders
+        ).data
 
     suspend fun predictStream(
         account: String,
@@ -149,7 +178,15 @@ class MlpClientSDK(
         requestHeaders: Map<String, String> = emptyMap()
     ): Flow<ClientResponseProto> =
         sendRequestPayloadStream(
-            buildPredictRequest(account, model, data, config, timeout, authToken, requestHeaders),
+            buildPredictRequest(
+                account,
+                model,
+                data,
+                config,
+                timeout,
+                authToken,
+                requestHeaders
+            ),
             timeout
         )
 
@@ -159,9 +196,21 @@ class MlpClientSDK(
         data: Payload,
         config: Payload? = null,
         timeout: Duration? = null,
-        authToken: String = ensureDefaultToken()
+        authToken: String = ensureDefaultToken(),
+        requestHeaders: Map<String, String> = emptyMap()
     ) =
-        sendRequestPayload(buildPredictRequest(account, model, data, config, timeout, authToken), timeout)
+        sendRequestPayload(
+            buildPredictRequest(
+                account,
+                model,
+                data,
+                config,
+                timeout,
+                authToken,
+                requestHeaders
+            ),
+            timeout
+        )
 
     fun extBlocking(
         account: String,

@@ -27,7 +27,7 @@ class ConnectorsPool(
 
     private var connectors = config.initialGateUrls
         .map { Connector(it, this, executor, config, scope, context) }
-        .associateBy { it.id }
+        .associateBy { it.connectorId }
 
     init {
         launchConnectorsMonitor()
@@ -100,7 +100,7 @@ class ConnectorsPool(
 
             connectors = urls.map { url ->
                 connectorsMap[url] ?: Connector(url, this, executor, config, scope, context)
-            }.associateBy { it.id }
+            }.associateBy { it.connectorId }
 
             logger.info("$this: ... connectors are updated")
         }

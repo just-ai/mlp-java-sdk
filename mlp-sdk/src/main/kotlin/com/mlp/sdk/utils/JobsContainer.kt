@@ -8,7 +8,11 @@ import kotlinx.coroutines.delay
 import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentHashMap.KeySetView
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.Long.Companion.MAX_VALUE
+import kotlin.Long.Companion.MIN_VALUE
 
 class JobsContainer(
     private val config: MlpServiceConfig,
@@ -17,12 +21,17 @@ class JobsContainer(
 
     private val containers = ConcurrentHashMap<Long, ConnectorContainer>()
 
-    fun put(connectorId: Long, requestId: Long, job: Job): Boolean {
+    fun isAbleProcessNewJobs(connectorId: Long, grpcChannelId: Long): Boolean {
+        val container = containers.get(connectorId) ?: return true
+        return !container.disabledAllNewRequests.get() && container.isGrpcChannelActual(grpcChannelId)
+    }
+
+    fun put(connectorId: Long, grpcChannelId: Long, requestId: Long, job: Job): Boolean {
         val connectorContainer = containers.computeIfAbsent(connectorId) {
             ConnectorContainer(ConcurrentHashMap<Long, Job>())
         }
 
-        return if (connectorContainer.ableToProcessNewJobs.get()) {
+        return if (isAbleProcessNewJobs(connectorId, grpcChannelId)) {
             connectorContainer.requestJobMap[requestId] = job
             true
         } else {
@@ -36,22 +45,23 @@ class JobsContainer(
             ?.remove(requestId)
     }
 
-    fun cancel(connectorId: Long) {
+    fun cancel(connectorId: Long, grpcChannelId: Long) {
         containers[connectorId]
-            ?.disableNewOnes()
+            ?.disableNewOnes(grpcChannelId)
             ?.cancelAll()
     }
 
-    fun cancelAll() {
+    fun cancelAllForever() {
         containers.forEach {
-            it.value.disableNewOnes().cancelAll()
+            it.value.disabledAllNewRequests.set(true)
+            it.value.cancelAll()
         }
     }
 
-    suspend fun gracefulShutdownByConnector(connectorId: Long) {
+    suspend fun gracefulShutdownByConnector(connectorId: Long, grpcChannelId: Long) {
         val container = containers[connectorId] ?: return
 
-        container.disableNewOnes()
+        container.disableNewOnes(grpcChannelId)
 
         val deadline = now() + ofMillis(config.shutdownConfig.actionConnectorMs)
         while (now() < deadline) {
@@ -68,13 +78,23 @@ class JobsContainer(
         container.cancelAll()
     }
 
-    fun enableNewOnes(connectorId: Long) {
-        containers[connectorId]
-            ?.ableToProcessNewJobs?.set(true)
+    fun enableNewOnes(connectorId: Long, grpcChannelId: Long) {
+        containers.computeIfAbsent(connectorId) { ConnectorContainer(ConcurrentHashMap<Long, Job>()) }
+            .let {
+                it.actualGrpcChannels += grpcChannelId
+                logger.info("$this: enable new tasks of connector $connectorId grpc channel $grpcChannelId")
+            }
     }
 
-    private fun ConnectorContainer.disableNewOnes() = this
-        .also { it.ableToProcessNewJobs.set(false) }
+    private fun ConnectorContainer.disableNewOnes(grpcChannelId: Long) = this
+        .also {
+            it.actualGrpcChannels.remove(grpcChannelId)
+            logger.info("$this: disable new tasks of connector grpc channel $grpcChannelId")
+        }
+
+    private fun ConnectorContainer.isGrpcChannelActual(grpcChannelId: Long): Boolean {
+        return grpcChannelId in actualGrpcChannels
+    }
 
     private fun ConnectorContainer.cancelAll() = requestJobMap
         .values
@@ -83,5 +103,6 @@ class JobsContainer(
 
 data class ConnectorContainer(
     val requestJobMap: ConcurrentHashMap<Long, Job>,
-    val ableToProcessNewJobs: AtomicBoolean = AtomicBoolean(true)
+    val actualGrpcChannels: KeySetView<Long, Boolean> = ConcurrentHashMap.newKeySet(),
+    val disabledAllNewRequests: AtomicBoolean = AtomicBoolean(false)
 )

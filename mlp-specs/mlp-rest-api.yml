@@ -363,6 +363,30 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/mlpcore/update-heartbeats:
+    post:
+      tags:
+      - model-instance-endpoint
+      operationId: updateLastHeartBeats
+      parameters:
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+        required: true
+      responses:
+        "200":
+          description: OK
   /api/mlpcore/task/{taskId}/stop:
     post:
       tags:
@@ -460,6 +484,29 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/ClickHistoryData'
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/mlpcore/admin/update-activities:
+    post:
+      tags:
+      - admin-endpoint
+      operationId: updateLastActivities
+      parameters:
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LastActivityPk'
         required: true
       responses:
         "200":
@@ -589,6 +636,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DifferenceIAccountConfigDump'
+  /api/mlpcore/admin/request-metrics/save:
+    post:
+      tags:
+      - admin-endpoint
+      operationId: saveMetrics
+      parameters:
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RequestMetricsData'
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/mlpcore/admin/models/resource-group/migrate:
+    post:
+      tags:
+      - admin-endpoint
+      operationId: migrateAllServicesToResourceGroup
+      parameters:
+      - name: sourceGroup
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: targetGroup
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: targetGroupRegex
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/mlpcore/admin/minio/delete-empty-users:
     post:
       tags:
@@ -946,33 +1050,6 @@ paths:
         "200":
           description: OK
   /api/mlpcore/account/{account}/resource-groups:
-    get:
-      tags:
-      - resource-group-endpoint
-      operationId: getAvailableResourceGroups
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ResourceGroupData'
-      deprecated: true
     post:
       tags:
       - resource-group-endpoint
@@ -2141,39 +2218,6 @@ paths:
             schema:
               $ref: '#/components/schemas/InstanceMetadata'
         required: true
-      responses:
-        "200":
-          description: OK
-  /api/mlpcore/account/{account}/model/{model}/instance/{instanceId}/heartbeat:
-    post:
-      tags:
-      - model-instance-endpoint
-      operationId: updateLastHeartBeatTime
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: model
-        in: path
-        description: Model id or model name
-        required: true
-        schema:
-          type: string
-      - name: instanceId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
       responses:
         "200":
           description: OK
@@ -4828,6 +4872,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogCategoryData'
+  /api/mlpcore/admin/request-metrics:
+    get:
+      tags:
+      - admin-endpoint
+      operationId: getMetrics
+      parameters:
+      - name: account
+        in: query
+        description: Account id or account name
+        required: false
+        schema:
+          type: string
+      - name: fromDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverallMetricsData'
   /api/mlpcore/admin/accounts:
     get:
       tags:
@@ -4840,6 +4915,12 @@ paths:
         schema:
           type: string
       - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: skip
         in: query
         required: false
         schema:
@@ -5679,6 +5760,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageStatLogData'
+  /api/mlpcore/account/{account}/resource-groups/{groupName}/all-services:
+    get:
+      tags:
+      - resource-group-endpoint
+      operationId: getResourceGroupServices_1
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: groupName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceGroupServicesData'
   /api/mlpcore/account/{account}/resource-groups/{groupName}/active-services:
     get:
       tags:
@@ -5708,7 +5819,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResourceGroupServicesData'
+                $ref: '#/components/schemas/ResourceGroupServicesShortData'
   /api/mlpcore/account/{account}/resource-group-types:
     get:
       tags:
@@ -8014,6 +8125,18 @@ components:
         elementId:
           type: integer
           format: int64
+    LastActivityPk:
+      required:
+      - accountId
+      - modelId
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        modelId:
+          type: integer
+          format: int64
     AccountDataDump:
       type: object
       properties:
@@ -8431,6 +8554,8 @@ components:
           format: int32
         mainPageEndpoint:
           type: string
+        httpInterfaceOnly:
+          type: boolean
         archiveEnabled:
           type: boolean
         numberOfArchivedRequests:
@@ -8467,6 +8592,8 @@ components:
           format: int32
         mainPageEndpoint:
           type: string
+        httpInterfaceOnly:
+          type: boolean
     ModelLimitsData:
       required:
       - cpuRequest
@@ -8730,6 +8857,44 @@ components:
           $ref: '#/components/schemas/AccountConfigDump'
         after:
           $ref: '#/components/schemas/AccountConfigDump'
+    RequestDetailsData:
+      required:
+      - callerAccountId
+      - date
+      - modelAccountId
+      - modelId
+      type: object
+      properties:
+        modelAccountId:
+          type: integer
+          format: int64
+        modelId:
+          type: integer
+          format: int64
+        callerAccountId:
+          type: string
+        date:
+          type: string
+    RequestMetricsData:
+      required:
+      - count
+      - isSuccess
+      - requestDetailsData
+      - requestTypeData
+      type: object
+      properties:
+        requestDetailsData:
+          $ref: '#/components/schemas/RequestDetailsData'
+        requestTypeData:
+          type: string
+          enum:
+          - FIT
+          - PREDICT
+        isSuccess:
+          type: boolean
+        count:
+          type: integer
+          format: int32
     EmptyUsersResponse:
       required:
       - empty
@@ -9009,6 +9174,9 @@ components:
           - DAY
           - MONTH
           - YEAR
+        maxServerLifetimeMinutes:
+          type: integer
+          format: int64
     ResourceGroupServerData:
       required:
       - id
@@ -9022,6 +9190,10 @@ components:
           type: integer
           format: int64
         name:
+          type: string
+        serverIp:
+          type: string
+        jumpHostIp:
           type: string
         description:
           type: string
@@ -9117,6 +9289,8 @@ components:
           - SHARED_RESOURCE_QUOTA
         accessPolicy:
           $ref: '#/components/schemas/QuotaAccessPolicy'
+        grantedAccountName:
+          type: string
         cpuLimit:
           type: string
         memoryLimit:
@@ -10298,6 +10472,47 @@ components:
         modelsCount:
           type: integer
           format: int32
+    ModelMetricsData:
+      required:
+      - failPercentage
+      - modelId
+      - totalFail
+      - totalSuccess
+      type: object
+      properties:
+        modelId:
+          type: integer
+          format: int64
+        totalSuccess:
+          type: integer
+          format: int32
+        totalFail:
+          type: integer
+          format: int32
+        failPercentage:
+          type: number
+          format: double
+    OverallMetricsData:
+      required:
+      - modelMetrics
+      - totalFailCount
+      - totalFailPercentage
+      - totalSuccessCount
+      type: object
+      properties:
+        totalSuccessCount:
+          type: integer
+          format: int32
+        totalFailCount:
+          type: integer
+          format: int32
+        totalFailPercentage:
+          type: number
+          format: double
+        modelMetrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelMetricsData'
     StatLogData:
       required:
       - accountId
@@ -10397,6 +10612,10 @@ components:
           - STOPPED
           - UNAVAILABLE
           - DELETING
+        serverIp:
+          type: string
+        jumpHostIp:
+          type: string
         resources:
           $ref: '#/components/schemas/ServerCapacityData'
         description:
@@ -10439,6 +10658,8 @@ components:
           format: int32
         first:
           type: boolean
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
         size:
           type: integer
           format: int32
@@ -10454,8 +10675,6 @@ components:
         numberOfElements:
           type: integer
           format: int32
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
         last:
           type: boolean
         empty:
@@ -10463,17 +10682,17 @@ components:
     PageableObject:
       type: object
       properties:
-        offset:
-          type: integer
-          format: int64
-        sort:
-          $ref: '#/components/schemas/SortObject'
         pageNumber:
           type: integer
           format: int32
         pageSize:
           type: integer
           format: int32
+        offset:
+          type: integer
+          format: int64
+        sort:
+          $ref: '#/components/schemas/SortObject'
         paged:
           type: boolean
         unpaged:
@@ -10481,9 +10700,9 @@ components:
     SortObject:
       type: object
       properties:
-        empty:
-          type: boolean
         sorted:
+          type: boolean
+        empty:
           type: boolean
         unsorted:
           type: boolean
@@ -10537,6 +10756,40 @@ components:
           items:
             $ref: '#/components/schemas/ServiceData'
     ServiceData:
+      required:
+      - active
+      - id
+      - requested
+      - state
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ModelInfoPK'
+        name:
+          type: string
+        state:
+          type: string
+          enum:
+          - RUNNING
+          - STARTING
+          - INACTIVE
+          - SLEEPING
+        active:
+          type: integer
+          format: int32
+        requested:
+          type: integer
+          format: int32
+    ResourceGroupServicesShortData:
+      required:
+      - services
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceShortData'
+    ServiceShortData:
       required:
       - id
       - name
@@ -10650,13 +10903,16 @@ components:
           format: int64
         name:
           type: string
+        serverId:
+          type: integer
+          format: int64
+        serverName:
+          type: string
         statusInfo:
           $ref: '#/components/schemas/StatusInfo'
         restartCount:
           type: integer
           format: int32
-        lastRestartTimestamp:
-          type: string
         createdTimestamp:
           type: string
         instanceHostingType:
@@ -10667,6 +10923,8 @@ components:
           - docker
           - external
           - hostingServer
+        lastRestartTimestamp:
+          type: string
     ModelInstanceListData:
       required:
       - instances
@@ -10941,6 +11199,9 @@ components:
           format: int64
         builtInImageName:
           type: string
+        externalDockerHttpPort:
+          type: integer
+          format: int32
         status:
           type: string
           enum:

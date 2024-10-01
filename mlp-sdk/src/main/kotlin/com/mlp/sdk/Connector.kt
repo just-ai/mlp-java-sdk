@@ -37,6 +37,7 @@ import kotlin.math.min
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.MDC
+import kotlin.Long.Companion.MIN_VALUE
 
 class Connector(
     @Volatile
@@ -48,14 +49,15 @@ class Connector(
     override val context: MlpExecutionContext
 ) : WithExecutionContext, WithState(ACTIVE) {
 
-    val id = lastConnectorId.getAndIncrement()
+    val connectorId = lastConnectorId.getAndIncrement()
 
     private val startServingProto = ServiceToGateProto.newBuilder()
         .setStartServing(
             StartServingProto.newBuilder()
                 .setConnectionToken(pool.token)
                 .setHostname(context.environment["HOSTNAME"] ?: "localhost")
-                .setVersion(1) // It depends on sdk version
+                .setVersion(SDK_VERSION)
+                .setImage(context.environment["IMAGE_NAME"] ?: "")
                 .setServiceDescriptor(executor.action.getDescriptor())
                 .build()
         )
@@ -127,9 +129,7 @@ class Connector(
         var progressiveDelay = 100L
         runCatching {
             while (isActive) {
-                if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
-                    delay(1_000L)
-                }
+                throttleIfUnknownConnectionToken()
 
                 if (grpcChannel.isShutdownStateOrNull()) {
                     val connected = tryConnectOrShutdown()
@@ -147,10 +147,11 @@ class Connector(
 
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
-                    if (progressiveDelay != 100L) {
-                        logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel is active")
-                    }
                     progressiveDelay = 100L
+
+                    if (!executor.isAbleProcessNewJobs(connectorId, grpcChannel.grpcChannelId())) {
+                        logger.error("${this@Connector}: grpc channel is active, but can not process new jobs")
+                    }
                 }
 
                 if (now() > lastActiveTime + ofMillis(config.grpcConnectTimeoutMs)) {
@@ -168,6 +169,12 @@ class Connector(
         }
 
         logger.debug("${this@Connector}: ... keep connection job has been stopped")
+    }
+
+    private suspend fun throttleIfUnknownConnectionToken() {
+        if (grpcChannel.get()?.state?.shutdownReason == "instance_by_token_not_found") {
+            delay(1_000L)
+        }
     }
 
     private suspend fun tryGrpcShutdown() {
@@ -195,10 +202,11 @@ class Connector(
         }.getOrDefault(false)
     }
 
-    override fun toString() = "Connector(id='$id', url='$targetUrl')"
+    override fun toString() = "Connector(id='$connectorId', url='$targetUrl')"
 
     companion object {
         private val lastConnectorId = AtomicLong()
+        private val lastGrpcChannelId = AtomicLong()
         const val LIVENESS_PROBE = "/tmp/liveness-probe"
     }
 
@@ -212,14 +220,15 @@ class Connector(
         private val lastServerHeartbeat = AtomicReference(now())
         private val heartbeatInterval = AtomicReference<Duration>(null)
         private val grpcMutex = Mutex()
+        val grpcChannelId = lastGrpcChannelId.getAndIncrement()
 
         init {
             launchHeartbeatJob()
         }
 
         suspend fun tryConnect() {
-            check(state.notStarted) { "Connector $id: GrpcChannel can connect only once" }
-            logger.debug("Connector $id: opening grpc channel to $targetUrl ...")
+            check(state.notStarted) { "Connector $connectorId: GrpcChannel can connect only once" }
+            logger.debug("Connector $connectorId: opening grpc channel to $targetUrl ...")
             state.starting()
 
             val channelBuilder = ManagedChannelBuilder
@@ -242,7 +251,7 @@ class Connector(
                 .processAsync(this)
 
             sendStartServingProto()
-            executor.enableNewTasks(id)
+            executor.enableNewTasks(connectorId, grpcChannelId)
         }
 
         suspend fun send(grpcResponse: ServiceToGateProto) {
@@ -263,7 +272,7 @@ class Connector(
             val requestId = request.headersMap["Z-requestId"] ?: request.requestId.toString()
             MDC.setContextMap(mapOf(
                 "requestId" to requestId,
-                "connectorId" to id.toString(),
+                "connectorId" to connectorId.toString(),
                 "gateRequestId" to request.requestId.toString(),
                 "MLP-BILLING-KEY" to request.headersMap["MLP-BILLING-KEY"],
             ))
@@ -276,21 +285,21 @@ class Connector(
 
         private fun processRequest(request: GateToServiceProto, tracker: TimeTracker) {
             if (request.hasHeartBeat())
-                logger.trace("GateToService (connector $id, requestId: ${request.requestId}): heartbeat")
+                logger.trace("GateToService (connector $connectorId, requestId: ${request.requestId}): heartbeat")
             else
-                logProto(request, prompt = "GateToService (connector $id)")
+                logProto(request, prompt = "GateToService (connector $connectorId)")
 
             when (request.bodyCase) {
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
-                PREDICT -> executor.predict(request.predict, request.requestId, id, tracker)
-                FIT -> executor.fit(request.fit, request.requestId, id)
-                EXT -> executor.ext(request.ext, request.requestId, id)
-                BATCH -> executor.batch(request.batch, request.requestId, id)
+                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker)
+                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId)
+                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId)
+                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId)
                 ERROR -> processError(request.error)
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
-                null -> logger.error("Connector $id: body case is null")
+                null -> logger.error("Connector $connectorId: body case is null")
                 else -> logger.debug("Could not find request bodyCase with type {}", request.bodyCase)
             }
         }
@@ -303,7 +312,7 @@ class Connector(
             logger.error("$this: RECEIVED error ${e.message}", e)
             state.shuttingDown()
 
-            executor.cancelAll(id)
+            executor.cancelAll(connectorId, grpcChannelId)
             gracefulShutdownManagedChannel()
         }
 
@@ -311,7 +320,7 @@ class Connector(
             state.shuttingDown()
             logger.info("$this: RECEIVED completed")
 
-            executor.cancelAll(id)
+            executor.cancelAll(connectorId, grpcChannelId)
             gracefulShutdownManagedChannel()
         }
 
@@ -320,7 +329,7 @@ class Connector(
                 "mlp.gate.instance_by_token_not_found" ->
                     processTokenNotFound()
                 else ->
-                    logger.error("Connector $id: error ${error.message}")
+                    logger.error("Connector $connectorId: error ${error.message}")
             }
         }
 
@@ -334,7 +343,7 @@ class Connector(
         }
 
         private fun processTokenNotFound() {
-            logger.warn("Connector $id: Receive instance_by_token_not_found error, so shutdown grpc channel")
+            logger.warn("Connector $connectorId: Receive instance_by_token_not_found error, so shutdown grpc channel")
             state.shuttingDown()
 
             scope.launch {
@@ -371,7 +380,7 @@ class Connector(
         }
 
         private suspend fun gracefulShutdownPrivate() {
-            executor.gracefulShutdownAll(id)
+            executor.gracefulShutdownAll(connectorId, grpcChannelId)
 
             logger.debug("$this: completing stream to $targetUrl ...")
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
@@ -400,18 +409,18 @@ class Connector(
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
                 .onFailure { logger.error("$this: can't complete stream", it) }
 
-            executor.cancelAll(id)
+            executor.cancelAll(connectorId, grpcChannelId)
 
             shutdownNowManagedChannel()
         }
 
         private suspend fun sendStartServingProto() {
-            logger.info("Connector $id: sending start serving to $targetUrl ...")
+            logger.info("Connector $connectorId: sending start serving to $targetUrl ...")
             runCatching {
                 send(startServingProto)
                 state.active()
             }.onFailure {
-                logger.error("Connector $id: error on first start serving to $targetUrl", it)
+                logger.error("Connector $connectorId: error on first start serving to $targetUrl", it)
                 gracefulShutdownManagedChannel()
             }
         }
@@ -488,7 +497,7 @@ class Connector(
         }
 
         private fun launchHeartbeatJob() = scope.launch {
-            logger.debug("Connector $id: starting heartbeats with interval $heartbeatInterval ms")
+            logger.debug("Connector $connectorId: starting heartbeats with interval $heartbeatInterval ms")
 
             while (!state.shutdown) {
                 val interval = heartbeatInterval.get()
@@ -506,7 +515,7 @@ class Connector(
                 runCatching { send(heartbeatProto) }
                     .onFailure {
                         if (!state.shutdown) {
-                            logger.error("Connector $id: can't send heartbeat", it)
+                            logger.error("Connector $connectorId: can't send heartbeat", it)
                         }
                     }
 
@@ -514,7 +523,7 @@ class Connector(
 
                 val maxTimeout = interval.multipliedBy(3).plusSeconds(1)
                 if (between(lastServerHeartbeat.get(), now()) > maxTimeout) {
-                    logger.error("Connector $id: no heartbeat for $maxTimeout ms")
+                    logger.error("Connector $connectorId: no heartbeat for $maxTimeout ms")
                     shutdownNow()
                 }
             }
@@ -534,6 +543,10 @@ class Connector(
     private fun AtomicReference<GrpcChannel?>.isActiveState() = get()
         ?.state
         ?.active == true
+
+    private fun AtomicReference<GrpcChannel?>.grpcChannelId() = get()
+        ?.grpcChannelId
+        ?: MIN_VALUE
 }
 
 private val ServiceInfoProto.asModelInfo
