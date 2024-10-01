@@ -24,6 +24,7 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.*
 import java.io.File
 import java.time.Duration
 import java.time.Duration.between
@@ -33,16 +34,8 @@ import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.min
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
 import org.slf4j.MDC
 import kotlin.Long.Companion.MIN_VALUE
 
@@ -70,7 +63,11 @@ class Connector(
         )
         .build()
     private val grpcChannel = AtomicReference<GrpcChannel?>(null)
-    private val keepConnectionJob = launchKeepConnectionJob()
+    private val keepConnectionJob: Job
+
+    init {
+        keepConnectionJob = launchKeepConnectionJob()
+    }
 
     suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto) {
         check(isAvailableToSendGrpc()) { "$this: cannot send message because it is not connected. Current grpcChannel state ${grpcChannel.get()?.state}" }
@@ -143,7 +140,7 @@ class Connector(
                         }
                         progressiveDelay = 100L
                     } else {
-                        progressiveDelay = min(progressiveDelay * 2, 5_000L)
+                        progressiveDelay = min(progressiveDelay * 2, 10_000L)
                         logger.debug("${this@Connector}: increase progressiveDelay to $progressiveDelay")
                     }
                 }
@@ -181,7 +178,7 @@ class Connector(
     }
 
     private suspend fun tryGrpcShutdown() {
-        logger.debug("${this@Connector}: grpc channel is not active for 10 seconds, reconnecting ...")
+//        logger.debug("${this@Connector}: grpc channel is not active for 10 seconds, reconnecting ...")
 
         runCatching {
             grpcChannel.getAndSet(null)
@@ -192,7 +189,7 @@ class Connector(
     }
 
     private suspend fun tryConnectOrShutdown(): Boolean {
-        logger.debug("${this@Connector}: creating new grpc channel ...")
+//        logger.debug("${this@Connector}: creating new grpc channel ...")
         val newGrpcChannel = GrpcChannel(context)
 
         return runCatching {
@@ -200,7 +197,7 @@ class Connector(
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
             true
         }.onFailure {
-            logger.error("${this@Connector}: cannot create new grpc channel", it)
+//            logger.error("${this@Connector}: cannot create new grpc channel", it)
             newGrpcChannel.shutdownNow()
         }.getOrDefault(false)
     }

@@ -38,7 +38,7 @@ data class PatternsResponseData(
  * Для использования класса необходимо задать env-переменные:
  * - MLP_CLIENT_TOKEN
  * - MLP_REST_URL
- * - MLP_GRPC_HOST
+ * - MLP_GRPC_HOSTS
  * - MLP_GRPC_SECURE
  */
 class MlpPatterns(
