@@ -60,7 +60,7 @@ fun loadClientConfig(configPath: String? = null): MlpClientConfig =
 fun loadClientConfig(configPath: String? = null, environment: Environment): MlpClientConfig {
     val props = ConfigHelper.loadProperties(configPath, environment)
     return MlpClientConfig(
-        initialGateUrls = props["MLP_GRPC_HOST"]?.split(",:") ?: error("Missed MLP_GRPC_HOST property"),
+        initialGateUrls = (props["MLP_GRPC_HOSTS"] ?: props["MLP_GRPC_HOST"])?.split(",") ?: error("Missed MLP_GRPC_HOST property"),
         restUrl = props["MLP_REST_URL"],
         clientToken = props["MLP_CLIENT_TOKEN"],
         billingToken = props["MLP_BILLING_TOKEN"],
