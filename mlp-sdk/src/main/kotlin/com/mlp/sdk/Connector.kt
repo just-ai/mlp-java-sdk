@@ -50,6 +50,7 @@ class Connector(
 ) : WithExecutionContext, WithState(ACTIVE) {
 
     val connectorId = lastConnectorId.getAndIncrement()
+    private var gatewayPermanentlyUnavailable = true
 
     private val startServingProto = ServiceToGateProto.newBuilder()
         .setStartServing(
@@ -139,15 +140,18 @@ class Connector(
                             logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel was connected")
                         }
                         progressiveDelay = 100L
+                        gatewayPermanentlyUnavailable = false
                     } else {
                         progressiveDelay = min(progressiveDelay * 2, 10_000L)
-                        logger.debug("${this@Connector}: increase progressiveDelay to $progressiveDelay")
+                        if (progressiveDelay == 10_000L) gatewayPermanentlyUnavailable = true
+                        logConnecting("${this@Connector}: increase progressiveDelay to $progressiveDelay")
                     }
                 }
 
                 if (grpcChannel.isActiveState()) {
                     lastActiveTime = now()
                     progressiveDelay = 100L
+                    gatewayPermanentlyUnavailable = false
 
                     if (!executor.isAbleProcessNewJobs(connectorId, grpcChannel.grpcChannelId())) {
                         logger.error("${this@Connector}: grpc channel is active, but can not process new jobs")
@@ -228,7 +232,7 @@ class Connector(
 
         suspend fun tryConnect() {
             check(state.notStarted) { "Connector $connectorId: GrpcChannel can connect only once" }
-            logger.debug("Connector $connectorId: opening grpc channel to $targetUrl ...")
+            logConnecting("Connector $connectorId: opening grpc channel to $targetUrl ...")
             state.starting()
 
             val channelBuilder = ManagedChannelBuilder
@@ -356,17 +360,17 @@ class Connector(
             if (state.isShutdownTypeState())
                 return
 
-            logger.debug("$this: graceful shutting down grpc channel ...")
+            logConnecting("$this: graceful shutting down grpc channel ...")
             state.shuttingDown()
 
             if (!this::stream.isInitialized) {
-                logger.debug("$this: ... stream is not initialized, skipping stream completion ...")
+                logConnecting("$this: ... stream is not initialized, skipping stream completion ...")
                 return gracefulShutdownManagedChannel()
             }
 
             runCatching {
                 send(stopServingProto)
-                logger.debug("$this: sent stopServing to gate, waiting for stopServing from gate ...")
+                logConnecting("$this: sent stopServing to gate, waiting for stopServing from gate ...")
 
                 withTimeout(config.shutdownConfig.actionConnectorMs) {
                     while(!state.shutdown) {
@@ -382,7 +386,7 @@ class Connector(
         private suspend fun gracefulShutdownPrivate() {
             executor.gracefulShutdownAll(connectorId, grpcChannelId)
 
-            logger.debug("$this: completing stream to $targetUrl ...")
+            logConnecting("$this: completing stream to $targetUrl ...")
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
                 .onFailure { if (it !is IllegalStateException) logger.error("$this: can't complete stream", it) }
 
@@ -394,18 +398,18 @@ class Connector(
                 return
             }
 
-            logger.debug("$this: force shutting down grpc channel ...")
+            logConnecting("$this: force shutting down grpc channel ...")
             state.shuttingDown()
 
             if (!this::stream.isInitialized) {
-                logger.debug("$this: stream is not initialized, skipping stream completion")
+                logConnecting("$this: stream is not initialized, skipping stream completion")
                 return shutdownNowManagedChannel()
             }
 
             runCatching { send(stopServingProto) }
                 .onFailure { logger.error("$this: can't send stop serving", it) }
 
-            logger.debug("$this: completing stream to $targetUrl ...")
+            logConnecting("$this: completing stream to $targetUrl ...")
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
                 .onFailure { logger.error("$this: can't complete stream", it) }
 
@@ -426,11 +430,11 @@ class Connector(
         }
 
         private fun gracefulShutdownManagedChannel(reason: String? = null) {
-            logger.debug("$this: graceful shutting down managed channel to $targetUrl ...")
+            logConnecting("$this: graceful shutting down managed channel to $targetUrl ...")
 
             try {
                 if (!this::managedChannel.isInitialized) {
-                    logger.debug("$this: managed channel is not initialized, skipping managed channel shutdown")
+                    logConnecting("$this: managed channel is not initialized, skipping managed channel shutdown")
                     return
                 }
 
@@ -443,13 +447,13 @@ class Connector(
 
                 val timeoutSeconds = 10L
                 if (managedChannel.awaitTermination(timeoutSeconds, SECONDS)) {
-                    return logger.debug("$this: ... managed channel has been successfully shutdown")
+                    return logConnecting("$this: ... managed channel has been successfully shutdown")
                 }
 
-                logger.debug("$this: ... managed channel has not been shutdown in $timeoutSeconds seconds, force shutdown ...")
+                logConnecting("$this: ... managed channel has not been shutdown in $timeoutSeconds seconds, force shutdown ...")
                 runCatching { managedChannel.shutdownNow() }
                     .onFailure { logger.error("$this: can't force shutdown managed channel", it) }
-                    .onSuccess { logger.debug("$this: ... managed channel has been successfully shutdown") }
+                    .onSuccess { logConnecting("$this: ... managed channel has been successfully shutdown") }
             } catch (e: InterruptedException) {
                 logger.error("$this: ... managed channel has not been shutdown", e)
             } finally {
@@ -458,11 +462,11 @@ class Connector(
         }
 
         private fun shutdownNowManagedChannel() {
-            logger.debug("$this: force shutting down managed channel ...")
+            logConnecting("$this: force shutting down managed channel ...")
 
             try {
                 if (!this::managedChannel.isInitialized) {
-                    logger.debug("$this: managed channel is not initialized, skipping managed channel shutdown")
+                    logConnecting("$this: managed channel is not initialized, skipping managed channel shutdown")
                     return
                 }
 
@@ -472,7 +476,7 @@ class Connector(
 
                 runCatching { managedChannel.shutdownNow() }
                     .onFailure { logger.error("$this: can't shutdown managed channel", it) }
-                    .onSuccess { logger.debug("$this: ... managed channel has been successfully shutdown") }
+                    .onSuccess { logConnecting("$this: ... managed channel has been successfully shutdown") }
             } finally {
                 state.shutdown()
             }
@@ -497,7 +501,7 @@ class Connector(
         }
 
         private fun launchHeartbeatJob() = scope.launch {
-            logger.debug("Connector $connectorId: starting heartbeats with interval $heartbeatInterval ms")
+            logConnecting("Connector $connectorId: starting heartbeats with interval $heartbeatInterval ms")
 
             while (!state.shutdown) {
                 val interval = heartbeatInterval.get()
@@ -547,6 +551,11 @@ class Connector(
     private fun AtomicReference<GrpcChannel?>.grpcChannelId() = get()
         ?.grpcChannelId
         ?: MIN_VALUE
+
+    private fun logConnecting(message: String) {
+        if (gatewayPermanentlyUnavailable) return
+        logger.debug(message)
+    }
 }
 
 private val ServiceInfoProto.asModelInfo
