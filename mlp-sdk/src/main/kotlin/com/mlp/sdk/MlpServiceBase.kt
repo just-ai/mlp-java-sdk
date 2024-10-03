@@ -20,6 +20,7 @@ import com.mlp.sdk.datatypes.asr.common.AsrRequest
 import com.mlp.sdk.datatypes.asr.common.RecognitionConfig
 import com.mlp.sdk.utils.JSON
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.transform
@@ -149,13 +150,19 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         }
 
         var lastResponse: R? = null
+        var lastPrice: Long? = null
         return this.streamPredict(pToCFlow).transform {
             lastResponse?.let { lr ->
+                val lastResponsePrice = lastPrice
+                lastPrice = BillingUnitsThreadLocal.getUnits()
+                lastResponsePrice?.let { price -> BillingUnitsThreadLocal.setUnits(price) }
                 emit(StreamPayloadInterface(Payload(data = JSON.stringify(lr), dataType = TypeInfo.canonicalName(lr.javaClass)), false))
             }
             lastResponse = it
+            lastPrice = BillingUnitsThreadLocal.getUnits()
         }.onCompletion {
             val dataType = lastResponse?.let { lr -> TypeInfo.canonicalName(lr.javaClass) } ?: "json"
+            lastPrice?.let { price -> BillingUnitsThreadLocal.setUnits(price) }
             emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = dataType), true))
         }
     }
@@ -189,6 +196,11 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
     } catch (e: JsonMappingException) {
         logger.error("Failed to parse json into {}", clazz, e)
         throw MlpException(MlpError(CommonErrorCode.BAD_REQUEST, e))
+    }
+
+    fun FlowCollector<R?>.setPrice(price: Long?): Unit {
+        val units = price ?: 0
+        BillingUnitsThreadLocal.setUnits(units)
     }
 
 }
