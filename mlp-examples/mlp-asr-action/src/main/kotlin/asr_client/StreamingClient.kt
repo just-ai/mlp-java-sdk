@@ -1,12 +1,12 @@
 package asr_client
 
 import com.google.protobuf.kotlin.toByteStringUtf8
-import com.mlp.gate.AsrRequestProto
 import com.mlp.gate.asrRequestProto
 import com.mlp.gate.recognitionConfig
 import com.mlp.sdk.MlpClientSDK
 import com.mlp.sdk.MlpExecutionContext
 import com.mlp.sdk.Payload
+import com.mlp.sdk.datatypes.asr.AsrRequestJson
 import com.mlp.sdk.datatypes.asr.common.AsrRequest
 import com.mlp.sdk.datatypes.asr.common.RecognitionConfig
 import com.mlp.sdk.utils.JSON.asJson
@@ -51,7 +51,7 @@ fun main() = runBlocking {
 
     val audioBase64 = Base64.getEncoder().encodeToString("Hello".toByteArray())
 
-    val longRecognition = Payload(data = com.mlp.sdk.datatypes.asr.AsrRequest(audioBase64).asJson)
+    val longRecognition = Payload(data = AsrRequestJson(audioBase64).asJson)
     val response = client.predict("1000001", "501", longRecognition)
     println(response.data)
 }
