@@ -133,7 +133,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
                                 "message" to "Unsupported payload body for asr datatype. Use protobuf body instead of json."
                             )
                         )
-                    val config = req.config?.let { JSON.parseOrThrowBadRequestMlpException(it.data, RecognitionConfig::class.java) }
+                    val config = req.config?.let { JSON.parseOrThrowBadRequestMlpException(it.stringData(), RecognitionConfig::class.java) }
                     @Suppress("UNCHECKED_CAST")
                     AsrRequest(audioContent, config) as P
                 }
@@ -144,7 +144,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
             val config = req.config
 
             val conf = if (config != null && predictConfigExample !is Unit) {
-                JSON.parseOrThrowBadRequestMlpException(config.data, predictConfigExample.javaClass)
+                JSON.parseOrThrowBadRequestMlpException(config.stringData(), predictConfigExample.javaClass)
             } else null
             request to conf
         }

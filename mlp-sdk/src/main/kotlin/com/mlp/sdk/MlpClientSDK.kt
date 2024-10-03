@@ -553,7 +553,7 @@ class MlpClientSDK(
         account: String,
         model: String,
         data: PayloadInterface,
-        config: Payload?,
+        config: PayloadInterface?,
         timeout: Duration?,
         authToken: String,
         requestHeaders: Map<String, String> = emptyMap(),
@@ -579,7 +579,12 @@ class MlpClientSDK(
                     config?.let {
                         this.config = PayloadProto.newBuilder()
                             .setDataType(config.dataType ?: "")
-                            .setJson(config.data)
+                            .apply {
+                                when(config) {
+                                    is Payload -> setJson(config.data)
+                                    is ProtobufPayload -> setProtobuf(config.data)
+                                }
+                            }
                             .build()
                     }
                 }

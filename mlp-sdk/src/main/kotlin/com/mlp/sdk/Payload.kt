@@ -24,7 +24,7 @@ sealed interface PayloadInterface {
 
 data class StreamPayloadInterface(val payload: PayloadInterface, val last: Boolean)
 
-data class PayloadWithConfig(val payload: PayloadInterface, val config: Payload?)
+data class PayloadWithConfig(val payload: PayloadInterface, val config: PayloadInterface?)
 
 data class Payload(
     override val dataType: String?,
