@@ -198,7 +198,7 @@ class Connector(
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
             true
         }.onFailure {
-//            logger.error("${this@Connector}: cannot create new grpc channel", it)
+            logger.error("${this@Connector}: cannot create new grpc channel", it)
             newGrpcChannel.shutdownNow()
         }.getOrDefault(false)
     }
