@@ -216,7 +216,7 @@ class Connector(
 
     private inner class GrpcChannel(
         override val context: MlpExecutionContext
-    ) : StreamObserver<GateToServiceProto>, WithExecutionContext, WithState() {
+    ) : StreamObserver<GateToServiceProto>, WithExecutionContext, WithState(logsEnabled = false) {
 
         private lateinit var managedChannel: ManagedChannel
         private lateinit var stream: StreamObserver<ServiceToGateProto>
