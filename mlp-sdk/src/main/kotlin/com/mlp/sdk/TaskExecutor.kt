@@ -115,7 +115,7 @@ class TaskExecutor(
 
         if (request.hasData()) {
             val dataPayload = requireNotNull(request.data?.asPayloadInterface) { "Payload data" }
-            val config = request.config?.asPayload
+            val config = if (request.config == request.config.defaultInstanceForType) null else request.config?.asPayload
             runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
         }
 
