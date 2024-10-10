@@ -23,4 +23,8 @@ data class RecognitionConfig(
         ALAW,
         FLAC
     }
+
+    companion object {
+        val DEFAULT = RecognitionConfig()
+    }
 }
