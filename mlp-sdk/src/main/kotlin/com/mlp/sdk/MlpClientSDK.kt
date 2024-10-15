@@ -1,17 +1,39 @@
 package com.mlp.sdk
 
+import com.mlp.gate.AsrRequestProto
+import com.mlp.gate.ClientAsrRequestProto
+import com.mlp.gate.ClientAsrResponseProto
 import com.mlp.gate.ClientRequestProto
 import com.mlp.gate.ClientResponseProto
 import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.GateGrpcKt.GateCoroutineStub
+import com.mlp.gate.PartialPredictRequestProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
+import com.mlp.sdk.datatypes.asr.common.AsrRequest
+import com.mlp.sdk.datatypes.asr.common.AsrResponse
+import com.mlp.sdk.utils.JSON
+import com.mlp.sdk.utils.JSON.parseOrThrowBadRequestMlpException
 import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.StatusException
 import io.grpc.StatusRuntimeException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
+import org.slf4j.MDC
 import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofSeconds
@@ -23,19 +45,6 @@ import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.coroutines.resume
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeout
-import org.slf4j.MDC
 
 class MlpClientSDK(
     initConfig: MlpClientConfig? = null,
@@ -212,6 +221,57 @@ class MlpClientSDK(
             timeout
         )
 
+    fun streamPredict(
+        account: String,
+        model: String,
+        stream: Flow<PayloadWithConfig>,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken(),
+    ): Flow<PayloadInterface> {
+        val clientRequestFlow = stream.map {
+            buildPartialPredict(account, model, it.payload, it.config, timeout, authToken)
+        }
+        return sendStream(clientRequestFlow)
+    }
+
+    fun asrPredict(
+        account: String,
+        model: String,
+        stream: Flow<AsrRequest>,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken(),
+    ): Flow<AsrResponse> {
+        val clientRequestFlow = stream.map {
+            val data = ProtobufPayload(dataType = AsrRequest.DATATYPE, it.audioContent)
+            val config = it.config?.let { conf -> Payload(JSON.stringify(conf)) }
+            buildPartialPredict(account, model, data, config, timeout, authToken)
+        }
+        return sendStream(clientRequestFlow).map {
+            when (it) {
+                is Payload -> JSON.parseOrThrowBadRequestMlpException(it.data, AsrResponse::class.java)
+                is ProtobufPayload -> JSON.parseOrThrowBadRequestMlpException(it.data.toStringUtf8(), AsrResponse::class.java)
+            }
+        }
+    }
+
+    fun asrPredictProto(
+        account: String,
+        model: String,
+        stream: Flow<AsrRequestProto>,
+        timeout: Duration? = null,
+        authToken: String = ensureDefaultToken(),
+    ): Flow<ClientAsrResponseProto> {
+        val clientAsrRequestFlow = stream.map {
+            ClientAsrRequestProto.newBuilder()
+                .setAccount(account)
+                .setModel(model)
+                .setAuthToken(authToken)
+                .setAsr(it)
+                .build()
+        }
+        return stub.processRecognition(clientAsrRequestFlow)
+    }
+
     fun extBlocking(
         account: String,
         model: String,
@@ -236,8 +296,53 @@ class MlpClientSDK(
         "Set authToken in environment variables, or in init method, or directly in predict method"
     }
 
-    private fun sendRequestPayloadStream(request: ClientRequestProto, timeout: Duration? = null): Flow<ClientResponseProto> {
+    private fun sendRequestPayloadStream(
+        request: ClientRequestProto,
+        timeout: Duration? = null
+    ): Flow<ClientResponseProto> {
         return stub.processResponseStream(request)
+    }
+
+    private fun sendStream(requests: Flow<ClientRequestProto>): Flow<PayloadInterface> {
+        val flow = stub.processStream(requests)
+        return flow.map { response ->
+            when {
+                response.hasPredict() -> {
+                    val data = response.predict.data
+                    if (data.hasJson()) {
+                        Payload(dataType = data.dataType, data = data.json)
+                    } else {
+                        ProtobufPayload(dataType = data.dataType, data = data.protobuf)
+                    }
+                }
+
+                response.hasPartialPredict() -> {
+                    val data = response.partialPredict.data
+                    if (data.hasJson()) {
+                        Payload(dataType = data.dataType, data = data.json)
+                    } else {
+                        ProtobufPayload(dataType = data.dataType, data = data.protobuf)
+                    }
+                }
+
+                response.hasError() -> {
+                    throw MlpClientException(
+                        response.error.code,
+                        response.error.message,
+                        response.error.argsMap,
+                        response.headersMap["Z-requestId"]
+                    )
+                }
+
+                else ->
+                    throw MlpClientException(
+                        "wrong-response",
+                        "Wrong response type: $response",
+                        emptyMap(),
+                        response.headersMap["Z-requestId"]
+                    )
+            }
+        }
     }
 
     private suspend fun sendRequestPayload(request: ClientRequestProto, timeout: Duration? = null): RawPayload {
@@ -248,13 +353,22 @@ class MlpClientSDK(
                 RawPayload(response.predict.data.dataType, response.predict.data.json, response.headersMap)
 
             response.hasPartialPredict() ->
-                RawPayload(response.partialPredict.data.dataType, response.partialPredict.data.json, response.headersMap)
+                RawPayload(
+                    response.partialPredict.data.dataType,
+                    response.partialPredict.data.json,
+                    response.headersMap
+                )
 
             response.hasExt() ->
                 RawPayload(response.ext.data.dataType, response.ext.data.json, response.headersMap)
 
             else ->
-                throw MlpClientException("wrong-response", "Wrong response type: $response", emptyMap(), response.headersMap["Z-requestId"])
+                throw MlpClientException(
+                    "wrong-response",
+                    "Wrong response type: $response",
+                    emptyMap(),
+                    response.headersMap["Z-requestId"]
+                )
         }
     }
 
@@ -264,7 +378,12 @@ class MlpClientSDK(
 
         if (response.hasError()) {
             logger.error("Error from gate. Error \n${response.error}")
-            throw MlpClientException(response.error.code, response.error.message, response.error.argsMap, response.headersMap["Z-requestId"])
+            throw MlpClientException(
+                response.error.code,
+                response.error.message,
+                response.error.argsMap,
+                response.headersMap["Z-requestId"]
+            )
         }
         return response
     }
@@ -312,7 +431,12 @@ class MlpClientSDK(
             throw exception
 
         else ->
-            throw MlpClientException("wrong-response", exception.message ?: "$exception", emptyMap(), MDC.get("requestId"))
+            throw MlpClientException(
+                "wrong-response",
+                exception.message ?: "$exception",
+                emptyMap(),
+                MDC.get("requestId")
+            )
     }
 
     fun shutdown() {
@@ -418,6 +542,62 @@ class MlpClientSDK(
 
         if (MDC.get("requestId") != null)
             builder.putHeaders("Z-requestId", MDC.get("requestId"))
+
+        if (timeout != null)
+            builder.timeoutSec = timeout.seconds.toInt()
+
+        return builder.build()
+    }
+
+    private fun buildPartialPredict(
+        account: String,
+        model: String,
+        data: PayloadInterface,
+        config: PayloadInterface?,
+        timeout: Duration?,
+        authToken: String,
+        requestHeaders: Map<String, String> = emptyMap(),
+    ): ClientRequestProto {
+        val builder = ClientRequestProto.newBuilder()
+
+        builder
+            .setAccount(account)
+            .setModel(model)
+            .setAuthToken(authToken)
+            .setPartialPredict(
+                PartialPredictRequestProto.newBuilder().apply {
+                    this.data = PayloadProto.newBuilder()
+                        .setDataType(data.dataType ?: "")
+                        .apply {
+                            when(data) {
+                                is Payload -> setJson(data.data)
+                                is ProtobufPayload -> setProtobuf(data.data)
+                            }
+                        }
+                        .build()
+
+                    config?.let {
+                        this.config = PayloadProto.newBuilder()
+                            .setDataType(config.dataType ?: "")
+                            .apply {
+                                when(config) {
+                                    is Payload -> setJson(config.data)
+                                    is ProtobufPayload -> setProtobuf(config.data)
+                                }
+                            }
+                            .build()
+                    }
+                }
+            )
+
+        builder.putAllHeaders(requestHeaders)
+
+        if (MDC.get("requestId") != null)
+            builder.putHeaders("Z-requestId", MDC.get("requestId"))
+
+        val billingKey = billingToken ?: MDC.get("MLP-BILLING-KEY")
+        if (billingKey != null)
+            builder.putHeaders("MLP-BILLING-KEY", billingKey)
 
         if (timeout != null)
             builder.timeoutSec = timeout.seconds.toInt()

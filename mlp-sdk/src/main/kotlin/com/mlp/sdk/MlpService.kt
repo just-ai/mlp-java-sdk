@@ -5,6 +5,7 @@ import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
+import kotlinx.coroutines.flow.Flow
 
 abstract class MlpService : WithExecutionContext {
 
@@ -20,6 +21,10 @@ abstract class MlpService : WithExecutionContext {
 
     open suspend fun predict(req: Payload): MlpResponse {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
+    }
+
+    open suspend fun streamPredictRaw(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
+        throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "streamPredict"))
     }
 
     open suspend fun fit(

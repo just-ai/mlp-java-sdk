@@ -17,16 +17,35 @@ object BillingUnitsThreadLocal {
     }
 }
 
+sealed interface PayloadInterface {
+    val dataType: String?
+    fun stringData(): String
+}
+
+data class StreamPayloadInterface(val payload: PayloadInterface, val last: Boolean)
+
+data class PayloadWithConfig(val payload: PayloadInterface, val config: PayloadInterface?)
+
 data class Payload(
-    val dataType: String?,
+    override val dataType: String?,
     val data: String,
-): MlpResponse {
+): MlpResponse, PayloadInterface {
     constructor(data: String) : this(null, data)
+
+    override fun stringData(): String = data
 
     companion object {
         val emptyPayload = Payload("{}")
     }
 }
+
+data class ProtobufPayload(
+    override val dataType: String?,
+    val data: com.google.protobuf.ByteString,
+): MlpResponse, PayloadInterface {
+    override fun stringData(): String = data.toStringUtf8()
+}
+
 
 data class RawPayload(
     val dataType: String?,

@@ -12,6 +12,7 @@
         <module>mlp-examples/mlp-client-app</module>
         <module>mlp-examples/mlp-rest-app</module>
         <module>mlp-examples/ai-proxy-client</module>
+        <module>mlp-examples/mlp-asr-action</module>
     </modules>
 
     <groupId>com.mlp</groupId>

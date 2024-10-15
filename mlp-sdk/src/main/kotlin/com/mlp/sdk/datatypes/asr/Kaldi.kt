@@ -1,6 +1,6 @@
 package com.mlp.sdk.datatypes.asr
 
-data class AsrRequest(
+data class AsrRequestJson(
     val audio_base64: String
 )
 

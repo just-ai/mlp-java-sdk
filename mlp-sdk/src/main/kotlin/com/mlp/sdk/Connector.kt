@@ -11,6 +11,7 @@ import com.mlp.gate.GateToServiceProto.BodyCase.ERROR
 import com.mlp.gate.GateToServiceProto.BodyCase.EXT
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
+import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
 import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
 import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
@@ -197,7 +198,7 @@ class Connector(
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
             true
         }.onFailure {
-//            logger.error("${this@Connector}: cannot create new grpc channel", it)
+            logger.error("${this@Connector}: cannot create new grpc channel", it)
             newGrpcChannel.shutdownNow()
         }.getOrDefault(false)
     }
@@ -293,6 +294,7 @@ class Connector(
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
                 PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker)
+                PARTIALPREDICT -> executor.streamPredict(request.partialPredict, request.requestId, connectorId, grpcChannelId)
                 FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId)
                 EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId)
                 BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId)
