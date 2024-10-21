@@ -8,14 +8,15 @@ import com.mlp.sdk.State.Condition.SHUT_DOWN
 import com.mlp.sdk.State.Condition.STARTING
 import java.util.concurrent.CountDownLatch
 
-abstract class WithState(condition: Condition = NOT_STARTED): WithExecutionContext {
-    internal val state by lazy { State(this, condition, context) }
+abstract class WithState(condition: Condition = NOT_STARTED, logsEnabled: Boolean = true): WithExecutionContext {
+    internal val state by lazy { State(this, condition, context, logsEnabled) }
 }
 
 class State(
     private val component: Any,
     startCondition: Condition = NOT_STARTED,
-    override val context: MlpExecutionContext
+    override val context: MlpExecutionContext,
+    private var logsEnabled: Boolean = true
 ) : WithExecutionContext {
 
     private val shutdownLatch = CountDownLatch(1)
@@ -37,7 +38,7 @@ class State(
         check(condition == NOT_STARTED) {
             "Can't starting $component because it's in illegal state $condition (expected: $NOT_STARTED)"
         }
-        logger.info("$component is starting")
+        if (logsEnabled) logger.info("$component is starting")
         condition = STARTING
     }
 
@@ -46,7 +47,7 @@ class State(
         check(condition in expectedStates) {
             "Can't activate $component because it's in illegal state $condition (expected: $expectedStates)"
         }
-        logger.info("$component is active")
+        if (logsEnabled) logger.info("$component is active")
         condition = ACTIVE
     }
 
@@ -58,12 +59,12 @@ class State(
         check(condition in expectedStates) {
             "Can't start shutting down $component because it's in illegal state $condition (expected: $expectedStates)"
         }
-        logger.info("$component is shutting down")
+        if (logsEnabled) logger.info("$component is shutting down")
         condition = SHUTTING_DOWN
     }
 
     fun shutdown() {
-        logger.info("$component is shut down")
+        if (logsEnabled) logger.info("$component is shut down")
         condition = SHUT_DOWN
         shutdownLatch.countDown()
     }

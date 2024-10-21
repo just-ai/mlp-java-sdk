@@ -52,7 +52,7 @@ class MlpClientSDK(
     val backoffJob: Job
 
     init {
-        val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
+        val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOSTS")
         connectionToken = config.clientToken
         billingToken = config.billingToken
         logger.debug("Starting mlp client for url $gateUrl")
@@ -63,7 +63,7 @@ class MlpClientSDK(
 
     private fun reconnect() {
         logger.info("Reconnecting to gate")
-        val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOST")
+        val gateUrl = config.initialGateUrls.firstOrNull() ?: error("There is not MLP_GRPC_HOSTS")
         connect(gateUrl)
     }
 
