@@ -83,7 +83,7 @@ class Connector(
         }
 
         state.shuttingDown()
-        logger.debug("$this: graceful shutting down ...")
+        logger.debug("{}: graceful shutting down ...", this)
 
         runCatching { runBlocking { keepConnectionJob.cancelAndJoin() } }
             .onFailure { logger.error("$this: error while keep connection job cancelling", it) }
@@ -91,7 +91,7 @@ class Connector(
         grpcChannel.get()?.gracefulShutdown()
 
         state.shutdown()
-        logger.debug("$this: ... has been successfully shutdown")
+        logger.debug("{}: ... has been successfully shutdown", this)
     }
 
     internal fun isConnected() = grpcChannel.get()
@@ -112,7 +112,7 @@ class Connector(
         }
 
         state.shuttingDown()
-        logger.debug("$this: force shutting down ...")
+        logger.debug("{}: force shutting down ...", this)
 
         runCatching { runBlocking { keepConnectionJob.cancelAndJoin() } }
             .onFailure { logger.error("$this: error while keep connection job cancelling", it) }
@@ -120,11 +120,11 @@ class Connector(
         grpcChannel.get()?.shutdownNow()
 
         state.shutdown()
-        logger.debug("$this: ... has been successfully shutdown")
+        logger.debug("{}: ... has been successfully shutdown", this)
     }
 
     private fun launchKeepConnectionJob() = scope.launch {
-        logger.debug("${this@Connector}: keep connection job is started ...")
+        logger.debug("{}: keep connection job is started ...", this@Connector)
 
         var lastActiveTime = now()
         var progressiveDelay = 100L
@@ -137,12 +137,12 @@ class Connector(
                     if (connected) {
                         lastActiveTime = now()
                         if (progressiveDelay != 100L) {
-                            logger.debug("${this@Connector}: reset progressiveDelay to 100 because channel was connected")
+                            logger.debug("{}: reset progressiveDelay to 100 because channel was connected", this@Connector)
                         }
                         progressiveDelay = 100L
                     } else {
                         progressiveDelay = min(progressiveDelay * 2, 10_000L)
-                        logger.debug("${this@Connector}: increase progressiveDelay to $progressiveDelay")
+                        logger.debug("{}: increase progressiveDelay to {}", this@Connector, progressiveDelay)
                     }
                 }
 
@@ -161,7 +161,7 @@ class Connector(
 
                 delay(progressiveDelay)
             }
-            logger.debug("${this@Connector}: ... keep connection job is stopped because scope is not active")
+            logger.debug("{}: ... keep connection job is stopped because scope is not active", this@Connector)
         }.onFailure {
             if (state.isShutdownTypeState() && it is CancellationException)
                 return@onFailure
@@ -169,7 +169,7 @@ class Connector(
                 logger.error("${this@Connector}: error while keep connection job running", it)
         }
 
-        logger.debug("${this@Connector}: ... keep connection job has been stopped")
+        logger.debug("{}: ... keep connection job has been stopped", this@Connector)
     }
 
     private suspend fun throttleIfUnknownConnectionToken() {
@@ -198,7 +198,7 @@ class Connector(
             grpcChannel.getAndSet(newGrpcChannel)?.shutdownNow()
             true
         }.onFailure {
-            logger.error("${this@Connector}: cannot create new grpc channel", it)
+            logger.trace("{}: cannot create new grpc channel", this@Connector, it)
             newGrpcChannel.shutdownNow()
         }.getOrDefault(false)
     }
@@ -358,17 +358,17 @@ class Connector(
             if (state.isShutdownTypeState())
                 return
 
-            logger.debug("$this: graceful shutting down grpc channel ...")
+            logger.debug("{}: graceful shutting down grpc channel ...", this)
             state.shuttingDown()
 
             if (!this::stream.isInitialized) {
-                logger.debug("$this: ... stream is not initialized, skipping stream completion ...")
+                logger.debug("{}: ... stream is not initialized, skipping stream completion ...", this)
                 return gracefulShutdownManagedChannel()
             }
 
             runCatching {
                 send(stopServingProto)
-                logger.debug("$this: sent stopServing to gate, waiting for stopServing from gate ...")
+                logger.debug("{}: sent stopServing to gate, waiting for stopServing from gate ...", this)
 
                 withTimeout(config.shutdownConfig.actionConnectorMs) {
                     while(!state.shutdown) {
@@ -384,7 +384,7 @@ class Connector(
         private suspend fun gracefulShutdownPrivate() {
             executor.gracefulShutdownAll(connectorId, grpcChannelId)
 
-            logger.debug("$this: completing stream to $targetUrl ...")
+            logger.debug("{}: completing stream to {} ...", this, targetUrl)
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
                 .onFailure { if (it !is IllegalStateException) logger.error("$this: can't complete stream", it) }
 
@@ -396,18 +396,18 @@ class Connector(
                 return
             }
 
-            logger.debug("$this: force shutting down grpc channel ...")
+            logger.debug("{}: force shutting down grpc channel ...", this)
             state.shuttingDown()
 
             if (!this::stream.isInitialized) {
-                logger.debug("$this: stream is not initialized, skipping stream completion")
+                logger.debug("{}: stream is not initialized, skipping stream completion", this)
                 return shutdownNowManagedChannel()
             }
 
             runCatching { send(stopServingProto) }
                 .onFailure { logger.error("$this: can't send stop serving", it) }
 
-            logger.debug("$this: completing stream to $targetUrl ...")
+            logger.debug("{}: completing stream to {} ...", this, targetUrl)
             runCatching { grpcMutex.withLock { stream.onCompleted() } }
                 .onFailure { logger.error("$this: can't complete stream", it) }
 
@@ -428,11 +428,11 @@ class Connector(
         }
 
         private fun gracefulShutdownManagedChannel(reason: String? = null) {
-            logger.debug("$this: graceful shutting down managed channel to $targetUrl ...")
+            logger.debug("{}: graceful shutting down managed channel to {} ...", this, targetUrl)
 
             try {
                 if (!this::managedChannel.isInitialized) {
-                    logger.debug("$this: managed channel is not initialized, skipping managed channel shutdown")
+                    logger.debug("{}: managed channel is not initialized, skipping managed channel shutdown", this)
                     return
                 }
 
@@ -445,13 +445,13 @@ class Connector(
 
                 val timeoutSeconds = 10L
                 if (managedChannel.awaitTermination(timeoutSeconds, SECONDS)) {
-                    return logger.debug("$this: ... managed channel has been successfully shutdown")
+                    return logger.debug("{}: ... managed channel has been successfully shutdown", this)
                 }
 
-                logger.debug("$this: ... managed channel has not been shutdown in $timeoutSeconds seconds, force shutdown ...")
+                logger.debug("{}: ... managed channel has not been shutdown in {} seconds, force shutdown ...", this, timeoutSeconds)
                 runCatching { managedChannel.shutdownNow() }
                     .onFailure { logger.error("$this: can't force shutdown managed channel", it) }
-                    .onSuccess { logger.debug("$this: ... managed channel has been successfully shutdown") }
+                    .onSuccess { logger.debug("{}: ... managed channel has been successfully shutdown", this) }
             } catch (e: InterruptedException) {
                 logger.error("$this: ... managed channel has not been shutdown", e)
             } finally {
@@ -460,11 +460,11 @@ class Connector(
         }
 
         private fun shutdownNowManagedChannel() {
-            logger.debug("$this: force shutting down managed channel ...")
+            logger.debug("{}: force shutting down managed channel ...", this)
 
             try {
                 if (!this::managedChannel.isInitialized) {
-                    logger.debug("$this: managed channel is not initialized, skipping managed channel shutdown")
+                    logger.debug("{}: managed channel is not initialized, skipping managed channel shutdown", this)
                     return
                 }
 
@@ -474,7 +474,7 @@ class Connector(
 
                 runCatching { managedChannel.shutdownNow() }
                     .onFailure { logger.error("$this: can't shutdown managed channel", it) }
-                    .onSuccess { logger.debug("$this: ... managed channel has been successfully shutdown") }
+                    .onSuccess { logger.debug("{}: ... managed channel has been successfully shutdown", this) }
             } finally {
                 state.shutdown()
             }
@@ -499,7 +499,7 @@ class Connector(
         }
 
         private fun launchHeartbeatJob() = scope.launch {
-            logger.debug("Connector $connectorId: starting heartbeats with interval $heartbeatInterval ms")
+            logger.debug("Connector {}: starting heartbeats with interval {} ms", connectorId, heartbeatInterval)
 
             while (!state.shutdown) {
                 val interval = heartbeatInterval.get()
