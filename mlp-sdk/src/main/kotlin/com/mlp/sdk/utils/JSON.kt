@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -13,6 +14,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.mlp.sdk.CommonErrorCode
+import com.mlp.sdk.MlpError
+import com.mlp.sdk.MlpException
 
 object JSON {
 
@@ -89,4 +93,10 @@ object JSON {
 
     val Any.asJson: String
         get() = mapper.writeValueAsString(this)
+
+    fun <T> JSON.parseOrThrowBadRequestMlpException(json: String, clazz: Class<T>): T = try {
+        parse(json, clazz)
+    } catch (e: JsonMappingException) {
+        throw MlpException(MlpError(CommonErrorCode.BAD_REQUEST, e))
+    }
 }
