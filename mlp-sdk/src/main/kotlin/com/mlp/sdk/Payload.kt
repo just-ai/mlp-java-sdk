@@ -6,30 +6,30 @@ object BillingUnitsThreadLocal {
 
     private val units = ThreadLocal<Long>()
 
-    private val details = ThreadLocal<Map<String, Long>>()
+    private val detailedUnits = ThreadLocal<Map<String, Long>>()
 
     fun clearUnits() {
         units.set(null)
     }
 
     fun clearDetails() {
-        details.set(null)
+        detailedUnits.set(null)
     }
 
     fun setUnits(units: Long) {
         this.units.set(units)
     }
 
-    fun setDetails(map: Map<String, Long>) {
-        this.details.set(map)
+    fun setDetailedUnits(map: Map<String, Long>) {
+        this.detailedUnits.set(map)
     }
 
     fun getUnits(): Long? {
         return units.get()
     }
 
-    fun getDetails(): Map<String, Long>? {
-        return details.get()
+    fun getDetailedUnits(): Map<String, Long>? {
+        return detailedUnits.get()
     }
 
 }

@@ -280,7 +280,7 @@ private fun Builder.setPredict(prediction: PayloadInterface) {
     BillingUnitsThreadLocal.getUnits()?.also {
         putHeaders("Z-custom-billing", it.toString())
     }
-    BillingUnitsThreadLocal.getDetails()?.also {
+    BillingUnitsThreadLocal.getDetailedUnits()?.also {
         putHeaders("Z-custom-billing-details", JSON.stringify(it))
     }
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
@@ -290,7 +290,7 @@ private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolea
     BillingUnitsThreadLocal.getUnits()?.also {
         putHeaders("Z-custom-billing", it.toString())
     }
-    BillingUnitsThreadLocal.getDetails()?.also {
+    BillingUnitsThreadLocal.getDetailedUnits()?.also {
         putHeaders("Z-custom-billing-details", JSON.stringify(it))
     }
     setPartialPredict(PartialPredictResponseProto.newBuilder().setData(prediction.asProto).setFinish(last))
