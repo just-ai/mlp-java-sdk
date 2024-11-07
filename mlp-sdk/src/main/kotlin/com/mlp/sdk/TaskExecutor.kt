@@ -18,6 +18,7 @@ import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
 import com.mlp.sdk.State.Condition.ACTIVE
+import com.mlp.sdk.utils.JSON
 import com.mlp.sdk.utils.JobsContainer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -279,12 +280,18 @@ private fun Builder.setPredict(prediction: PayloadInterface) {
     BillingUnitsThreadLocal.getUnits()?.also {
         putHeaders("Z-custom-billing", it.toString())
     }
+    BillingUnitsThreadLocal.getDetails()?.also {
+        putHeaders("Z-custom-billing-details", JSON.stringify(it))
+    }
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
 }
 
 private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolean) {
     BillingUnitsThreadLocal.getUnits()?.also {
         putHeaders("Z-custom-billing", it.toString())
+    }
+    BillingUnitsThreadLocal.getDetails()?.also {
+        putHeaders("Z-custom-billing-details", JSON.stringify(it))
     }
     setPartialPredict(PartialPredictResponseProto.newBuilder().setData(prediction.asProto).setFinish(last))
 }
