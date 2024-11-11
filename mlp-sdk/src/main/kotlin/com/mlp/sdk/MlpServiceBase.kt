@@ -16,7 +16,14 @@ import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
+import com.mlp.sdk.datatypes.asr.common.AsrRequest
+import com.mlp.sdk.datatypes.asr.common.RecognitionConfig
 import com.mlp.sdk.utils.JSON
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.transform
 import org.slf4j.MDC
 
 abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
@@ -106,6 +113,60 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         }
     }
 
+    override suspend fun streamPredictRaw(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
+        val pToCFlow = stream.map { req ->
+            val request = when (req.payload.dataType) {
+                AsrRequest.DATATYPE -> {
+                    if (predictRequestExample !is AsrRequest) {
+                        throw MlpException(
+                            MlpError(
+                                CommonErrorCode.BAD_REQUEST,
+                                "message" to "Unsupported datatype ${AsrRequest.DATATYPE}."
+                            )
+                        )
+                    }
+
+                    val audioContent = (req.payload as? ProtobufPayload)?.data
+                        ?: throw MlpException(
+                            MlpError(
+                                CommonErrorCode.BAD_REQUEST,
+                                "message" to "Unsupported payload body for asr datatype. Use protobuf body instead of json."
+                            )
+                        )
+                    val config = req.config?.let { JSON.parseOrThrowBadRequestMlpException(it.stringData(), RecognitionConfig::class.java) }
+                    @Suppress("UNCHECKED_CAST")
+                    AsrRequest(audioContent, config) as P
+                }
+
+                else -> JSON.parseOrThrowBadRequestMlpException(req.payload.stringData(), predictRequestExample.javaClass)
+            }
+
+            val config = req.config
+
+            val conf = if (config != null && predictConfigExample !is Unit) {
+                JSON.parseOrThrowBadRequestMlpException(config.stringData(), predictConfigExample.javaClass)
+            } else null
+            request to conf
+        }
+
+        var lastResponse: R? = null
+        var lastPrice: Long? = null
+        return this.streamPredict(pToCFlow).transform {
+            lastResponse?.let { lr ->
+                val lastResponsePrice = lastPrice
+                lastPrice = BillingUnitsThreadLocal.getUnits()
+                lastResponsePrice?.let { price -> BillingUnitsThreadLocal.setUnits(price) }
+                emit(StreamPayloadInterface(Payload(data = JSON.stringify(lr), dataType = TypeInfo.canonicalName(lr.javaClass)), false))
+            }
+            lastResponse = it
+            lastPrice = BillingUnitsThreadLocal.getUnits()
+        }.onCompletion {
+            val dataType = lastResponse?.let { lr -> TypeInfo.canonicalName(lr.javaClass) } ?: "json"
+            lastPrice?.let { price -> BillingUnitsThreadLocal.setUnits(price) }
+            emit(StreamPayloadInterface(Payload(data = JSON.stringify(lastResponse), dataType = dataType), true))
+        }
+    }
+
     fun createGenerator(): ResultGenerator<R> {
         return com.mlp.sdk.createGenerator<R>(sdk)
     }
@@ -126,11 +187,20 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
 
     abstract suspend fun predict(request: P, config: C?): R?
 
+    open suspend fun streamPredict(stream: Flow<Pair<P, C?>>): Flow<R?> {
+        return stream.map { predict(it.first, it.second) }
+    }
+
     private fun <T> JSON.parseOrThrowBadRequestMlpException(json: String, clazz: Class<T>): T = try {
         parse(json, clazz)
     } catch (e: JsonMappingException) {
         logger.error("Failed to parse json into {}", clazz, e)
         throw MlpException(MlpError(CommonErrorCode.BAD_REQUEST, e))
+    }
+
+    fun FlowCollector<R?>.setPrice(price: Long?): Unit {
+        val units = price ?: 0
+        BillingUnitsThreadLocal.setUnits(units)
     }
 
 }
@@ -181,6 +251,10 @@ abstract class MlpFitServiceBase<F : Any, FC : Any>(
 ) : MlpServiceBase<F, FC, String, Unit, String>(fitDataExample, fitConfigExample, "", Unit, "") {
 
     final override suspend fun predict(request: String, config: Unit?): String? {
+        throw RuntimeException("Not implemented yet")
+    }
+
+    final override suspend fun streamPredict(stream: Flow<Pair<String, Unit?>>): Flow<String?> {
         throw RuntimeException("Not implemented yet")
     }
 }
