@@ -3,18 +3,35 @@ package com.mlp.sdk
 sealed interface MlpResponse
 
 object BillingUnitsThreadLocal {
-    private val tl = ThreadLocal<Long>()
-    fun clear() {
-        tl.set(null)
+
+    private val units = ThreadLocal<Long>()
+
+    private val detailedUnits = ThreadLocal<Map<String, Long>>()
+
+    fun clearUnits() {
+        units.set(null)
+    }
+
+    fun clearDetails() {
+        detailedUnits.set(null)
     }
 
     fun setUnits(units: Long) {
-        tl.set(units)
+        this.units.set(units)
+    }
+
+    fun setDetailedUnits(map: Map<String, Long>) {
+        this.detailedUnits.set(map)
     }
 
     fun getUnits(): Long? {
-        return tl.get()
+        return units.get()
     }
+
+    fun getDetailedUnits(): Map<String, Long>? {
+        return detailedUnits.get()
+    }
+
 }
 
 sealed interface PayloadInterface {

@@ -239,6 +239,9 @@ fun <R : Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerato
         if (billingUnits != null) {
             builder.putHeaders("Z-custom-billing", billingUnits.toString())
         }
+        BillingUnitsThreadLocal.getDetailedUnits()?.let {
+            builder.putHeaders("Z-custom-billing-details", JSON.stringify(it))
+        }
 
         sdk.send(connectorId, builder.build())
     }
