@@ -114,7 +114,8 @@ pipeline {
                     },
                     "build mlp-vectorize-service" : {
                         build job: "mlp-vectorize-service-build/${RESULT_BRANCH}", wait: false
-                    },
+                    }
+                        ,
                 )
             }
         }
@@ -126,7 +127,7 @@ pipeline {
             }
             steps {
                 sh """git checkout stable --force"""
-                sh """git pull"""
+                sh """git pull origin stable"""
                 sh """git merge origin/release -m 'Automatic merge from release to stable'"""
                 sh """git push"""
             }
@@ -139,7 +140,7 @@ pipeline {
             }
             steps {
                 sh """git checkout dev --force"""
-                sh """git pull"""
+                sh """git pull origin dev"""
                 sh """git merge origin/stable -m 'Automatic merge from stable to dev'"""
                 sh """git push"""
             }
