@@ -303,6 +303,16 @@ components:
           type: integer
         total_tokens:
           type: integer
+        prompt_tokens_details:
+          $ref: '#/components/schemas/PromptTokensDetails'
+
+    PromptTokensDetails:
+      type: object
+      properties:
+        cached_tokens:
+          type: integer
+        audio_tokens:
+          type: integer
 
     Logprobs:
       type: object
