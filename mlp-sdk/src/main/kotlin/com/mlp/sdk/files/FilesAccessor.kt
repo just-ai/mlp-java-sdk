@@ -10,8 +10,8 @@ import java.util.UUID
 class FilesAccessor(
     url: String,
     token: String,
-    val mountPath: String? = null,
-    val backendName: String? = null
+    private val mountPath: String? = null,
+    private val backendName: String? = null
 ) {
 
     private val client = ApiClient().apply {
