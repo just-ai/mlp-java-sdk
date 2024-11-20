@@ -8,10 +8,10 @@ object FilesAccessorFactory {
         context: MlpExecutionContext = systemContext,
     ): FilesAccessor {
         val accessor = FilesAccessor(
-            context.environment.getOrThrow("MLP_FILES_ENDPOINT"),
+            context.environment.getOrThrow("MLP_STORAGE_ENDPOINT"),
             context.environment.getOrThrow("MLP_SERVICE_TOKEN"),
-            context.environment["MLP_FILES_MOUNT_PATH"],
-            context.environment["MLP_FILES_BACKEND_NAME"]
+            context.environment["MLP_STORAGE_MOUNT_PATH"],
+            context.environment["MLP_STORAGE_BACKEND_NAME"]
         )
         return accessor
     }
