@@ -2,6 +2,7 @@ package com.mlp.sdk.files
 
 import com.justai.caila.storage.api.ApiClient
 import com.justai.caila.storage.api.client.FilesEndpointApi
+import com.justai.caila.storage.api.client.model.FileData
 import com.justai.caila.storage.api.client.model.FileOptions
 import java.io.File
 import java.io.InputStream
@@ -34,39 +35,39 @@ class FilesAccessor(
         return file.inputStream()
     }
 
-    fun write(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileId {
+    fun write(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileData {
         if (onlyApi()) return writeByApi(stream, key, options)
 
         val tempName = UUID.randomUUID().toString()
         val tempFile = File("${mountPath}/$tempName")
         writeToFile(tempFile, stream)
 
-        return filesApi.registerFile(key, tempName, options).key
+        return filesApi.registerFile(key, tempName, options)
     }
 
-    fun write(file: File, key: FileId? = null, options: FileOptions? = null): FileId {
+    fun write(file: File, key: FileId? = null, options: FileOptions? = null): FileData {
         if (onlyApi()) return writeByApi(file, key, options)
 
         val tempName = UUID.randomUUID().toString()
         val tempFile = File("${mountPath}/$tempName")
         file.copyTo(tempFile)
 
-        return filesApi.registerFile(key, tempName, options).key
+        return filesApi.registerFile(key, tempName, options)
     }
 
     private fun readByApi(fileId: FileId, version: Int?): InputStream {
         return filesApi.getFileContent(fileId, version).inputStream()
     }
 
-    private fun writeByApi(file: File, key: FileId? = null, options: FileOptions? = null): FileId {
+    private fun writeByApi(file: File, key: FileId? = null, options: FileOptions? = null): FileData {
         return filesApi.uploadMultipartFile(
             file,
             key,
             options
-        ).key
+        )
     }
 
-    private fun writeByApi(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileId {
+    private fun writeByApi(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileData {
         val tempFile = File.createTempFile("mlp", "file")
         writeToFile(tempFile, stream)
 
