@@ -17,7 +17,7 @@ import org.springframework.web.client.RestTemplate
 class MlpApiClient(
     defaultApiToken: String?,
     apiGateUrl: String,
-    restTemplate: RestTemplate = getRestTemplate(),
+    restTemplate: RestTemplate = getRestTemplateWithFileConverter(),
     billingToken: String? = null
 ) : ApiClient(restTemplate) {
 
@@ -34,23 +34,24 @@ class MlpApiClient(
             return MlpApiClient(defaultApiToken, apiGateUrl)
         }
 
-        private fun getRestTemplate(): RestTemplate {
-            val restTemplate = RestTemplate()
-
-            restTemplate.messageConverters.add(0, FileHttpMessageConverter())
-
-            val jacksonConverter = restTemplate.messageConverters.find {
-                it is MappingJackson2HttpMessageConverter
-            } as MappingJackson2HttpMessageConverter
-
-            jacksonConverter.objectMapper = JSON.mapper
-
-            return restTemplate
-        }
     }
 }
 
-private class FileHttpMessageConverter :
+internal fun getRestTemplateWithFileConverter(): RestTemplate {
+    val restTemplate = RestTemplate()
+
+    restTemplate.messageConverters.add(0, FileHttpMessageConverter())
+
+    val jacksonConverter = restTemplate.messageConverters.find {
+        it is MappingJackson2HttpMessageConverter
+    } as MappingJackson2HttpMessageConverter
+
+    jacksonConverter.objectMapper = JSON.mapper
+
+    return restTemplate
+}
+
+internal class FileHttpMessageConverter :
     AbstractHttpMessageConverter<File>(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL) {
 
     override fun getDefaultContentType(file: File): MediaType =
