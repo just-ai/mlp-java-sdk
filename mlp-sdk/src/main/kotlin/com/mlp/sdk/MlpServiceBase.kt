@@ -175,13 +175,19 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         val result: R,
         val price: Long?,
         val last: Boolean,
+        val billingDetails: Map<String, Long>? = null
     )
 
     class ResultGenerator<R>(
         private val publisher: suspend (ResultAndFinish<R>) -> Unit
     ) {
-        suspend fun next(result: R, last: Boolean, price: Long? = null) {
-            publisher(ResultAndFinish(result, price, last))
+        suspend fun next(
+            result: R,
+            last: Boolean,
+            price: Long? = null,
+            billingDetails: Map<String, Long>? = null
+        ) {
+            publisher(ResultAndFinish(result, price, last, billingDetails))
         }
     }
 
@@ -238,6 +244,10 @@ fun <R : Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerato
         val billingUnits = resultAndFinish.price ?: BillingUnitsThreadLocal.getUnits()
         if (billingUnits != null) {
             builder.putHeaders("Z-custom-billing", billingUnits.toString())
+        }
+        val detailedUnits = resultAndFinish.billingDetails ?: BillingUnitsThreadLocal.getDetailedUnits()
+        if (detailedUnits != null) {
+            builder.putHeaders("Z-custom-billing-details", JSON.stringify(detailedUnits))
         }
 
         sdk.send(connectorId, builder.build())
