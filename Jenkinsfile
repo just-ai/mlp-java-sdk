@@ -53,7 +53,7 @@ pipeline {
             steps {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
                     sh """mvn versions:set -DnewVersion=${RESULT_BRANCH}-SNAPSHOT"""
-                    sh """mvn clean deploy"""
+                    sh """mvn clean deploy -U"""
                     sh """mvn deploy -P nexus-open-snapshot"""
                 }
             }

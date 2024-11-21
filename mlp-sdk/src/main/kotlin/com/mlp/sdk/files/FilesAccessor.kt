@@ -5,6 +5,7 @@ import com.justai.caila.storage.api.client.FilesEndpointApi
 import com.justai.caila.storage.api.client.model.FileData
 import com.justai.caila.storage.api.client.model.FileOptions
 import java.io.File
+import java.io.File.createTempFile
 import java.io.InputStream
 import java.util.UUID
 
@@ -68,7 +69,7 @@ class FilesAccessor(
     }
 
     private fun writeByApi(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileData {
-        val tempFile = File.createTempFile("mlp", "file")
+        val tempFile = createTempFile("mlp", "file")
         writeToFile(tempFile, stream)
 
         return writeByApi(tempFile, key, options)
