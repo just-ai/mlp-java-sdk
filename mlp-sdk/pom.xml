@@ -57,7 +57,7 @@
         <dependency>
             <groupId>com.justai.caila</groupId>
             <artifactId>mlp-storage-client</artifactId>
-            <version>${project.version}</version>
+            <version>dev-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.openapitools</groupId>
