@@ -24,9 +24,7 @@ class FilesAccessor(
     private var filesApi = FilesEndpointApi(client)
 
     fun read(fileId: FileId, version: Int? = null): InputStream {
-        if (onlyApi()) {
-            return readByApi(fileId, version)
-        }
+        if (onlyApi()) return readByApi(fileId, version)
 
         val fileRelativePath = filesApi.getFilePath(fileId, backendName, version)
         val file = File("$mountPath/$fileRelativePath")
@@ -35,6 +33,10 @@ class FilesAccessor(
         }
 
         return file.inputStream()
+    }
+
+    fun getFileData(fileId: FileId, version: Int? = null): FileData {
+        return filesApi.getFileData(fileId, version)
     }
 
     fun write(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileData {
@@ -62,11 +64,7 @@ class FilesAccessor(
     }
 
     private fun writeByApi(file: File, key: FileId? = null, options: FileOptions? = null): FileData {
-        return filesApi.uploadMultipartFile(
-            file,
-            key,
-            options
-        )
+        return filesApi.uploadMultipartFile(file, key, options)
     }
 
     private fun writeByApi(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileData {
@@ -76,17 +74,17 @@ class FilesAccessor(
         return writeByApi(tempFile, key, options)
     }
 
-    private fun writeToFile(tempFile: File, stream: InputStream) {
-        if (!tempFile.exists())
-            tempFile.createNewFile()
-
-        tempFile.outputStream().use {
-            stream.copyTo(it)
-        }
-        stream.close()
-    }
-
     private fun onlyApi() = mountPath == null || backendName == null
 }
 
 typealias FileId = String
+
+private fun writeToFile(tempFile: File, stream: InputStream) {
+    if (!tempFile.exists())
+        tempFile.createNewFile()
+
+    tempFile.outputStream().use {
+        stream.copyTo(it)
+    }
+    stream.close()
+}
