@@ -145,7 +145,7 @@ class Connector(
                     } else {
                         progressiveDelay = min(progressiveDelay * 2, 10_000L)
                         if (progressiveDelay == 10_000L) gatewayPermanentlyUnavailable = true
-                        logger.debug("{}: increase progressiveDelay to {}", this@Connector, progressiveDelay)
+                        logConnecting("{}: increase progressiveDelay to {}", this@Connector, progressiveDelay)
                     }
                 }
 
