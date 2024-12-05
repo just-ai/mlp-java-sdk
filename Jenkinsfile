@@ -132,19 +132,6 @@ pipeline {
                 sh """git push"""
             }
         }
-        stage('Merge stable to dev') {
-            when {
-                expression {
-                    RESULT_BRANCH == 'stable'
-                }
-            }
-            steps {
-                sh """git checkout dev --force"""
-                sh """git pull origin dev"""
-                sh """git merge origin/stable -m 'Automatic merge from stable to dev'"""
-                sh """git push"""
-            }
-        }
         stage('Merge release to stable') {
             when {
                 expression {
