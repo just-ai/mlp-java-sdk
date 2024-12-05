@@ -127,19 +127,6 @@ pipeline {
             }
             steps {
                 sh """git checkout stable --force"""
-                sh """git pull origin stable"""
-                sh """git merge origin/release -m 'Automatic merge from release to stable'"""
-                sh """git push"""
-            }
-        }
-        stage('Merge release to stable') {
-            when {
-                expression {
-                    RESULT_BRANCH == 'release'
-                }
-            }
-            steps {
-                sh """git checkout stable --force"""
                 sh """git pull"""
                 sh """git merge origin/release -m 'Automatic merge from release to stable'"""
                 sh """git push"""
