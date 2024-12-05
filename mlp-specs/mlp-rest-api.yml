@@ -8769,7 +8769,6 @@ components:
     ServerTemplateDump:
       required:
       - configuration
-      - costPrice
       - description
       - name
       - tarifficationPrice
@@ -8792,8 +8791,6 @@ components:
         configuration:
           type: string
         tarifficationPrice:
-          type: number
-        costPrice:
           type: number
         tarifficationPeriod:
           type: string
@@ -8857,8 +8854,6 @@ components:
         fitPerMinute:
           type: integer
           format: int32
-        storageLimit:
-          type: string
     DifferenceIAccountConfigDump:
       required:
       - errors
@@ -9042,7 +9037,6 @@ components:
           type: string
     CreateUpdateServerTemplateData:
       required:
-      - costPrice
       - description
       - name
       - rawConfiguration
@@ -9067,8 +9061,6 @@ components:
           type: string
         tarifficationPrice:
           type: number
-        costPrice:
-          type: number
         tarifficationPeriod:
           type: string
           enum:
@@ -9080,7 +9072,6 @@ components:
           - YEAR
     ServerTemplateData:
       required:
-      - costPrice
       - description
       - id
       - name
@@ -9108,8 +9099,6 @@ components:
         rawConfiguration:
           type: string
         tarifficationPrice:
-          type: number
-        costPrice:
           type: number
         tarifficationPeriod:
           type: string
@@ -9241,8 +9230,6 @@ components:
         rawConfiguration:
           type: string
         tarifficationPrice:
-          type: number
-        costPrice:
           type: number
         tarifficationPeriod:
           type: string
