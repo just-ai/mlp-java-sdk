@@ -4,6 +4,7 @@ import com.justai.caila.storage.api.ApiClient
 import com.justai.caila.storage.api.client.FilesEndpointApi
 import com.justai.caila.storage.api.client.model.FileData
 import com.justai.caila.storage.api.client.model.FileOptions
+import com.mlp.sdk.MlpApiClient.Companion.getRestTemplate
 import java.io.File
 import java.io.InputStream
 import java.util.UUID
@@ -15,7 +16,7 @@ class FilesAccessor(
     private val backendName: String? = null
 ) {
 
-    private val client = ApiClient().apply {
+    private val client = ApiClient(getRestTemplate()).apply {
         basePath = url
         addDefaultHeader("MLP-API-KEY", token)
     }
