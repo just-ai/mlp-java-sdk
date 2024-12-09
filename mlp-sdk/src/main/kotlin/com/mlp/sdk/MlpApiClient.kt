@@ -34,7 +34,7 @@ class MlpApiClient(
             return MlpApiClient(defaultApiToken, apiGateUrl)
         }
 
-        private fun getRestTemplate(): RestTemplate {
+        fun getRestTemplate(): RestTemplate {
             val restTemplate = RestTemplate()
 
             restTemplate.messageConverters.add(0, FileHttpMessageConverter())
