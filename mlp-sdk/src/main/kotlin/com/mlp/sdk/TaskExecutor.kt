@@ -204,6 +204,10 @@ class TaskExecutor(
         }
     }
 
+    fun cancelRequest(connectorId: Long, requestId: Long) {
+        jobsContainer.cancelRequest(connectorId, requestId)
+    }
+
     fun enableNewTasks(connectorId: Long, grpcChannelId: Long) {
         logger.info("$this: enable new requests for connector $connectorId")
         jobsContainer.enableNewOnes(connectorId, grpcChannelId)
