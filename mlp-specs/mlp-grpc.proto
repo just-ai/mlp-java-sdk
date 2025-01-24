@@ -411,3 +411,4 @@ message WordInfo {
   string word = 3;
   float confidence = 4;
 }
+
