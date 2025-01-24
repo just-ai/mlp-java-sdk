@@ -45,6 +45,14 @@ class JobsContainer(
             ?.remove(requestId)
     }
 
+    fun cancelRequest(connectorId: Long, requestId: Long) {
+        val requestsMap = containers[connectorId]
+            ?.requestJobMap
+            ?: return
+        val job = requestsMap.remove(requestId) ?: return
+        job.cancel()
+    }
+
     fun cancel(connectorId: Long, grpcChannelId: Long) {
         containers[connectorId]
             ?.disableNewOnes(grpcChannelId)
