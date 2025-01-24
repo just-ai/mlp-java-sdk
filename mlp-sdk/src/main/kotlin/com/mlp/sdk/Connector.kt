@@ -9,6 +9,7 @@ import com.mlp.gate.GateToServiceProto.BodyCase.BODY_NOT_SET
 import com.mlp.gate.GateToServiceProto.BodyCase.CLUSTER
 import com.mlp.gate.GateToServiceProto.BodyCase.ERROR
 import com.mlp.gate.GateToServiceProto.BodyCase.EXT
+import com.mlp.gate.GateToServiceProto.BodyCase.CANCEL
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
@@ -303,6 +304,7 @@ class Connector(
                 EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId)
                 BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId)
                 ERROR -> processError(request.error)
+                CANCEL -> executor.cancelRequest(connectorId, request.cancel.requestIdToCancel)
                 STOPSERVING -> processStopServing()
                 BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $connectorId: body case is null")

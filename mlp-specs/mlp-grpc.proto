@@ -213,6 +213,7 @@ message StatusResponseProto {
 }
 
 message CancelRequestProto {
+  int64 requestIdToCancel = 101;
 }
 
 message PayloadProto {
@@ -410,4 +411,3 @@ message WordInfo {
   string word = 3;
   float confidence = 4;
 }
-
