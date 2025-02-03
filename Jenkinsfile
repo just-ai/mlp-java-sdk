@@ -53,7 +53,7 @@ pipeline {
             steps {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
                     sh """mvn versions:set -DnewVersion=${RESULT_BRANCH}-SNAPSHOT"""
-                    sh """mvn clean deploy"""
+                    sh """mvn clean deploy -U"""
                     sh """mvn deploy -P nexus-open-snapshot"""
                 }
             }
@@ -132,19 +132,6 @@ pipeline {
                 sh """git push"""
             }
         }
-        stage('Merge release to stable') {
-            when {
-                expression {
-                    RESULT_BRANCH == 'release'
-                }
-            }
-            steps {
-                sh """git checkout stable --force"""
-                sh """git pull"""
-                sh """git merge origin/release -m 'Automatic merge from release to stable'"""
-                sh """git push"""
-            }
-        }
         stage('Merge stable to dev') {
             when {
                 expression {
@@ -153,7 +140,7 @@ pipeline {
             }
             steps {
                 sh """git checkout dev --force"""
-                sh """git pull"""
+                sh """git pull origin dev"""
                 sh """git merge origin/stable -m 'Automatic merge from stable to dev'"""
                 sh """git push"""
             }

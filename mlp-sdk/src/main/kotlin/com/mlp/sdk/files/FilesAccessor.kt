@@ -4,8 +4,9 @@ import com.justai.caila.storage.api.ApiClient
 import com.justai.caila.storage.api.client.FilesEndpointApi
 import com.justai.caila.storage.api.client.model.FileData
 import com.justai.caila.storage.api.client.model.FileOptions
-import com.mlp.sdk.MlpApiClient.Companion.getRestTemplate
+import com.mlp.sdk.getRestTemplateWithFileConverter
 import java.io.File
+import java.io.File.createTempFile
 import java.io.InputStream
 import java.util.UUID
 
@@ -16,7 +17,7 @@ class FilesAccessor(
     private val backendName: String? = null
 ) {
 
-    private val client = ApiClient(getRestTemplate()).apply {
+    private val client = ApiClient(getRestTemplateWithFileConverter()).apply {
         basePath = url
         addDefaultHeader("MLP-API-KEY", token)
     }
@@ -67,7 +68,7 @@ class FilesAccessor(
     }
 
     private fun writeByApi(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileData {
-        val tempFile = File.createTempFile("mlp", "file")
+        val tempFile = createTempFile("mlp", "file")
         writeToFile(tempFile, stream)
 
         return writeByApi(tempFile, key, options)
