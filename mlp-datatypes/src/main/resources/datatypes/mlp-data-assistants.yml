@@ -1,0 +1,519 @@
+openapi: 3.0.1
+info:
+  title: Datatypes specification for GPT task type
+  version: v0
+paths: { }
+
+components:
+  schemas:
+    # ASSISTANTS
+
+    CreateAssistantRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: object
+
+    ListAssistantsParameters:
+      type: object
+      properties:
+        limit:
+          type: integer
+        order:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+
+    GetAssistantParameters:
+      type: object
+      required:
+        - assistantId
+      properties:
+        assistantId:
+          type: string
+
+    ModifyAssistantRequest:
+      type: object
+      required:
+        - assistantId
+        - body
+      properties:
+        assistantId:
+          type: string
+        body:
+          type: object
+
+    DeleteAssistantRequest:
+      type: object
+      required:
+        - assistantId
+      properties:
+        assistantId:
+          type: string
+
+    # THREADS
+
+    CreateThreadRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: object
+
+    GetThreadParameters:
+      type: object
+      required:
+        - threadId
+      properties:
+        threadId:
+          type: string
+
+    ModifyThreadRequest:
+      type: object
+      required:
+        - threadId
+        - body
+      properties:
+        threadId:
+          type: string
+        body:
+          type: object
+
+    DeleteThreadRequest:
+      type: object
+      required:
+        - threadId
+      properties:
+        threadId:
+          type: string
+
+    # MESSAGES
+
+    CreateMessageRequest:
+      type: object
+      required:
+        - threadId
+        - body
+      properties:
+        threadId:
+          type: string
+        body:
+          type: object
+
+    ListMessagesParameters:
+      type: object
+      required:
+        - threadId
+      properties:
+        threadId:
+          type: string
+        limit:
+          type: integer
+        order:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+        runId:
+          type: string
+
+    GetMessageParameters:
+      type: object
+      required:
+        - threadId
+        - messageId
+      properties:
+        threadId:
+          type: string
+        messageId:
+          type: string
+
+    ModifyMessageRequest:
+      type: object
+      required:
+        - threadId
+        - messageId
+        - body
+      properties:
+        threadId:
+          type: string
+        messageId:
+          type: string
+        body:
+          type: object
+
+    DeleteMessageRequest:
+      type: object
+      required:
+        - threadId
+        - messageId
+      properties:
+        threadId:
+          type: string
+        messageId:
+          type: string
+
+    # RUNS
+
+    CreateRunRequest:
+      type: object
+      required:
+        - threadId
+        - body
+      properties:
+        threadId:
+          type: string
+        body:
+          type: object
+
+    CreateThreadAndRunRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: object
+
+    ListRunsParameters:
+      type: object
+      required:
+        - threadId
+      properties:
+        threadId:
+          type: string
+        limit:
+          type: integer
+        order:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+
+    GetRunParameters:
+      type: object
+      required:
+        - threadId
+        - runId
+      properties:
+        threadId:
+          type: string
+        runId:
+          type: string
+
+    ModifyRunRequest:
+      type: object
+      required:
+        - threadId
+        - runId
+        - body
+      properties:
+        threadId:
+          type: string
+        runId:
+          type: string
+        body:
+          type: object
+
+    SubmitToolOutputsRequest:
+      type: object
+      required:
+        - threadId
+        - runId
+        - body
+      properties:
+        threadId:
+          type: string
+        runId:
+          type: string
+        body:
+          type: object
+
+    CancelRunRequest:
+      type: object
+      required:
+        - threadId
+        - runId
+      properties:
+        threadId:
+          type: string
+        runId:
+          type: string
+
+    # RUN STEPS
+
+    ListRunStepsParameters:
+      type: object
+      required:
+        - threadId
+        - runId
+      properties:
+        threadId:
+          type: string
+        runId:
+          type: string
+        limit:
+          type: integer
+        order:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+
+    GetRunStepParameters:
+      type: object
+      required:
+        - threadId
+        - runId
+        - stepId
+      properties:
+        threadId:
+          type: string
+        runId:
+          type: string
+        stepId:
+          type: string
+
+    # VECTOR STORE
+
+    CreateVectorStoreRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: object
+
+    ListVectorStoresParameters:
+      type: object
+      properties:
+        limit:
+          type: integer
+        order:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+
+    GetVectorStoreParameters:
+      type: object
+      required:
+        - vectorStoreId
+      properties:
+        vectorStoreId:
+          type: string
+
+    ModifyVectorStoreRequest:
+      type: object
+      required:
+        - vectorStoreId
+        - body
+      properties:
+        vectorStoreId:
+          type: string
+        body:
+          type: object
+
+    DeleteVectorStoreRequest:
+      type: object
+      required:
+        - vectorStoreId
+      properties:
+        vectorStoreId:
+          type: string
+
+    CreateVectorStoreFileRequest:
+      type: object
+      required:
+        - vectorStoreId
+        - body
+      properties:
+        vectorStoreId:
+          type: string
+        body:
+          type: object
+
+    ListVectorStoreFilesParameters:
+      type: object
+      required:
+        - vectorStoreId
+      properties:
+        vectorStoreId:
+          type: string
+        limit:
+          type: integer
+        order:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+        filter:
+          type: string
+
+    GetVectorStoreFileParameters:
+      type: object
+      required:
+        - vectorStoreId
+        - fileId
+      properties:
+        vectorStoreId:
+          type: string
+        fileId:
+          type: string
+
+    DeleteVectorStoreFileRequest:
+      type: object
+      required:
+        - vectorStoreId
+        - fileId
+      properties:
+        vectorStoreId:
+          type: string
+        fileId:
+          type: string
+
+    CreateVectorStoreFileBatchRequest:
+      type: object
+      required:
+        - vectorStoreId
+        - body
+      properties:
+        vectorStoreId:
+          type: string
+        body:
+          type: object
+
+    GetVectorStoreFileBatchParameters:
+      type: object
+      required:
+        - vectorStoreId
+        - batchId
+      properties:
+        vectorStoreId:
+          type: string
+        batchId:
+          type: string
+
+    CancelVectorStoreFileBatchRequest:
+      type: object
+      required:
+        - vectorStoreId
+        - batchId
+      properties:
+        vectorStoreId:
+          type: string
+        batchId:
+          type: string
+
+    ListVectorStoreFilesInBatchParameters:
+      type: object
+      required:
+        - vectorStoreId
+        - batchId
+      properties:
+        vectorStoreId:
+          type: string
+        batchId:
+          type: string
+        limit:
+          type: integer
+        order:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+        filter:
+          type: string
+
+    # FILES
+
+    UploadFileRequest:
+      type: object
+      required:
+        - body
+        - purpose
+      properties:
+        body:
+          type: object
+        purpose:
+          type: string
+
+    ListFilesParameters:
+      type: object
+      properties:
+        purpose:
+          type: string
+
+    GetFileParameters:
+      type: object
+      required:
+        - fileId
+      properties:
+        fileId:
+          type: string
+
+    DeleteFileRequest:
+      type: object
+      required:
+        - fileId
+      properties:
+        fileId:
+          type: string
+
+    GetFileContentParameters:
+      type: object
+      required:
+        - fileId
+      properties:
+        fileId:
+          type: string
+
+    # UPLOADS
+
+    CreateUploadRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: object
+
+    AddUploadPartRequest:
+      type: object
+      required:
+        - uploadId
+        - body
+      properties:
+        uploadId:
+          type: string
+        body:
+          type: object
+
+    CompleteUploadRequest:
+      type: object
+      required:
+        - uploadId
+        - body
+      properties:
+        uploadId:
+          type: string
+        body:
+          type: object
+
+    CancelUploadRequest:
+      type: object
+      required:
+        - uploadId
+      properties:
+        uploadId:
+          type: string
