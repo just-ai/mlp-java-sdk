@@ -37,7 +37,7 @@
 
         <!-- The version is the latest found here: https://search.maven.org/artifact/io.grpc/grpc-protobuf -->
         <!-- IMPORTANT: currently we support max 1.39.0 -->
-        <grpc.version>1.57.2</grpc.version>
+        <grpc.version>1.60.2</grpc.version>
 
         <!-- the version is the latest found here: https://search.maven.org/search?q=a:protobuf-kotlin -->
         <!-- IMPORTANT: currently we support max 3.18.1 -->
