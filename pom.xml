@@ -41,7 +41,8 @@
 
         <!-- the version is the latest found here: https://search.maven.org/search?q=a:protobuf-kotlin -->
         <!-- IMPORTANT: currently we support max 3.18.1 -->
-        <protobuf.version>3.19.3</protobuf.version>
+        <!--        3.19.3 contains CVE-2024-7254-->
+        <protobuf.version>3.25.6</protobuf.version>
 
         <slf4j.version>1.7.32</slf4j.version>
     </properties>
