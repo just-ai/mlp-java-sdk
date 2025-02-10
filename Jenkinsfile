@@ -18,7 +18,7 @@ pipeline {
             steps {
                 script {
                     RESULT_BRANCH = env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH
-                    addBadge(cssStyle: "badge-text--background badge-text--bordered", text: "${RESULT_BRANCH}")
+                    addBadge(cssClass: "badge-text--background badge-text--bordered", text: "${RESULT_BRANCH}")
                     echo "${env.gitlabBranch}"
                 }
                 updateGitlabCommitStatus name: "build", state: "running"
