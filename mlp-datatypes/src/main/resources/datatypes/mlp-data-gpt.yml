@@ -414,9 +414,10 @@ components:
     CompletionResult:
       type: object
       required:
+        - id
         - created
         - model
-        - usage
+        - choices
       properties:
         id:
           type: string
