@@ -38,6 +38,7 @@ components:
         - assistant
         - marker
         - tool
+        - developer
 
     ChatMessage:
       type: object

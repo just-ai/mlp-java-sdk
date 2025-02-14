@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
 * 
-* Values: system,user,assistant,marker,tool
+* Values: system,user,assistant,marker,tool,developer
 */
 enum class ChatRole(val value: kotlin.String) {
 
@@ -15,6 +15,7 @@ enum class ChatRole(val value: kotlin.String) {
     @JsonProperty("user") user("user"),
     @JsonProperty("assistant") assistant("assistant"),
     @JsonProperty("marker") marker("marker"),
-    @JsonProperty("tool") tool("tool")
+    @JsonProperty("tool") tool("tool"),
+    @JsonProperty("developer") developer("developer")
 }
 
