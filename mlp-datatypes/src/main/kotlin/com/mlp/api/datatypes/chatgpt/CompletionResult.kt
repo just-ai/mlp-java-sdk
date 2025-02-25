@@ -8,13 +8,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 
+ * @param id 
  * @param created 
  * @param model 
- * @param usage 
- * @param id 
  * @param choices 
+ * @param usage 
  */
 data class CompletionResult(
+
+    @Schema(example = "null", required = true, description = "")
+    @get:JsonProperty("id", required = true) val id: kotlin.String,
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("created", required = true) val created: kotlin.Long,
@@ -23,13 +26,10 @@ data class CompletionResult(
     @get:JsonProperty("model", required = true) val model: kotlin.String,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("usage", required = true) val usage: Usage,
+    @get:JsonProperty("choices", required = true) val choices: kotlin.collections.List<CompletionChoice>,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("id") val id: kotlin.String? = null,
-
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("choices") val choices: kotlin.collections.List<CompletionChoice>? = null
+    @get:JsonProperty("usage") val usage: Usage? = null
 ) {
 
 }

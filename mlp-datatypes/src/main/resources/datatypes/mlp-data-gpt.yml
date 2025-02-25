@@ -38,6 +38,7 @@ components:
         - assistant
         - marker
         - tool
+        - developer
 
     ChatMessage:
       type: object
@@ -414,9 +415,10 @@ components:
     CompletionResult:
       type: object
       required:
+        - id
         - created
         - model
-        - usage
+        - choices
       properties:
         id:
           type: string
