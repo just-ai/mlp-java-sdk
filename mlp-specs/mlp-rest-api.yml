@@ -10167,6 +10167,7 @@ components:
           - STARTING
           - INACTIVE
           - SLEEPING
+          - REMOVING
     ModelInfoPK:
       required:
       - accountId
@@ -11186,6 +11187,10 @@ components:
         totalPages:
           type: integer
           format: int32
+        first:
+          type: boolean
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
         size:
           type: integer
           format: int32
@@ -11198,10 +11203,6 @@ components:
           format: int32
         sort:
           $ref: '#/components/schemas/SortObject'
-        first:
-          type: boolean
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
         numberOfElements:
           type: integer
           format: int32
@@ -11212,17 +11213,17 @@ components:
     PageableObject:
       type: object
       properties:
-        offset:
-          type: integer
-          format: int64
-        sort:
-          $ref: '#/components/schemas/SortObject'
         pageNumber:
           type: integer
           format: int32
         pageSize:
           type: integer
           format: int32
+        offset:
+          type: integer
+          format: int64
+        sort:
+          $ref: '#/components/schemas/SortObject'
         paged:
           type: boolean
         unpaged:
@@ -11230,9 +11231,9 @@ components:
     SortObject:
       type: object
       properties:
-        empty:
-          type: boolean
         sorted:
+          type: boolean
+        empty:
           type: boolean
         unsorted:
           type: boolean
@@ -11304,6 +11305,7 @@ components:
           - STARTING
           - INACTIVE
           - SLEEPING
+          - REMOVING
         active:
           type: integer
           format: int32
@@ -11435,6 +11437,7 @@ components:
           - STARTING
           - INACTIVE
           - SLEEPING
+          - REMOVING
         instances:
           $ref: '#/components/schemas/InstancesStatusData'
         lastJob:
