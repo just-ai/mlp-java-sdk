@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param toolCallId 
  * @param name 
  * @param toolCalls 
+ * @param thinking 
  */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.mlp.api.ChatMessageDeserializer::class)
 open class ChatMessage(
@@ -36,7 +37,10 @@ open class ChatMessage(
     @get:JsonProperty("name") open val name: kotlin.String? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("tool_calls") open val toolCalls: kotlin.collections.List<ToolCall>? = null
+    @get:JsonProperty("tool_calls") open val toolCalls: kotlin.collections.List<ToolCall>? = null,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("thinking") open val thinking: kotlin.Any? = null
 ){
 
     override fun equals(other: Any?): Boolean {
@@ -47,6 +51,7 @@ open class ChatMessage(
         if (toolCallId != other.toolCallId) return false
         if (name != other.name) return false
         if (toolCalls != other.toolCalls) return false
+        if (thinking != other.thinking) return false
 
         return true
     }
@@ -59,11 +64,12 @@ open class ChatMessage(
         result = 31 * result + toolCallId.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + toolCalls.hashCode()
+        result = 31 * result + thinking.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "ChatMessage(role=$role, content=$content, toolCallId=$toolCallId, name=$name, toolCalls=$toolCalls)"
+        return "ChatMessage(role=$role, content=$content, toolCallId=$toolCallId, name=$name, toolCalls=$toolCalls, thinking=$thinking)"
     }
 
     fun copy(
@@ -71,14 +77,16 @@ open class ChatMessage(
         content: kotlin.Any? = this.content,
         toolCallId: kotlin.String? = this.toolCallId,
         name: kotlin.String? = this.name,
-        toolCalls: kotlin.collections.List<ToolCall>? = this.toolCalls
+        toolCalls: kotlin.collections.List<ToolCall>? = this.toolCalls,
+        thinking: kotlin.Any? = this.thinking
     ): ChatMessage {
         return ChatMessage(
             role,
             content,
             toolCallId,
             name,
-            toolCalls
+            toolCalls,
+            thinking
         )
     }
 
