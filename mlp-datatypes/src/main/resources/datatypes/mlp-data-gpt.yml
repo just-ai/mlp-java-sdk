@@ -102,6 +102,7 @@ components:
           text: 'TextContentPart'
           image_url: 'ImageContentPart'
           tool_use: 'ToolContentPart'
+          thinking: 'ThinkingContentPart'
 
 
     ContentPartType:
