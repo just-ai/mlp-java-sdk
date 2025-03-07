@@ -104,14 +104,12 @@ components:
           tool_use: 'ToolContentPart'
           thinking: 'ThinkingContentPart'
 
-
     ContentPartType:
       type: string
       enum:
         - text
         - image_url
         - tool_use
-        - thinking
 
     TextContentPart:
       type: object
@@ -122,6 +120,8 @@ components:
             - text
           properties:
             text:
+              type: string
+            thinking:
               type: string
 
     ImageContentPart:
@@ -150,6 +150,16 @@ components:
             input:
               type: string
 
+    ThinkingContentPart:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ContentPart'
+        - type: object
+          required:
+            - thinking
+          properties:
+            thinking:
+              type: string
 
     ImageContentPartImageUrl:
       type: object
