@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * 
  * @param text 
+ * @param thinking 
  */
 data class TextContentPart(
 
@@ -17,7 +18,10 @@ data class TextContentPart(
     @get:JsonProperty("text", required = true) val text: kotlin.String,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("type", required = true) override val type: ContentPartType
+    @get:JsonProperty("type", required = true) override val type: ContentPartType,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("thinking") val thinking: kotlin.String? = null
 ) : ContentPart{
 
 }

@@ -8608,6 +8608,21 @@ components:
           - private
           - public
           - restricted
+    LocalTime:
+      type: object
+      properties:
+        hour:
+          type: integer
+          format: int32
+        minute:
+          type: integer
+          format: int32
+        second:
+          type: integer
+          format: int32
+        nano:
+          type: integer
+          format: int32
     ModelArchiveSettingsData:
       required:
       - enabled
@@ -8626,7 +8641,7 @@ components:
           type: string
     ModelAutoScalingConfiguration:
       required:
-      - active
+      - enabled
       - minInstanceCount
       type: object
       properties:
@@ -8636,6 +8651,10 @@ components:
         maxInstanceCount:
           type: integer
           format: int32
+        scheduledInstanceCountSettings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduledInstanceCountSetting'
         cooldownDurationMinutes:
           type: integer
           format: int32
@@ -8657,7 +8676,7 @@ components:
         scaleDownCpuThresholdMilliCores:
           type: integer
           format: int32
-        active:
+        enabled:
           type: boolean
     ModelBatchesData:
       required:
@@ -8988,6 +9007,23 @@ components:
           type: string
         isDefault:
           type: boolean
+    ScheduledInstanceCountSetting:
+      required:
+      - endTime
+      - minInstances
+      - startTime
+      type: object
+      properties:
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+        minInstances:
+          type: integer
+          format: int32
+        maxInstances:
+          type: integer
+          format: int32
     AccountConfigDump:
       required:
       - accountName
@@ -10131,6 +10167,7 @@ components:
           - STARTING
           - INACTIVE
           - SLEEPING
+          - REMOVING
     ModelInfoPK:
       required:
       - accountId
@@ -10739,6 +10776,8 @@ components:
           type: string
         isInterruptible:
           type: boolean
+        errorMessage:
+          type: string
     TaskTypeData:
       required:
       - displayName
@@ -11148,8 +11187,6 @@ components:
         totalPages:
           type: integer
           format: int32
-        first:
-          type: boolean
         size:
           type: integer
           format: int32
@@ -11162,11 +11199,13 @@ components:
           format: int32
         sort:
           $ref: '#/components/schemas/SortObject'
+        first:
+          type: boolean
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
         numberOfElements:
           type: integer
           format: int32
-        pageable:
-          $ref: '#/components/schemas/PageableObject'
         last:
           type: boolean
         empty:
@@ -11266,6 +11305,7 @@ components:
           - STARTING
           - INACTIVE
           - SLEEPING
+          - REMOVING
         active:
           type: integer
           format: int32
@@ -11397,6 +11437,7 @@ components:
           - STARTING
           - INACTIVE
           - SLEEPING
+          - REMOVING
         instances:
           $ref: '#/components/schemas/InstancesStatusData'
         lastJob:
