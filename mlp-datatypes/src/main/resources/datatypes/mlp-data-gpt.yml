@@ -58,7 +58,7 @@ components:
           items:
             $ref: '#/components/schemas/ToolCall'
         thinking:
-          type: object
+          type: string
       oneOf:
         - $ref: '#/components/schemas/TextChatMessage'
         - $ref: '#/components/schemas/PartsChatMessage'
@@ -102,7 +102,6 @@ components:
           text: 'TextContentPart'
           image_url: 'ImageContentPart'
           tool_use: 'ToolContentPart'
-          thinking: 'ThinkingContentPart'
 
     ContentPartType:
       type: string
@@ -148,17 +147,6 @@ components:
             name:
               type: string
             input:
-              type: string
-
-    ThinkingContentPart:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/ContentPart'
-        - type: object
-          required:
-            - thinking
-          properties:
-            thinking:
               type: string
 
     ImageContentPartImageUrl:
