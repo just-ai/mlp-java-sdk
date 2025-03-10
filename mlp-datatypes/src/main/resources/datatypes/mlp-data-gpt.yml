@@ -57,6 +57,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ToolCall'
+        thinking:
+          type: string
       oneOf:
         - $ref: '#/components/schemas/TextChatMessage'
         - $ref: '#/components/schemas/PartsChatMessage'
@@ -101,7 +103,6 @@ components:
           image_url: 'ImageContentPart'
           tool_use: 'ToolContentPart'
 
-
     ContentPartType:
       type: string
       enum:
@@ -118,6 +119,8 @@ components:
             - text
           properties:
             text:
+              type: string
+            thinking:
               type: string
 
     ImageContentPart:
@@ -145,7 +148,6 @@ components:
               type: string
             input:
               type: string
-
 
     ImageContentPartImageUrl:
       type: object
