@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonSubTypes(
       JsonSubTypes.Type(value = ImageContentPart::class, name = "image_url"),
       JsonSubTypes.Type(value = TextContentPart::class, name = "text"),
-      JsonSubTypes.Type(value = ThinkingContentPart::class, name = "thinking"),
       JsonSubTypes.Type(value = ToolContentPart::class, name = "tool_use")
 )
 

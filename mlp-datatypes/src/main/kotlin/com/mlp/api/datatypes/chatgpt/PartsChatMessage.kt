@@ -31,7 +31,7 @@ data class PartsChatMessage(
     @get:JsonProperty("tool_calls") override val toolCalls: kotlin.collections.List<ToolCall>? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("thinking") override val thinking: kotlin.Any? = null
+    @get:JsonProperty("thinking") override val thinking: kotlin.String? = null
 ) : ChatMessage(role, content, toolCallId, name, toolCalls, thinking){
 
 }

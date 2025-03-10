@@ -40,7 +40,7 @@ open class ChatMessage(
     @get:JsonProperty("tool_calls") open val toolCalls: kotlin.collections.List<ToolCall>? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("thinking") open val thinking: kotlin.Any? = null
+    @get:JsonProperty("thinking") open val thinking: kotlin.String? = null
 ){
 
     override fun equals(other: Any?): Boolean {
@@ -78,7 +78,7 @@ open class ChatMessage(
         toolCallId: kotlin.String? = this.toolCallId,
         name: kotlin.String? = this.name,
         toolCalls: kotlin.collections.List<ToolCall>? = this.toolCalls,
-        thinking: kotlin.Any? = this.thinking
+        thinking: kotlin.String? = this.thinking
     ): ChatMessage {
         return ChatMessage(
             role,
