@@ -10,7 +10,7 @@ pipeline {
         label 'caila-dev-cloud-agent'
     }
     parameters {
-        string(name: "BRANCH", defaultValue: "dev", description: "")
+        string(name: "BRANCH", defaultValue: "release", description: "")
         booleanParam(name: "CHECK_SCHEMAS_ONLY", defaultValue: false, description: '')
     }
     stages {
@@ -60,7 +60,7 @@ pipeline {
         }
         stage('Rebuild MLP Services') {
             when {
-                expression { RESULT_BRANCH in ['dev','stable','release'] }
+                expression { RESULT_BRANCH in ['release'] }
             }
             steps {
                 parallel (
@@ -117,32 +117,6 @@ pipeline {
                     }
                         ,
                 )
-            }
-        }
-        stage('Merge release to stable') {
-            when {
-                expression {
-                    RESULT_BRANCH == 'release'
-                }
-            }
-            steps {
-                sh """git checkout stable --force"""
-                sh """git pull origin stable"""
-                sh """git merge origin/release -m 'Automatic merge from release to stable'"""
-                sh """git push"""
-            }
-        }
-        stage('Merge stable to dev') {
-            when {
-                expression {
-                    RESULT_BRANCH == 'stable'
-                }
-            }
-            steps {
-                sh """git checkout dev --force"""
-                sh """git pull origin dev"""
-                sh """git merge origin/stable -m 'Automatic merge from stable to dev'"""
-                sh """git push"""
             }
         }
     }
