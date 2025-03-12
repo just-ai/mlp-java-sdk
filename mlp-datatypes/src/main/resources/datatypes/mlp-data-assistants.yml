@@ -440,11 +440,12 @@ components:
     UploadFileRequest:
       type: object
       required:
-        - body
+        - file
         - purpose
       properties:
-        body:
-          type: object
+        file:
+          type: string
+          format: byte
         purpose:
           type: string
 
