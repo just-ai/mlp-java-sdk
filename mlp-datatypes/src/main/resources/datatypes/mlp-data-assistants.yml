@@ -441,11 +441,14 @@ components:
       type: object
       required:
         - file
+        - fileName
         - purpose
       properties:
         file:
           type: string
           format: byte
+        fileName:
+          type: string
         purpose:
           type: string
 
