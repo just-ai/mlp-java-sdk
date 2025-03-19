@@ -435,6 +435,41 @@ components:
         filter:
           type: string
 
+    # BATCHES
+
+    CreateBatchRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: object
+
+    RetrieveBatchParameters:
+      type: object
+      required:
+        - batch_id
+      properties:
+        batch_id:
+          type: string
+
+    CancelBatchParameters:
+      type: object
+      required:
+        - batch_id
+      properties:
+        batch_id:
+          type: string
+
+    ListBatchesParameters:
+      type: object
+      properties:
+        after:
+          type: string
+        limit:
+          type: integer
+          default: 20
+
     # FILES
 
     UploadFileRequest:
