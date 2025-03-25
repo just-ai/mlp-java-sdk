@@ -475,13 +475,16 @@ components:
     UploadFileRequest:
       type: object
       required:
-        - file
         - fileName
         - purpose
       properties:
         file:
           type: string
           format: byte
+        fileId:
+          type: string
+        version:
+          type: integer
         fileName:
           type: string
         purpose:
