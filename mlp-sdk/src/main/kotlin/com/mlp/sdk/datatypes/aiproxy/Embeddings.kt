@@ -27,6 +27,16 @@ data class EmbeddingResult(
     val usage: Usage
 )
 
+data class EmbeddingResultV2(
+    val model: String,
+
+    val `object`: String? = null,
+
+    val data: Any? = null,
+
+    val usage: Usage
+)
+
 data class Embedding(
     val `object`: String? = null,
     val embedding: List<Double>? = null,
