@@ -494,6 +494,8 @@ class Connector(
         }
 
         private fun processCluster(cluster: ClusterUpdateProto) {
+            if (config.ignoreClusterUpdates) return
+
             if (targetUrl != cluster.currentServer) {
                 logger.info("$this: url is changed from $targetUrl to ${cluster.currentServer}")
                 targetUrl = cluster.currentServer
