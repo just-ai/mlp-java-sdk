@@ -6,6 +6,7 @@ import com.mlp.sdk.MlpServiceConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_MS
 import com.mlp.sdk.MlpServiceConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS
 import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_CONNECT_TIMEOUT_MS
 import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_SECURE
+import com.mlp.sdk.MlpServiceConfig.Companion.IGNORE_CLUSTER_UPDATES
 import com.mlp.sdk.utils.ConfigHelper
 
 data class MlpServiceConfig(
@@ -17,6 +18,7 @@ data class MlpServiceConfig(
     val grpcConnectTimeoutMs: Long = GRPC_CONNECT_TIMEOUT_MS,
     val grpcSecure: Boolean = GRPC_SECURE,
     val clientApiAuthToken: String? = null,
+    val ignoreClusterUpdates: Boolean = IGNORE_CLUSTER_UPDATES
 ) {
     companion object {
         const val DEFAULT_THREAD_POOL_SIZE: Int = 10
@@ -25,6 +27,7 @@ data class MlpServiceConfig(
         const val GRACEFUL_SHUTDOWN_CONNECTOR_REQUEST_DELAY_MS: Long = 3000
         const val GRPC_CONNECT_TIMEOUT_MS: Long = 10000
         const val GRPC_SECURE: Boolean = true
+        const val IGNORE_CLUSTER_UPDATES: Boolean = false
     }
 }
 
@@ -56,6 +59,7 @@ fun loadActionConfig(configPath: String? = null, environment: Environment): MlpS
         grpcConnectTimeoutMs = props["MLP_GRPC_CONNECT_TIMEOUT_MS"]?.toLong()
             ?: GRPC_CONNECT_TIMEOUT_MS,
         grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE,
-        clientApiAuthToken = props["MLP_CLIENT_TOKEN"]
+        clientApiAuthToken = props["MLP_CLIENT_TOKEN"],
+        ignoreClusterUpdates = props["IGNORE_CLUSTER_UPDATES"]?.toBoolean() ?: IGNORE_CLUSTER_UPDATES
     )
 }
