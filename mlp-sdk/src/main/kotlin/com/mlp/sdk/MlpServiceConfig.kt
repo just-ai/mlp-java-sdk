@@ -60,6 +60,6 @@ fun loadActionConfig(configPath: String? = null, environment: Environment): MlpS
             ?: GRPC_CONNECT_TIMEOUT_MS,
         grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE,
         clientApiAuthToken = props["MLP_CLIENT_TOKEN"],
-        ignoreClusterUpdates = props["IGNORE_CLUSTER_UPDATES"]?.toBoolean() ?: IGNORE_CLUSTER_UPDATES
+        ignoreClusterUpdates = props["MLP_IGNORE_CLUSTER_UPDATES"]?.toBoolean() ?: IGNORE_CLUSTER_UPDATES
     )
 }
