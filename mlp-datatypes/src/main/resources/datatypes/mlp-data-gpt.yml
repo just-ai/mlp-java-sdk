@@ -42,8 +42,6 @@ components:
 
     ChatMessage:
       type: object
-      required:
-        - role
       properties:
         role:
           $ref: '#/components/schemas/ChatRole'
@@ -221,8 +219,6 @@ components:
     ToolCall:
       type: object
       required:
-        - id
-        - type
         - function
       properties:
         id:
