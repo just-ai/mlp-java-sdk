@@ -24,8 +24,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.mlp.api.ChatMessageDeserializer::class)
 open class ChatMessage(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("role", required = true) open val role: ChatRole,
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("role") open val role: ChatRole? = null,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("content") open val content: kotlin.Any? = null,
@@ -57,10 +57,10 @@ open class ChatMessage(
     }
 
     override fun hashCode(): Int {
+        
         var result = role.hashCode()
         
         result = 31 * result + content.hashCode()
-        
         result = 31 * result + toolCallId.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + toolCalls.hashCode()
@@ -73,7 +73,7 @@ open class ChatMessage(
     }
 
     fun copy(
-        role: ChatRole = this.role,
+        role: ChatRole? = this.role,
         content: kotlin.Any? = this.content,
         toolCallId: kotlin.String? = this.toolCallId,
         name: kotlin.String? = this.name,

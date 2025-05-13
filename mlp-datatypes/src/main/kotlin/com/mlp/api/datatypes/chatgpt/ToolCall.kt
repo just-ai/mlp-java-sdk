@@ -9,20 +9,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 
+ * @param function 
  * @param id 
  * @param type 
- * @param function 
  */
 data class ToolCall(
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) val id: kotlin.String,
+    @get:JsonProperty("function", required = true) val function: FunctionCall,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("type", required = true) val type: ToolType,
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("id") val id: kotlin.String? = null,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("function", required = true) val function: FunctionCall
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("type") val type: ToolType? = null
 ) {
 
 }

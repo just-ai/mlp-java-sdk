@@ -32,11 +32,11 @@ object ChatMessageDeserializer : JsonDeserializer<ChatMessage>() {
         return if (contentNode?.isArray == true) {
             val content =
                 p.codec.readValue(contentNode.traverse(p.codec), object : TypeReference<List<ContentPart>>() {})
-            PartsChatMessage(role, content, toolCallId, name, toolCalls)
+            PartsChatMessage(content, role, toolCallId, name, toolCalls)
         } else {
             val content = contentNode?.asText()
             val thinking = node.get("thinking")?.asText()
-            TextChatMessage(role, content, toolCallId, name, toolCalls, thinking)
+            TextChatMessage(content, role, toolCallId, name, toolCalls, thinking)
         }
     }
 }
