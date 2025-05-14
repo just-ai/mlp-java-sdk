@@ -127,8 +127,8 @@ class JsonTests {
                     id = "call_abc123",
                     type = ToolType.function,
                     function = FunctionCall(
-                        "get_current_weather",
-                        "{\n\"location\": \"Boston, MA\"\n}"
+                        name = "get_current_weather",
+                        arguments = "{\n\"location\": \"Boston, MA\"\n}"
                     )
                 )
             )
