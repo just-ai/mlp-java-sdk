@@ -70,6 +70,10 @@ components:
         - $ref: '#/components/schemas/ChatMessage'
         - type: object
           properties:
+            role:
+              allOf: # Объединяем $ref и x-isInherited
+              - $ref: '#/components/schemas/ChatRole'
+              x-isInherited: true
             content:
               type: string
               x-isInherited: true
@@ -80,6 +84,10 @@ components:
         - $ref: '#/components/schemas/ChatMessage'
         - type: object
           properties:
+            role:
+              allOf: # Объединяем $ref и x-isInherited
+              - $ref: '#/components/schemas/ChatRole'
+              x-isInherited: true
             content:
               type: array
               items:

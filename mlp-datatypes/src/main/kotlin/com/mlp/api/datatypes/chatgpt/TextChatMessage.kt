@@ -10,15 +10,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 
+ * @param role 
  * @param content 
  */
 data class TextChatMessage(
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("content") override val content: kotlin.String? = null,
+    @get:JsonProperty("role") override val role: ChatRole? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("role") override val role: ChatRole? = null,
+    @get:JsonProperty("content") override val content: kotlin.String? = null,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("tool_call_id") override val toolCallId: kotlin.String? = null,

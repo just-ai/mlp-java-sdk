@@ -155,6 +155,7 @@
                             </typeMappings>
                             <configOptions>
                                 <useBeanValidation>false</useBeanValidation>
+                                <sortProperties>false</sortProperties>
                             </configOptions>
                             <modelPackage>com.mlp.api.datatypes.assistants</modelPackage>
                             <templateDirectory>${project.basedir}/src/main/resources/kotlin-spring</templateDirectory>
