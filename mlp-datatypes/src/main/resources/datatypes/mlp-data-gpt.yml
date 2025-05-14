@@ -239,7 +239,6 @@ components:
     FunctionCall:
       type: object
       required:
-        - name
         - arguments
       properties:
         name:
@@ -271,7 +270,7 @@ components:
         model:
           type: string
         choices:
-          type: array
+          type: arrayF
           items:
             $ref: '#/components/schemas/ChatCompletionChoice'
         usage: # for streaming=true responses we will fill this field in the last chunk
