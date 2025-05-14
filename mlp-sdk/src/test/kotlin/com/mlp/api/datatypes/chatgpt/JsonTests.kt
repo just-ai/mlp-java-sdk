@@ -109,7 +109,7 @@ class JsonTests {
         val toolMessage = chatCompletionRequest.messages[1]
         assertTrue(userMessage is TextChatMessage)
         val expectedToolMessage = TextChatMessage(
-            role = ChatRole.tool,
+            ChatRole.tool,
             toolCallId = "123456",
             toolCalls = null,
             name = "get_current_time",
@@ -120,7 +120,7 @@ class JsonTests {
         val assistantMessage = chatCompletionRequest.messages[2]
         assertTrue(userMessage is TextChatMessage)
         val expectedAssistantMessage = TextChatMessage(
-            role = ChatRole.assistant,
+            ChatRole.assistant,
             content = null,
             toolCalls = listOf(
                 ToolCall(
@@ -277,7 +277,7 @@ class JsonTests {
         assertDoesNotThrow {
             chatCompletionRequest = JSON.parse<ChatCompletionRequest>(body)
         }
-        assertEquals(TextChatMessage(role = ChatRole.user, content = "Hello!"), chatCompletionRequest.messages.first())
+        assertEquals(TextChatMessage(ChatRole.user, "Hello!"), chatCompletionRequest.messages.first())
         assertEquals(true, chatCompletionRequest.logprobs)
         assertEquals(2, chatCompletionRequest.topLogprobs)
 
