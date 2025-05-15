@@ -146,7 +146,7 @@ message PredictResponseProto {
 }
 
 message PartialPredictResponseProto {
-  optional PayloadProto data = 101;
+  PayloadProto data = 101;
   optional bool start = 103;
   optional bool finish = 104;
 }
