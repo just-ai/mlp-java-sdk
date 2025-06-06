@@ -562,6 +562,30 @@ paths:
       responses:
         "200":
           description: OK
+  /api/mlpcore/model-name-availability:
+    post:
+      tags:
+      - model-endpoint
+      operationId: checkModelNameAvailability
+      parameters:
+      - name: modelName
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelNameAvailability'
   /api/mlpcore/clicks:
     post:
       tags:
@@ -1627,6 +1651,11 @@ paths:
         schema:
           type: string
       - name: modelField
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: displayAuthor
         in: query
         required: false
         schema:
@@ -2901,6 +2930,16 @@ paths:
         required: true
         schema:
           type: string
+      - name: displayName
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: displayAuthor
+        in: query
+        required: false
+        schema:
+          type: string
       - name: hidden
         in: query
         required: false
@@ -2977,6 +3016,16 @@ paths:
       - name: name
         in: query
         required: true
+        schema:
+          type: string
+      - name: displayName
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: displayAuthor
+        in: query
+        required: false
         schema:
           type: string
       - name: autoStart
@@ -4992,6 +5041,11 @@ paths:
         schema:
           type: string
       - name: modelField
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: displayAuthor
         in: query
         required: false
         schema:
@@ -8635,6 +8689,13 @@ components:
           - ERROR
         textMessage:
           type: string
+    ModelNameAvailability:
+      required:
+      - available
+      type: object
+      properties:
+        available:
+          type: boolean
     ClickHistoryData:
       required:
       - eventType
@@ -8982,6 +9043,10 @@ components:
       type: object
       properties:
         name:
+          type: string
+        displayName:
+          type: string
+        displayAuthor:
           type: string
         imageAccount:
           type: string
@@ -10037,6 +10102,10 @@ components:
       properties:
         modelName:
           type: string
+        displayName:
+          type: string
+        displayAuthor:
+          type: string
         imageAccountId:
           type: integer
           format: int64
@@ -10272,6 +10341,8 @@ components:
       - caching
       - composite
       - dataImageMounts
+      - displayAuthor
+      - displayName
       - favorite
       - fittable
       - hostingType
@@ -10295,6 +10366,10 @@ components:
         modelAccountDisplayName:
           type: string
         modelName:
+          type: string
+        displayName:
+          type: string
+        displayAuthor:
           type: string
         imageAccountId:
           type: integer
