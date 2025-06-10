@@ -84,6 +84,8 @@ interface MlpClientHelper: WithExecutionContext {
                 baseModelId,
                 modelName,
                 false,
+                null,
+                null,
                 null
             )
             logger.info("Model was created with an id: ${createdDerivedModel.id.accountId}/${createdDerivedModel.id.modelId}")
