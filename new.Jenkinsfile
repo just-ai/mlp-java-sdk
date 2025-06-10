@@ -53,7 +53,7 @@ pipeline {
         stage('Revert to Snapshot Version') {
             steps {
                 withMaven(maven: 'Maven 3.5', jdk: '11') {
-                    sh "mvn versions:set -DnewVersion=dev-SNAPSHOT -DgenerateBackupPoms=false"
+                    sh "mvn versions:set -DnewVersion=release-SNAPSHOT -DgenerateBackupPoms=false"
                 }
             }
         }
