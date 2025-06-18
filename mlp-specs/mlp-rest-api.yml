@@ -6,6 +6,96 @@ servers:
 - url: https://app.caila.io
   description: Generated server url
 paths:
+  /api/mlpcore/account/{account}/token/{token}:
+    get:
+      tags:
+      - access-token-endpoint
+      operationId: checkAccessToken
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenData'
+    put:
+      tags:
+      - access-token-endpoint
+      operationId: updateAccessToken
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccessTokenData'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenData'
+    delete:
+      tags:
+      - access-token-endpoint
+      operationId: deleteAccessToken
+      parameters:
+      - name: account
+        in: path
+        description: Account id or account name
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
   /api/mlpcore/account/{account}/notification:
     get:
       tags:
@@ -1078,6 +1168,11 @@ paths:
         required: false
         schema:
           type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccessTokenData'
       responses:
         "200":
           description: OK
@@ -4994,7 +5089,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CaptchaData'
+                $ref: '#/components/schemas/Function0CaptchaData'
   /api/mlpcore/specs/{api-file}:
     get:
       tags:
@@ -5431,61 +5526,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountInfoData'
-  /api/mlpcore/account/{account}/token/{token}:
-    get:
-      tags:
-      - access-token-endpoint
-      operationId: checkAccessToken
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: token
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccessTokenData'
-    delete:
-      tags:
-      - access-token-endpoint
-      operationId: deleteAccessToken
-      parameters:
-      - name: account
-        in: path
-        description: Account id or account name
-        required: true
-        schema:
-          type: string
-      - name: token
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: MLP-API-KEY
-        in: header
-        description: token to use instead of a session
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
   /api/mlpcore/account/{account}/token/{token}/logs:
     get:
       tags:
@@ -8632,6 +8672,34 @@ paths:
           description: OK
 components:
   schemas:
+    UpdateAccessTokenData:
+      required:
+      - permissions
+      type: object
+      properties:
+        permissions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    AccessTokenData:
+      required:
+      - creationDate
+      - name
+      - permissions
+      - token
+      type: object
+      properties:
+        token:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        creationDate:
+          type: string
     ReadUINotificationRequest:
       required:
       - ids
@@ -9605,19 +9673,14 @@ components:
           type: string
         enabled:
           type: boolean
-    AccessTokenData:
-      required:
-      - creationDate
-      - name
-      - token
+    CreateAccessTokenData:
       type: object
       properties:
-        token:
-          type: string
-        name:
-          type: string
-        creationDate:
-          type: string
+        permissions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
     CreateUpdateServerTemplateData:
       required:
       - description
@@ -11229,16 +11292,8 @@ components:
           type: boolean
         saveClicksEnabled:
           type: boolean
-    CaptchaData:
-      required:
-      - enabled
-      - siteKey
+    Function0CaptchaData:
       type: object
-      properties:
-        enabled:
-          type: boolean
-        siteKey:
-          type: string
     PagedModelInfoData:
       required:
       - paging
