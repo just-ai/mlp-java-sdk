@@ -121,6 +121,9 @@ pipeline {
         }
     }
     post {
+        always {
+            cleanWs()
+        }
         failure {
             updateGitlabCommitStatus name: "build", state: "failed"
         }
