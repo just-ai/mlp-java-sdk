@@ -162,6 +162,36 @@
                             <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>generate-client-gpt-response-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/datatypes/mlp-data-gpt-responses-api.yml</inputSpec>
+                            <generatorName>kotlin-spring</generatorName>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>mlp-datatypes</artifactId>
+                            <artifactVersion>${project.version}</artifactVersion>
+                            <output>${project.basedir}</output>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateApiTests>false</generateApiTests>
+                            <typeMappings>
+                                <mapping>date-time=java.time.Instant</mapping>
+                                <mapping>DateTime=java.time.Instant</mapping>
+                                <mapping>BigDecimal = java.math.BigDecimal</mapping>
+                            </typeMappings>
+                            <configOptions>
+                                <useBeanValidation>false</useBeanValidation>
+                            </configOptions>
+                            <modelPackage>com.mlp.api.datatypes.chatgpt.responsesapi</modelPackage>
+                            <templateDirectory>${project.basedir}/src/main/resources/kotlin-spring</templateDirectory>
+                            <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 

@@ -1,0 +1,2616 @@
+openapi: 3.0.1
+info:
+  title: Datatypes specification for GPT task type
+  version: v0
+paths: { }
+
+
+components:
+  schemas:
+    ResponsesApiRequest:
+      allOf:
+        - $ref: "#/components/schemas/CreateModelResponsesApiProperties"
+        - $ref: "#/components/schemas/ResponsesApiProperties"
+        - type: object
+          properties:
+            input:
+              $ref: "#/components/schemas/ResponsesApiRequestInput"
+            include:
+              type: array
+              items:
+                type: string
+            parallel_tool_calls:
+              type: boolean
+            store:
+              type: boolean
+            stream:
+              type: boolean
+            background:
+              type: boolean
+            metadata:
+              $ref: "#/components/schemas/Metadata"
+          required:
+            - model
+            - input
+
+    CreateModelResponsesApiProperties:
+      allOf:
+        - $ref: "#/components/schemas/ModelResponsesApiProperties"
+
+    ResponsesApiRequestInput:
+      oneOf:
+        - $ref: '#/components/schemas/ResponsesApiRequestTextInput'
+        - $ref: '#/components/schemas/ResponsesApiRequestItemsInput'
+
+    ResponsesApiRequestTextInput:
+      type: object
+      properties:
+        value:
+          type: string
+      required:
+        - value
+
+    ResponsesApiRequestItemsInput:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InputItem"
+      required:
+        - items
+
+    ModelResponsesApiProperties:
+      type: object
+      properties:
+        temperature:
+          type: number
+          format: double
+        top_p:
+          type: number
+          format: double
+        user:
+          type: string
+        service_tier:
+          $ref: "#/components/schemas/ServiceTier"
+    ServiceTier:
+      type: string
+      enum:
+        - auto
+        - default
+        - flex
+    ResponsesApiProperties:
+      type: object
+      properties:
+        previous_response_id:
+          type: string
+        model:
+          type: string
+        reasoning:
+          $ref: "#/components/schemas/Reasoning"
+        max_output_tokens:
+          type: integer
+        instructions:
+          type: string
+        text:
+          type: object
+          properties:
+            format:
+              $ref: "#/components/schemas/TextResponseFormatConfiguration"
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsesApiTool"
+        tool_choice:
+          $ref: "#/components/schemas/ResponsesApiToolChoice"
+        truncation:
+          type: string
+          enum:
+            - auto
+            - disabled
+          default: disabled
+
+
+    ResponsesApiToolChoice:
+      oneOf:
+        - $ref: '#/components/schemas/ResponsesApiToolChoiceEnum'
+        - $ref: '#/components/schemas/ResponsesApiToolChoiceFunction'
+
+    ResponsesApiToolChoiceEnum:
+      type: string
+      enum:
+        - none
+        - auto
+        - required
+
+    ResponsesApiToolChoiceFunction:
+      type: object
+      properties:
+        type:
+          type: string
+        name:
+          type: string
+      required:
+        - type
+
+
+    Reasoning:
+      type: object
+      properties:
+        effort:
+          $ref: "#/components/schemas/ReasoningEffort"
+        summary:
+          $ref: "#/components/schemas/ReasoningSummaryType"
+    ReasoningEffort:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+    ReasoningSummaryType:
+      type: string
+      enum:
+        - auto
+        - concise
+        - detailed
+
+    TextResponseFormatConfiguration:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/ResponseFormatType'
+      discriminator:
+        propertyName: type
+        mapping:
+          text: "ResponseFormatText"
+          json_schema: "TextResponseFormatJsonSchema"
+          json_object: "ResponseFormatJsonObject"
+    ResponseFormatType:
+      type: string
+      enum:
+        - text
+        - json_schema
+        - json_object
+    TextResponseFormatJsonSchema:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/TextResponseFormatConfiguration'
+        - type: object
+          properties:
+            description:
+              type: string
+            name:
+              type: string
+            schema:
+              type: object
+            strict:
+              type: boolean
+          required:
+            - type
+            - schema
+            - name
+    ResponseFormatText:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/TextResponseFormatConfiguration'
+        - type: object
+          required:
+            - type
+    ResponseFormatJsonObject:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/TextResponseFormatConfiguration'
+        - type: object
+          required:
+            - type
+    ResponseToolChoiceOptions:
+      type: string
+      enum:
+        - none
+        - auto
+        - required
+    ResponseToolChoiceFunction:
+      type: object
+      properties:
+        type:
+          type: string
+        name:
+          type: string
+      required:
+        - type
+
+
+
+    Annotation:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/AnnotationType'
+      discriminator:
+        propertyName: type
+        mapping:
+          file_citation: "FileCitationBody"
+          container_file_citation: "ContainerFileCitationBody"
+          url_citation: "UrlCitationBody"
+          file_path: "FilePath"
+    AnnotationType:
+      type: string
+      enum:
+        - file_citation
+        - container_file_citation
+        - url_citation
+        - file_path
+    FileCitationBody:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Annotation'
+        - type: object
+          properties:
+            file_id:
+              type: string
+            index:
+              type: integer
+          required:
+            - type
+            - file_id
+            - index
+    ContainerFileCitationBody:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Annotation'
+        - type: object
+          properties:
+            container_id:
+              type: string
+            file_id:
+              type: string
+            start_index:
+              type: integer
+            end_index:
+              type: integer
+          required:
+            - type
+            - container_id
+            - file_id
+            - start_index
+            - end_index
+    UrlCitationBody:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Annotation'
+        - type: object
+          properties:
+            url:
+              type: string
+            start_index:
+              type: integer
+            end_index:
+              type: integer
+            title:
+              type: string
+          required:
+            - type
+            - url
+            - start_index
+            - end_index
+            - title
+    FilePath:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Annotation'
+        - type: object
+          properties:
+            file_id:
+              type: string
+            index:
+              type: integer
+          required:
+            - type
+            - file_id
+            - index
+
+
+    InputItem:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/InputItemType'
+      discriminator:
+        propertyName: type
+        mapping:
+          message: "MessageInputItem"
+          file_search_call: "FileSearchResponsesApiToolCallInputItem"
+          computer_call: "ComputerResponsesApiToolCallInputItem"
+          computer_call_output: "ComputerCallOutputItemParamInputItem"
+          web_search_call: "WebSearchResponsesApiToolCallInputItem"
+          function_call: "FunctionResponsesApiToolCallInputItem"
+          function_call_output: "FunctionCallOutputItemParamInputItem"
+          reasoning: "ReasoningItemInputItem"
+          item_reference: "ItemReferenceParamInputItem"
+          local_shell_call: "LocalShellInputItem"
+          local_shell_call_output: "LocalShellOutputInputItem"
+          image_generation_call: "ImageGenerationCallInputItem"
+          code_interpreter_call: "CodeInterpreterCallInputItem"
+    InputItemType:
+      type: string
+      enum:
+        - message
+        - file_search_call
+        - function_call
+        - function_call_output
+        - web_search_call
+        - computer_call
+        - computer_call_output
+        - reasoning
+        - item_reference
+        - local_shell_call
+        - local_shell_call_output
+        - image_generation_call
+        - code_interpreter_call
+      default: message
+
+
+    MessageInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/MessageRole'
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/MessageContentInputItem"
+          required:
+            - role
+            - content
+    MessageContentInputItem:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/MessageInputItemContentType'
+      discriminator:
+        propertyName: type
+        mapping:
+          input_text: "MessageInputTextInputItemContent"
+          input_image: "MessageInputImageInputItemContent"
+          input_file: "MessageInputFileInputItemContent"
+          output_text: "MessageOutputTextInputItemContent"
+          refusal: "MessageRefusalInputItemContent"
+    MessageInputItemContentType:
+      type: string
+      enum:
+        - input_text
+        - input_image
+        - input_file
+        - output_text
+        - refusal
+    MessageInputTextInputItemContent:
+      allOf:
+        - $ref: '#/components/schemas/MessageContentInputItem'
+        - type: object
+          properties:
+            text:
+              type: string
+          required:
+            - type
+            - text
+    MessageInputImageInputItemContent:
+      allOf:
+        - $ref: '#/components/schemas/MessageContentInputItem'
+        - type: object
+          properties:
+            image_url:
+              type: string
+            file_id:
+              type: string
+            detail:
+              $ref: '#/components/schemas/ImageDetailLevel'
+          required:
+            - type
+    ImageDetailLevel:
+      type: string
+      enum:
+        - high
+        - low
+        - auto
+    MessageInputFileInputItemContent:
+      allOf:
+        - $ref: '#/components/schemas/MessageContentInputItem'
+        - type: object
+          properties:
+            file_id:
+              type: string
+            filename:
+              type: string
+            file_data:
+              type: string
+          required:
+            - type
+    MessageOutputTextInputItemContent:
+      allOf:
+        - $ref: '#/components/schemas/MessageContentInputItem'
+        - type: object
+          properties:
+            text:
+              type: string
+            annotations:
+              items:
+                $ref: "#/components/schemas/Annotation"
+              type: array
+          required:
+            - type
+            - text
+    MessageRefusalInputItemContent:
+      allOf:
+        - $ref: '#/components/schemas/MessageContentInputItem'
+        - type: object
+          properties:
+            refusal:
+              type: string
+          required:
+            - type
+            - refusal
+
+
+    ItemReferenceParamInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - properties:
+            id:
+              type: string
+          type: object
+          required:
+            - id
+            - type
+    LocalShellInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            action:
+              $ref: '#/components/schemas/LocalShellAction'
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - id
+            - call_id
+            - type
+            - action
+            - status
+    LocalShellOutputInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            output:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - id
+            - output
+            - type
+    ImageGenerationCallInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            result:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - id
+            - status
+            - type
+    CodeInterpreterCallInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            code:
+              type: string
+            container_id:
+              type: string
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/CodeInterpreterResult"
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - id
+            - status
+            - type
+            - results
+            - code
+    CodeInterpreterResult:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/CodeInterpreterResultType'
+      discriminator:
+        propertyName: type
+        mapping:
+          logs: "CodeInterpreterTextResult"
+          files: "CodeInterpreterFilesResult"
+    CodeInterpreterResultType:
+      type: string
+      enum:
+        - logs
+        - files
+    CodeInterpreterTextResult:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CodeInterpreterResult'
+        - properties:
+            logs:
+              type: string
+          type: object
+          required:
+            - logs
+            - type
+    CodeInterpreterFilesResult:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CodeInterpreterResult'
+        - properties:
+            files:
+              type: array
+              items:
+                $ref: "#/components/schemas/CodeInterpreterFile"
+          type: object
+          required:
+            - logs
+            - type
+    CodeInterpreterFile:
+      type: object
+      properties:
+        file_id:
+          type: string
+        mime_type:
+          type: string
+      required:
+        - file_id
+        - mime_type
+    FileSearchResponsesApiToolCallInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - properties:
+            id:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - searching
+                - completed
+                - incomplete
+                - failed
+            queries:
+              type: array
+              items:
+                type: string
+            results:
+              type: array
+              items:
+                type: object
+                properties:
+                  file_id:
+                    type: string
+                  text:
+                    type: string
+                  filename:
+                    type: string
+                  attributes:
+                    type: object
+                  score:
+                    type: number
+                    format: double
+          type: object
+          required:
+            - id
+            - type
+            - status
+            - queries
+    FunctionResponsesApiToolCallInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            name:
+              type: string
+            arguments:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          type: object
+          required:
+            - type
+            - call_id
+            - name
+            - arguments
+    WebSearchResponsesApiToolCallInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - properties:
+            id:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - searching
+                - completed
+                - failed
+          type: object
+          required:
+            - id
+            - type
+            - status
+    ComputerResponsesApiToolCallInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            action:
+              $ref: "#/components/schemas/ComputerAction"
+            pending_safety_checks:
+              type: array
+              items:
+                $ref: "#/components/schemas/ComputerResponsesApiToolCallSafetyCheck"
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - type
+            - id
+            - action
+            - call_id
+            - pending_safety_checks
+            - status
+    ReasoningItemInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            summary:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - summary_text
+                  text:
+                    type: string
+                required:
+                  - type
+                  - text
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - id
+            - summary
+            - type
+    ComputerCallOutputItemParamInputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            output:
+              $ref: "#/components/schemas/ComputerCallOutput"
+            acknowledged_safety_checks:
+              items:
+                $ref: "#/components/schemas/ComputerCallSafetyCheckParam"
+              type: array
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - call_id
+            - type
+            - output
+    ComputerCallOutput:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/ComputerCallOutputType'
+      discriminator:
+        propertyName: type
+        mapping:
+          computer_screenshot: "ComputerScreenshotImage"
+    ComputerCallOutputType:
+      type: string
+      enum:
+        - computer_screenshot
+    ComputerScreenshotImage:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerCallOutput'
+        - type: object
+          properties:
+            image_url:
+              type: string
+            file_id:
+              type: string
+          required:
+            - type
+    ComputerCallSafetyCheckParam:
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+      type: object
+      required:
+        - id
+    FunctionCallOutputItemParamInputItem:
+      properties:
+        id:
+          type: string
+        call_id:
+          type: string
+        output:
+          type: string
+        status:
+          type: string
+          enum:
+            - in_progress
+            - completed
+            - incomplete
+      type: object
+      required:
+        - call_id
+        - type
+        - output
+
+
+    OutputItem:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/OutputItemType'
+      discriminator:
+        propertyName: type
+        mapping:
+          message: "MessageOutputItem"
+          file_search_call: "FileSearchResponsesApiToolCallOutputItem"
+          computer_call: "ComputerResponsesApiToolCallOutputItem"
+          web_search_call: "WebSearchResponsesApiToolCallOutputItem"
+          function_call: "FunctionResponsesApiToolCallOutputItem"
+          reasoning: "ReasoningItemOutputItem"
+          local_shell_call: "LocalShellOutputItem"
+          image_generation_call: "ImageGenerationOutputItem"
+          code_interpreter_call: "CodeInterpreterOutputItem"
+    OutputItemType:
+      type: string
+      enum:
+        - message
+        - file_search_call
+        - function_call
+        - web_search_call
+        - computer_call
+        - reasoning
+        - local_shell_call
+        - image_generation_call
+        - code_interpreter_call
+    CodeInterpreterOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - properties:
+            id:
+              type: string
+            code:
+              type: string
+            container_id:
+              type: string
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/CodeInterpreterResponsesApiToolOutput"
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          type: object
+          required:
+            - type
+            - status
+    CodeInterpreterContainerType:
+      type: string
+      enum:
+        - auto
+    ImageGenerationOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - properties:
+            id:
+              type: string
+            result:
+              type: string
+            quality:
+              $ref: '#/components/schemas/ImageGenerationQuality'
+            size:
+              $ref: '#/components/schemas/ImageGenerationSize'
+            background:
+              $ref: '#/components/schemas/ImageGenerationBackground'
+            output_format:
+              $ref: '#/components/schemas/ImageGenerationOutputFormat'
+            revised_prompt:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          type: object
+          required:
+            - type
+            - status
+    MessageOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/MessageRole'
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/MessageContentOutputItem"
+          required:
+            - role
+            - content
+    MessageContentOutputItem:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/MessageOutputItemContentType'
+      discriminator:
+        propertyName: type
+        mapping:
+          output_text: "MessageOutputTextOutputItemContent"
+          refusal: "MessageRefusalOutputItemContent"
+    MessageOutputItemContentType:
+      type: string
+      enum:
+        - output_text
+        - refusal
+    MessageOutputTextOutputItemContent:
+      allOf:
+        - $ref: '#/components/schemas/MessageContentOutputItem'
+        - type: object
+          properties:
+            text:
+              type: string
+            annotations:
+              items:
+                $ref: "#/components/schemas/Annotation"
+              type: array
+          required:
+            - type
+            - text
+    MessageRefusalOutputItemContent:
+      allOf:
+        - $ref: '#/components/schemas/MessageContentOutputItem'
+        - type: object
+          properties:
+            refusal:
+              type: string
+          required:
+            - type
+            - refusal
+    FileSearchResponsesApiToolCallOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - properties:
+            id:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - searching
+                - completed
+                - incomplete
+                - failed
+            queries:
+              type: array
+              items:
+                type: string
+            results:
+              type: array
+              items:
+                type: object
+                properties:
+                  file_id:
+                    type: string
+                  text:
+                    type: string
+                  filename:
+                    type: string
+                  attributes:
+                    type: object
+                  score:
+                    type: number
+                    format: double
+          type: object
+          required:
+            - id
+            - type
+            - status
+            - queries
+    FunctionResponsesApiToolCallOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            name:
+              type: string
+            arguments:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          type: object
+          required:
+            - type
+            - call_id
+            - name
+            - arguments
+    WebSearchResponsesApiToolCallOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - properties:
+            id:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - searching
+                - completed
+                - failed
+          type: object
+          required:
+            - id
+            - type
+            - status
+    ComputerResponsesApiToolCallOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            action:
+              $ref: "#/components/schemas/ComputerAction"
+            pending_safety_checks:
+              type: array
+              items:
+                $ref: "#/components/schemas/ComputerResponsesApiToolCallSafetyCheck"
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - type
+            - id
+            - action
+            - call_id
+            - pending_safety_checks
+            - status
+    ReasoningItemOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            summary:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - summary_text
+                  text:
+                    type: string
+                required:
+                  - type
+                  - text
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - id
+            - summary
+            - type
+    LocalShellOutputItem:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OutputItem'
+        - type: object
+          properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            action:
+              $ref: '#/components/schemas/LocalShellAction'
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          required:
+            - id
+            - call_id
+            - type
+            - action
+    LocalShellAction:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/LocalShellActionType'
+      discriminator:
+        propertyName: type
+        mapping:
+          exec: "LocalShellExecAction"
+    LocalShellActionType:
+      type: string
+      enum:
+        - exec
+    LocalShellExecAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/LocalShellAction'
+        - type: object
+          properties:
+            command:
+              type: array
+              items:
+                type: string
+            env:
+              type: object
+            timeout_ms:
+              type: integer
+            user:
+              type: string
+            working_directory:
+              type: string
+          required:
+            - type
+            - command
+            - env
+
+    MessageRole:
+      type: string
+      enum:
+        - user
+        - system
+        - developer
+        - assistant
+
+
+    ComputerResponsesApiToolCallSafetyCheck:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            id:
+              type: string
+            code:
+              type: string
+            message:
+              type: string
+          required:
+            - id
+            - code
+            - message
+    ComputerAction:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/ComputerActionType'
+      discriminator:
+        propertyName: type
+        mapping:
+          click: "ClickComputerAction"
+          double_click: "DoubleClickComputerAction"
+          drag: "DragComputerAction"
+          keypress: "KeyPressComputerAction"
+          move: "MoveComputerAction"
+          screenshot: "ScreenshotComputerAction"
+          scroll: "ScrollComputerAction"
+          type: "TypeComputerAction"
+          wait: "WaitComputerAction"
+    ComputerActionType:
+      type: string
+      enum:
+        - click
+        - double_click
+        - drag
+        - keypress
+        - move
+        - screenshot
+        - scroll
+        - type
+        - wait
+    ClickComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            button:
+              $ref: '#/components/schemas/ButtonType'
+            x:
+              type: integer
+            y:
+              type: integer
+          required:
+            - type
+            - button
+            - x
+            - y
+    ButtonType:
+      type: string
+      enum:
+        - left
+        - right
+        - wheel
+        - back
+        - forward
+    DoubleClickComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            x:
+              type: integer
+            y:
+              type: integer
+          required:
+            - type
+            - x
+            - y
+    DragComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            path:
+              type: array
+              items:
+                $ref: "#/components/schemas/Coordinate"
+          required:
+            - type
+            - path
+    Coordinate:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            x:
+              type: integer
+            y:
+              type: integer
+          required:
+            - x
+            - y
+    KeyPressComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            keys:
+              type: array
+              items:
+                type: string
+          required:
+            - type
+            - keys
+    MoveComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            x:
+              type: integer
+            y:
+              type: integer
+          required:
+            - type
+            - x
+            - y
+    ScreenshotComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          required:
+            - type
+    ScrollComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            x:
+              type: integer
+            y:
+              type: integer
+            scroll_x:
+              type: integer
+            scroll_y:
+              type: integer
+          required:
+            - type
+            - x
+            - y
+            - scroll_x
+            - scroll_y
+    TypeComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          properties:
+            text:
+              type: string
+          required:
+            - type
+            - text
+    WaitComputerAction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ComputerAction'
+        - type: object
+          required:
+            - type
+
+
+    ResponsesApiResult:
+      allOf:
+        - $ref: "#/components/schemas/ModelResponsesApiProperties"
+        - $ref: "#/components/schemas/ResponsesApiProperties"
+        - type: object
+          properties:
+            id:
+              type: string
+            object:
+              type: string
+            status:
+              type: string
+              enum:
+                - completed
+                - failed
+                - in_progress
+                - incomplete
+            created_at:
+              type: number
+            error:
+              $ref: "#/components/schemas/ResponsesApiError"
+            incomplete_details:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  enum:
+                    - max_output_tokens
+                    - content_filter
+            output:
+              type: array
+              items:
+                $ref: "#/components/schemas/OutputItem"
+            output_text:
+              type: string
+            usage:
+              $ref: "#/components/schemas/ResponsesApiUsage"
+            parallel_tool_calls:
+              type: boolean
+            background:
+              type: boolean
+            metadata:
+              $ref: "#/components/schemas/Metadata"
+          required:
+            - id
+            - created_at
+            - model
+            - tools
+            - output
+            - parallel_tool_calls
+            - tool_choice
+
+
+
+    ResponsesApiStreamEvent:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/ResponsesApiStreamEventType'
+      discriminator:
+        propertyName: type
+        mapping:
+          "response.output_text.annotation.added": "ResponsesApiTextAnnotationDeltaEvent"
+          "response.output_text.delta": "ResponsesApiTextDeltaEvent"
+          "response.output_text.done": "ResponsesApiTextDoneEvent"
+          "response.web_search_call.completed": "ResponsesApiWebSearchCallCompletedEvent"
+          "response.web_search_call.in_progress": "ResponsesApiWebSearchCallInProgressEvent"
+          "response.web_search_call.searching": "ResponsesApiWebSearchCallSearchingEvent"
+          "response.audio.delta": "ResponsesApiAudioDeltaEvent"
+          "response.audio.done": "ResponsesApiAudioDoneEvent"
+          "response.audio.transcript.delta": "ResponsesApiAudioTranscriptDeltaEvent"
+          "response.audio.transcript.done": "ResponsesApiAudioTranscriptDoneEvent"
+          "response.code_interpreter_call.code.delta": "ResponsesApiCodeInterpreterCallCodeDeltaEvent"
+          "response.code_interpreter_call.code.done": "ResponsesApiCodeInterpreterCallCodeDoneEvent"
+          "response.code_interpreter_call.completed": "ResponsesApiCodeInterpreterCallCompletedEvent"
+          "response.code_interpreter_call.in_progress": "ResponsesApiCodeInterpreterCallInProgressEvent"
+          "response.code_interpreter_call.interpreting": "ResponsesApiCodeInterpreterCallInterpretingEvent"
+          "response.completed": "ResponsesApiCompletedEvent"
+          "response.content_part.added": "ResponsesApiContentPartAddedEvent"
+          "response.content_part.done": "ResponsesApiContentPartDoneEvent"
+          "response.created": "ResponsesApiCreatedEvent"
+          "error": "ResponsesApiErrorEvent"
+          "response.failed": "ResponsesApiFailedEvent"
+          "response.file_search_call.completed": "ResponsesApiFileSearchCallCompletedEvent"
+          "response.file_search_call.in_progress": "ResponsesApiFileSearchCallInProgressEvent"
+          "response.file_search_call.searching": "ResponsesApiFileSearchCallSearchingEvent"
+          "response.function_call_arguments.delta": "ResponsesApiFunctionCallArgumentsDeltaEvent"
+          "response.function_call_arguments.done": "ResponsesApiFunctionCallArgumentsDoneEvent"
+          "response.in_progress": "ResponsesApiInProgressEvent"
+          "response.incomplete": "ResponsesApiIncompleteEvent"
+          "response.output_item.added": "ResponsesApiOutputItemAddedEvent"
+          "response.output_item.done": "ResponsesApiOutputItemDoneEvent"
+          "response.reasoning_summary_part.added": "ResponsesApiReasoningSummaryPartAddedEvent"
+          "response.reasoning_summary_part.done": "ResponsesApiReasoningSummaryPartDoneEvent"
+          "response.reasoning_summary_text.delta": "ResponsesApiReasoningSummaryTextDeltaEvent"
+          "response.reasoning_summary_text.done": "ResponsesApiReasoningSummaryTextDoneEvent"
+          "response.refusal.delta": "ResponsesApiRefusalDeltaEvent"
+          "response.refusal.done": "ResponsesApiRefusalDoneEvent"
+    ResponsesApiStreamEventType:
+      type: string
+      enum:
+        - response.output_text.annotation.added
+        - response.output_text.delta
+        - response.output_text.done
+        - response.web_search_call.completed
+        - response.web_search_call.in_progress
+        - response.web_search_call.searching
+        - response.audio.delta
+        - response.audio.done
+        - response.audio.transcript.delta
+        - response.audio.transcript.done
+        - response.code_interpreter_call.code.delta
+        - response.code_interpreter_call.code.done
+        - response.code_interpreter_call.completed
+        - response.code_interpreter_call.in_progress
+        - response.code_interpreter_call.interpreting
+        - response.completed
+        - response.content_part.added
+        - response.content_part.done
+        - response.created
+        - error
+        - response.failed
+        - response.file_search_call.completed
+        - response.file_search_call.in_progress
+        - response.file_search_call.searching
+        - response.function_call_arguments.delta
+        - response.function_call_arguments.done
+        - response.in_progress
+        - response.incomplete
+        - response.output_item.added
+        - response.output_item.done
+        - response.reasoning_summary_part.added
+        - response.reasoning_summary_part.done
+        - response.reasoning_summary_text.delta
+        - response.reasoning_summary_text.done
+        - response.refusal.delta
+        - response.refusal.done
+    ResponsesApiTextAnnotationDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            content_index:
+              type: integer
+            annotation_index:
+              type: integer
+            annotation:
+              $ref: "#/components/schemas/Annotation"
+          required:
+            - type
+            - item_id
+            - output_index
+            - content_index
+            - annotation_index
+            - annotation
+    ResponsesApiTextDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            content_index:
+              type: integer
+            delta:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - content_index
+            - delta
+    ResponsesApiTextDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            content_index:
+              type: integer
+            text:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - content_index
+            - text
+    ResponsesApiUsage:
+      type: object
+      properties:
+        input_tokens:
+          type: integer
+        input_tokens_details:
+          type: object
+          properties:
+            cached_tokens:
+              type: integer
+          required:
+            - cached_tokens
+        output_tokens:
+          type: integer
+        output_tokens_details:
+          type: object
+          properties:
+            reasoning_tokens:
+              type: integer
+          required:
+            - reasoning_tokens
+        total_tokens:
+          type: integer
+      required:
+        - input_tokens
+        - input_tokens_details
+        - output_tokens
+        - output_tokens_details
+        - total_tokens
+    ResponsesApiWebSearchCallCompletedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item_id:
+              type: string
+          required:
+            - type
+            - output_index
+            - item_id
+    ResponsesApiWebSearchCallInProgressEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item_id:
+              type: string
+          required:
+            - type
+            - output_index
+            - item_id
+    ResponsesApiWebSearchCallSearchingEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item_id:
+              type: string
+          required:
+            - type
+            - output_index
+            - item_id
+    ResponsesApiError:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            code:
+              $ref: "#/components/schemas/ResponsesApiErrorCode"
+            message:
+              type: string
+          required:
+            - code
+            - message
+    ResponsesApiErrorCode:
+      type: string
+    ResponsesApiAudioDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            delta:
+              type: string
+          required:
+            - type
+            - delta
+    ResponsesApiAudioDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          required:
+            - type
+            - response_id
+    ResponsesApiAudioTranscriptDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            delta:
+              type: string
+          required:
+            - type
+            - response_id
+            - delta
+    ResponsesApiAudioTranscriptDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          required:
+            - type
+            - response_id
+    ResponsesApiCodeInterpreterCallCodeDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            delta:
+              type: string
+          required:
+            - type
+            - response_id
+            - output_index
+            - delta
+    ResponsesApiCodeInterpreterCallCodeDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            code:
+              type: string
+          required:
+            - type
+            - response_id
+            - output_index
+            - code
+    ResponsesApiCodeInterpreterCallCompletedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            code_interpreter_call:
+              $ref: "#/components/schemas/CodeInterpreterResponsesApiToolCall"
+          required:
+            - type
+            - response_id
+            - output_index
+            - code_interpreter_call
+    ResponsesApiCodeInterpreterCallInProgressEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            code_interpreter_call:
+              $ref: "#/components/schemas/CodeInterpreterResponsesApiToolCall"
+          required:
+            - type
+            - response_id
+            - output_index
+            - code_interpreter_call
+    ResponsesApiCodeInterpreterCallInterpretingEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            code_interpreter_call:
+              $ref: "#/components/schemas/CodeInterpreterResponsesApiToolCall"
+          required:
+            - type
+            - response_id
+            - output_index
+            - code_interpreter_call
+    ResponsesApiCompletedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            response:
+              $ref: "#/components/schemas/ResponsesApiResult"
+          required:
+            - type
+            - response
+    ResponsesApiContentPartAddedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            content_index:
+              type: integer
+            part:
+              $ref: "#/components/schemas/MessageContentOutputItem"
+          required:
+            - type
+            - item_id
+            - output_index
+            - content_index
+            - part
+    ResponsesApiContentPartDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            content_index:
+              type: integer
+            part:
+              $ref: "#/components/schemas/MessageContentOutputItem"
+          required:
+            - type
+            - item_id
+            - output_index
+            - content_index
+            - part
+    ResponsesApiCreatedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            response:
+              $ref: "#/components/schemas/ResponsesApiResult"
+          required:
+            - type
+            - response
+    ResponsesApiErrorEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            param:
+              type: string
+          required:
+            - type
+            - code
+            - message
+            - param
+    ResponsesApiFailedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            response:
+              $ref: "#/components/schemas/ResponsesApiResult"
+          required:
+            - type
+            - response
+    ResponsesApiFileSearchCallCompletedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item_id:
+              type: string
+          required:
+            - type
+            - output_index
+            - item_id
+    ResponsesApiFileSearchCallInProgressEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item_id:
+              type: string
+          required:
+            - type
+            - output_index
+            - item_id
+    ResponsesApiFileSearchCallSearchingEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item_id:
+              type: string
+          required:
+            - type
+            - output_index
+            - item_id
+    ResponsesApiFunctionCallArgumentsDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            delta:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - delta
+    ResponsesApiFunctionCallArgumentsDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            arguments:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - arguments
+    ResponsesApiInProgressEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            response:
+              $ref: "#/components/schemas/ResponsesApiResult"
+          required:
+            - type
+            - response
+    ResponsesApiIncompleteEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            response:
+              $ref: "#/components/schemas/ResponsesApiResult"
+          required:
+            - type
+            - response
+    ResponsesApiOutputItemAddedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item:
+              $ref: "#/components/schemas/OutputItem"
+          required:
+            - type
+            - output_index
+            - item
+    ResponsesApiOutputItemDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            output_index:
+              type: integer
+            item:
+              $ref: "#/components/schemas/OutputItem"
+          required:
+            - type
+            - output_index
+            - item
+    ResponsesApiReasoningSummaryPartAddedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            summary_index:
+              type: integer
+            part:
+              type: object
+              properties:
+                type:
+                  type: string
+                text:
+                  type: string
+              required:
+                - type
+                - text
+          required:
+            - type
+            - item_id
+            - output_index
+            - summary_index
+            - part
+    ResponsesApiReasoningSummaryPartDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            summary_index:
+              type: integer
+            part:
+              type: object
+              properties:
+                type:
+                  type: string
+                text:
+                  type: string
+              required:
+                - type
+                - text
+          required:
+            - type
+            - item_id
+            - output_index
+            - summary_index
+            - part
+    ResponsesApiReasoningSummaryTextDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            summary_index:
+              type: integer
+            delta:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - summary_index
+            - delta
+    ResponsesApiReasoningSummaryTextDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            summary_index:
+              type: integer
+            text:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - summary_index
+            - text
+    ResponsesApiRefusalDeltaEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            content_index:
+              type: integer
+            delta:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - content_index
+            - delta
+    ResponsesApiRefusalDoneEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            item_id:
+              type: string
+            output_index:
+              type: integer
+            content_index:
+              type: integer
+            refusal:
+              type: string
+          required:
+            - type
+            - item_id
+            - output_index
+            - content_index
+            - refusal
+    CodeInterpreterResponsesApiToolCall:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiStreamEvent'
+        - type: object
+          properties:
+            id:
+              type: string
+            code:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - interpreting
+                - completed
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/CodeInterpreterResponsesApiToolOutput"
+          required:
+            - id
+            - type
+            - code
+            - status
+            - results
+    CodeInterpreterResponsesApiToolOutput:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/CodeInterpreterResponsesApiToolOutputType'
+      discriminator:
+        propertyName: type
+        mapping:
+          logs: "CodeInterpreterTextOutput"
+          files: "CodeInterpreterFileOutput"
+    CodeInterpreterResponsesApiToolOutputType:
+      type: string
+      enum:
+        - logs
+        - files
+    CodeInterpreterFileOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            files:
+              type: array
+              items:
+                type: object
+                properties:
+                  mime_type:
+                    type: string
+                  file_id:
+                    type: string
+                required:
+                  - mime_type
+                  - file_id
+          required:
+            - type
+            - files
+    CodeInterpreterTextOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            logs:
+              type: string
+          required:
+            - type
+            - logs
+    ResponsesApiTool:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/ResponsesApiToolType'
+      discriminator:
+        propertyName: type
+        mapping:
+          file_search: "FileSearchResponsesApiTool"
+          function: "FunctionResponsesApiTool"
+          web_search_preview: "WebSearchPreviewResponsesApiTool"
+          web_search_preview_2025_03_11: "WebSearchPreviewResponsesApiTool"
+          computer_use_preview: "ComputerUsePreviewResponsesApiTool"
+          local_shell: "LocalShellResponsesApiTool"
+          code_interpreter: "CodeInterpreterResponsesApiTool"
+          image_generation: "ImageGenerationResponsesApiTool"
+    ResponsesApiToolType:
+      type: string
+      enum:
+        - file_search
+        - function
+        - web_search_preview
+        - web_search_preview_2025_03_11
+        - computer_use_preview
+        - local_shell
+        - code_interpreter
+        - image_generation
+    CodeInterpreterResponsesApiTool:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            container:
+              $ref: '#/components/schemas/CodeInterpreterContainer'
+          required:
+            - type
+            - container
+
+    CodeInterpreterContainer:
+      oneOf:
+        - $ref: '#/components/schemas/CodeInterpreterIdContainer'
+        - $ref: '#/components/schemas/CodeInterpreterAutoContainer'
+    CodeInterpreterIdContainer:
+      type: object
+      properties:
+        value:
+          type: string
+      required:
+        - value
+    CodeInterpreterAutoContainer:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/CodeInterpreterContainerType'
+        file_ids:
+          type: array
+          items:
+            type: string
+      required:
+        - type
+
+    ImageGenerationResponsesApiTool:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            background:
+              $ref: '#/components/schemas/ImageGenerationBackground'
+            input_image_mask:
+              type: object
+              properties:
+                file_id:
+                  type: string
+                image_url:
+                  type: string
+            model:
+              type: string
+            moderation:
+              $ref: '#/components/schemas/ImageGenerationModeration'
+            output_compression:
+              type: integer
+            output_format:
+              $ref: '#/components/schemas/ImageGenerationOutputFormat'
+            partial_images:
+              type: integer
+            quality:
+              $ref: '#/components/schemas/ImageGenerationQuality'
+            size:
+              $ref: '#/components/schemas/ImageGenerationSize'
+          required:
+            - type
+    ImageGenerationOutputFormat:
+      type: string
+      enum:
+        - png
+        - webp
+        - jpeg
+    ImageGenerationBackground:
+      type: string
+      enum:
+        - transparent
+        - opaque
+        - auto
+    ImageGenerationModeration:
+      type: string
+      enum:
+        - auto
+    ImageGenerationQuality:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - auto
+    ImageGenerationSize:
+      type: string
+      enum:
+        - "1024x1024"
+        - "1024x1536"
+        - "1536x1024"
+        - auto
+    FileSearchResponsesApiTool:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            vector_store_ids:
+              items:
+                type: string
+              type: array
+            max_num_results:
+              type: integer
+            ranking_options:
+              $ref: "#/components/schemas/RankingOptions"
+            filters:
+              $ref: "#/components/schemas/Filter"
+          required:
+            - type
+            - vector_store_ids
+    FunctionResponsesApiTool:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            parameters:
+              type: object
+            strict:
+              type: boolean
+          required:
+            - type
+            - name
+            - parameters
+    WebSearchPreviewResponsesApiTool:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            user_location:
+              $ref: "#/components/schemas/UserLocation"
+            search_context_size:
+              type: string
+              enum:
+                - low
+                - medium
+                - high
+    LocalShellResponsesApiTool:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          required:
+            - type
+    ComputerUsePreviewResponsesApiTool:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ResponsesApiTool'
+        - type: object
+          properties:
+            environment:
+              type: string
+              enum:
+                - windows
+                - mac
+                - linux
+                - ubuntu
+                - browser
+            display_width:
+              type: integer
+            display_height:
+              type: integer
+          required:
+            - type
+            - environment
+            - display_width
+            - display_height
+    UserLocation:
+      properties:
+        type:
+          $ref: '#/components/schemas/UserLocationType'
+        country:
+          type: string
+        region:
+          type: string
+        city:
+          type: string
+        timezone:
+          type: string
+      type: object
+    UserLocationType:
+      type: string
+      enum:
+        - approximate
+    RankingOptions:
+      properties:
+        ranker:
+          type: string
+        score_threshold:
+          type: number
+      type: object
+    Filter:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/FilterType'
+      discriminator:
+        propertyName: type
+        mapping:
+          and: "CompoundFilter"
+          or: "CompoundFilter"
+          eq: "ComparisonFilter"
+          ne: "ComparisonFilter"
+          gt: "ComparisonFilter"
+          gte: "ComparisonFilter"
+          lt: "ComparisonFilter"
+          lte: "ComparisonFilter"
+    FilterType:
+      type: string
+      enum:
+        - and
+        - or
+        - eq
+        - ne
+        - gt
+        - gte
+        - lt
+        - lte
+    ComparisonFilter:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Filter'
+        - type: object
+          properties:
+            key:
+              type: string
+            value:
+              type: object
+          required:
+            - type
+            - key
+            - value
+    CompoundFilter:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Filter'
+        - type: object
+          properties:
+            filters:
+              type: array
+              items:
+                $ref: "#/components/schemas/Filter"
+          required:
+            - type
+            - filters
+
+    Metadata:
+      type: object
+      additionalProperties:
+        type: string
+
+    GetResponsesApiResponseParameters:
+      type: object
+      properties:
+        response_id:
+          type: string
+        include:
+          type: array
+          items:
+            type: string
+        starting_after:
+          type: integer
+        stream:
+          type: boolean
+      required:
+        - response_id
+
+    DeleteResponsesApiResponseParameters:
+      type: object
+      properties:
+        response_id:
+          type: string
+      required:
+        - response_id
+
+    DeleteResponsesApiResponseResult:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        deleted:
+          type: boolean
+      required:
+        - id
+        - object
+        - deleted
+
+    CancelResponsesApiResponseParameters:
+      type: object
+      properties:
+        response_id:
+          type: string
+      required:
+        - response_id
+
+    ListResponsesApiInputItemsParameters:
+      type: object
+      properties:
+        response_id:
+          type: string
+        after:
+          type: string
+        before:
+          type: string
+        include:
+          type: array
+          items:
+            type: string
+        limit:
+          type: integer
+        order:
+          type: string
+      required:
+        - response_id
+
+    ListResponsesApiInputItemsResult:
+      type: object
+      properties:
+        object:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputItem'
+        first_id:
+          type: string
+        last_id:
+          type: string
+        has_more:
+          type: boolean
+      required:
+        - object
+        - data
+        - first_id
+        - last_id
+        - has_more
