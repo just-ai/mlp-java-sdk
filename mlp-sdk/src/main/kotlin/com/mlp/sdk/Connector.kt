@@ -295,14 +295,16 @@ class Connector(
             else
                 logProto(request, prompt = "GateToService (connector $connectorId)")
 
+            val contentHidden = request.getHeadersOrDefault("Content-Hidden", "false").toBoolean()
+
             when (request.bodyCase) {
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
-                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker)
-                PARTIALPREDICT -> executor.streamPredict(request.partialPredict, request.requestId, connectorId, grpcChannelId)
-                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId)
-                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId)
-                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId)
+                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker, contentHidden)
+                PARTIALPREDICT -> executor.streamPredict(request.partialPredict, request.requestId, connectorId, grpcChannelId, contentHidden)
+                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId, contentHidden)
+                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId, contentHidden)
+                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId, contentHidden)
                 ERROR -> processError(request.error)
                 CANCEL -> executor.cancelRequest(connectorId, request.cancel.requestIdToCancel)
                 STOPSERVING -> processStopServing()

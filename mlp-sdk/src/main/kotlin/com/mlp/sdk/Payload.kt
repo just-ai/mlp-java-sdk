@@ -46,10 +46,17 @@ data class PayloadWithConfig(val payload: PayloadInterface, val config: PayloadI
 data class Payload(
     override val dataType: String?,
     val data: String,
+    val contentHidden: Boolean = false
 ): MlpResponse, PayloadInterface {
     constructor(data: String) : this(null, data)
 
     override fun stringData(): String = data
+
+    override fun toString(): String {
+        if (contentHidden) return "Payload(dataType=$dataType, data=\"content-hidden\")"
+
+        return "Payload(dataType=$dataType, data=$data)"
+    }
 
     companion object {
         val emptyPayload = Payload("{}")
@@ -59,8 +66,15 @@ data class Payload(
 data class ProtobufPayload(
     override val dataType: String?,
     val data: com.google.protobuf.ByteString,
+    val contentHidden: Boolean = false
 ): MlpResponse, PayloadInterface {
     override fun stringData(): String = data.toStringUtf8()
+
+    override fun toString(): String {
+        if (contentHidden) return "ProtobufPayload(dataType=$dataType, data=\"content-hidden\")"
+
+        return "ProtobufPayload(dataType=$dataType, data=$data)"
+    }
 }
 
 
