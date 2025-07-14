@@ -53,13 +53,20 @@ class TaskExecutor(
     fun isAbleProcessNewJobs(connectorId: Long, grpcChannelId: Long) =
         jobsContainer.isAbleProcessNewJobs(connectorId, grpcChannelId)
 
-    fun predict(request: PredictRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long, tracker: TimeTracker) {
+    fun predict(
+        request: PredictRequestProto,
+        requestId: Long,
+        connectorId: Long,
+        grpcChannelId: Long,
+        tracker: TimeTracker,
+        contentHidden: Boolean
+    ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-            val dataPayload = requireNotNull(request.data.asPayload) { "Payload data" }
+            val dataPayload = requireNotNull(request.data.getAsPayload(contentHidden)) { "Payload data" }
 
             runCatching {
-                when (val responsePayload = action.predict(dataPayload, request.config.asPayload)) {
+                when (val responsePayload = action.predict(dataPayload, request.config.getAsPayload(contentHidden))) {
                     is PayloadInterface -> responseBuilder.setPredict(responsePayload)
                     is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload)
                     is MlpResponseException -> throw responsePayload.exception
@@ -78,7 +85,13 @@ class TaskExecutor(
         }
     }
 
-    fun streamPredict(request: PartialPredictRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
+    fun streamPredict(
+        request: PartialPredictRequestProto,
+        requestId: Long,
+        connectorId: Long,
+        grpcChannelId: Long,
+        contentHidden: Boolean
+    ) {
         val channel = channelsContainer.computeIfAbsent(requestId) {
             val channel = Channel<PayloadWithConfig>()
             launchAndStore(requestId, connectorId, grpcChannelId) {
@@ -115,21 +128,21 @@ class TaskExecutor(
         }
 
         if (request.hasData()) {
-            val dataPayload = requireNotNull(request.data?.asPayloadInterface) { "Payload data" }
-            val config = if (request.config == request.config.defaultInstanceForType) null else request.config?.asPayload
+            val dataPayload = requireNotNull(request.data?.getAsPayloadInterface(contentHidden)) { "Payload data" }
+            val config = if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(contentHidden)
             runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
         }
 
         if (request.finish) channel.close()
     }
 
-    fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
+    fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long, contentHidden: Boolean) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
-            val trainPayload = request.trainData.asPayload
-            val targetsPayload = request.targetsData?.asPayload
-            val configPayload = request.config?.asPayload
+            val trainPayload = request.trainData.getAsPayload(contentHidden)
+            val targetsPayload = request.targetsData?.getAsPayload(contentHidden)
+            val configPayload = request.config?.getAsPayload(contentHidden)
             val modelDir = request.modelDir
 
             runCatching {
@@ -157,13 +170,19 @@ class TaskExecutor(
         }
     }
 
-    fun ext(request: ExtendedRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
+    fun ext(
+        request: ExtendedRequestProto,
+        requestId: Long,
+        connectorId: Long,
+        grpcChannelId: Long,
+        contentHidden: Boolean
+    ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val methodName = requireNotNull(request.methodName) { "methodName" }
             val params =
-                requireNotNull(request.paramsMap.mapValues { requireNotNull(it.value.asPayload) }) { "paramsMap" }
+                requireNotNull(request.paramsMap.mapValues { requireNotNull(it.value.getAsPayload(contentHidden)) }) { "paramsMap" }
 
             runCatching {
                 when (val responsePayload = action.ext(methodName, params)) {
@@ -182,17 +201,23 @@ class TaskExecutor(
         }
     }
 
-    fun batch(request: BatchRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long) {
+    fun batch(
+        request: BatchRequestProto,
+        requestId: Long,
+        connectorId: Long,
+        grpcChannelId: Long,
+        contentHidden: Boolean
+    ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
 
             val data = request.dataList
 
-            val payloadData = data.map { it.data.asPayload }
+            val payloadData = data.map { it.data.getAsPayload(contentHidden) }
             val requestsIdes = data.map { it.requestId }
 
             runCatching {
-                val responses = action.batch(payloadData, request.config.asPayload)
+                val responses = action.batch(payloadData, request.config.getAsPayload(contentHidden))
                 responseBuilder.setBatch(responses, requestsIdes)
             }.onFailure {
                 logger.error("Error while processing batch request", it)
@@ -274,11 +299,11 @@ internal val PayloadInterface.asProto
         dataType?.let { builder.dataType = it }
     }
 
-private val PayloadProto.asPayload: Payload
-    get() = Payload(dataType, json)
+private fun PayloadProto.getAsPayload(contentHidden: Boolean): Payload =
+    Payload(dataType, json, contentHidden)
 
-private val PayloadProto.asPayloadInterface: PayloadInterface
-    get() = if (hasJson()) Payload(dataType, json) else ProtobufPayload(dataType, protobuf)
+private fun PayloadProto.getAsPayloadInterface(contentHidden: Boolean): PayloadInterface =
+    if (hasJson()) Payload(dataType, json, contentHidden) else ProtobufPayload(dataType, protobuf, contentHidden)
 
 private fun Builder.setPredict(prediction: PayloadInterface) {
     BillingUnitsThreadLocal.getUnits()?.also {
