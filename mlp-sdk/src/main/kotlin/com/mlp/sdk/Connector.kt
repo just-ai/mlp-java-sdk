@@ -6,10 +6,10 @@ import com.mlp.gate.GateGrpc
 import com.mlp.gate.GateToServiceProto
 import com.mlp.gate.GateToServiceProto.BodyCase.BATCH
 import com.mlp.gate.GateToServiceProto.BodyCase.BODY_NOT_SET
+import com.mlp.gate.GateToServiceProto.BodyCase.CANCEL
 import com.mlp.gate.GateToServiceProto.BodyCase.CLUSTER
 import com.mlp.gate.GateToServiceProto.BodyCase.ERROR
 import com.mlp.gate.GateToServiceProto.BodyCase.EXT
-import com.mlp.gate.GateToServiceProto.BodyCase.CANCEL
 import com.mlp.gate.GateToServiceProto.BodyCase.FIT
 import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
 import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
@@ -26,7 +26,6 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.*
 import java.io.File
 import java.time.Duration
 import java.time.Duration.between
@@ -35,11 +34,22 @@ import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.Long.Companion.MIN_VALUE
 import kotlin.math.min
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
 import org.slf4j.MDC
-import kotlin.Long.Companion.MIN_VALUE
+
+const val CONTENT_HIDDEN_HEADER = "Content-Hidden"
 
 class Connector(
     @Volatile
@@ -261,10 +271,12 @@ class Connector(
         }
 
         suspend fun send(grpcResponse: ServiceToGateProto) {
+            val contentHidden = grpcResponse.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean()
+
             if (grpcResponse.hasHeartBeat())
                 logger.trace("ServiceToGateProto: heartbeat")
             else
-                logProto(grpcResponse, prompt = "ServiceToGate")
+                logProto(grpcResponse, prompt = "ServiceToGate", contentHidden = contentHidden)
 
             check(!state.notStarted && !state.shutdown) { "$this: can't send message in state $state" }
 
@@ -290,7 +302,7 @@ class Connector(
         }
 
         private fun processRequest(request: GateToServiceProto, tracker: TimeTracker) {
-            val contentHidden = request.getHeadersOrDefault("Content-Hidden", "false").toBoolean()
+            val contentHidden = request.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean()
 
             if (request.hasHeartBeat())
                 logger.trace("GateToService (connector $connectorId, requestId: ${request.requestId}): heartbeat")
@@ -338,6 +350,7 @@ class Connector(
             when (error.code) {
                 "mlp.gate.instance_by_token_not_found" ->
                     processTokenNotFound()
+
                 else ->
                     logger.error("Connector $connectorId: error ${error.message}")
             }
@@ -379,7 +392,7 @@ class Connector(
                 logConnecting("{}: sent stopServing to gate, waiting for stopServing from gate ...", this)
 
                 withTimeout(config.shutdownConfig.actionConnectorMs) {
-                    while(!state.shutdown) {
+                    while (!state.shutdown) {
                         delay(100)
                     }
                 }
@@ -550,7 +563,7 @@ class Connector(
     }
 
     private fun AtomicReference<GrpcChannel?>.isShutdownStateOrNull() = get() == null
-            || get()?.state?.shutdown == true
+        || get()?.state?.shutdown == true
 
     private fun AtomicReference<GrpcChannel?>.isActiveState() = get()
         ?.state

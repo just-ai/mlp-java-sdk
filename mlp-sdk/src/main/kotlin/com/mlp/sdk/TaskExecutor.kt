@@ -63,6 +63,7 @@ class TaskExecutor(
     ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
             val dataPayload = requireNotNull(request.data.getAsPayload(contentHidden)) { "Payload data" }
 
             runCatching {
@@ -105,11 +106,13 @@ class TaskExecutor(
                     }.catch {
                         logger.error("requestId: $requestId Error while processing stream predict request", it)
                         val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                            .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
                         responseBuilder.setError(it.asErrorProto)
                         runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                             .onFailure { logger.error("Error while sending predict response", it) }
                     }.collect { response ->
                         val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                            .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
                         responseBuilder.setPartialPredict(response.payload, response.last)
                         runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                             .onFailure { logger.error("Error while sending predict response", it) }
@@ -119,6 +122,7 @@ class TaskExecutor(
                     channel.close(it)
                     channelsContainer.remove(requestId)
                     val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                        .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
                     responseBuilder.setError(it.asErrorProto)
                     runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                         .onFailure { logger.error("Error while sending predict response", it) }
@@ -139,6 +143,7 @@ class TaskExecutor(
     fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long, contentHidden: Boolean) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
 
             val trainPayload = request.trainData.getAsPayload(contentHidden)
             val targetsPayload = request.targetsData?.getAsPayload(contentHidden)
@@ -149,7 +154,9 @@ class TaskExecutor(
                 val percentageConsumer: suspend (Int) -> Unit = { percentage ->
                     runCatching {
                         val status = FitStatusProto.newBuilder().setPercentage(percentage).build()
-                        val proto = ServiceToGateProto.newBuilder().setRequestId(requestId).setFitStatus(status).build()
+                        val proto = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                            .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                            .setFitStatus(status).build()
                         connectorsPool.send(connectorId, proto)
                     }
                 }
@@ -179,6 +186,7 @@ class TaskExecutor(
     ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
 
             val methodName = requireNotNull(request.methodName) { "methodName" }
             val params =
@@ -210,6 +218,7 @@ class TaskExecutor(
     ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
 
             val data = request.dataList
 
