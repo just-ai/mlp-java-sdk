@@ -290,12 +290,12 @@ class Connector(
         }
 
         private fun processRequest(request: GateToServiceProto, tracker: TimeTracker) {
+            val contentHidden = request.getHeadersOrDefault("Content-Hidden", "false").toBoolean()
+
             if (request.hasHeartBeat())
                 logger.trace("GateToService (connector $connectorId, requestId: ${request.requestId}): heartbeat")
             else
-                logProto(request, prompt = "GateToService (connector $connectorId)")
-
-            val contentHidden = request.getHeadersOrDefault("Content-Hidden", "false").toBoolean()
+                logProto(request, prompt = "GateToService (connector $connectorId)", contentHidden = contentHidden)
 
             when (request.bodyCase) {
                 HEARTBEAT -> processHeartbeat(request.heartBeat)

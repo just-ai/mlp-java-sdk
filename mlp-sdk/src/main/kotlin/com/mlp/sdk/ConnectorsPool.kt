@@ -139,7 +139,13 @@ class ConnectorsPool(
 internal fun WithExecutionContext.logProto(
     body: MessageLite,
     prompt: String,
+    contentHidden: Boolean = false
 ) {
+    if (contentHidden) {
+        logger.debug("$prompt: data hidden")
+        return
+    }
+
     // This size is always smaller than string version
     val approximateSize = body.serializedSize
     if (approximateSize > 1000) {
