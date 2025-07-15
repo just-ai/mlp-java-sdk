@@ -142,7 +142,7 @@ internal fun WithExecutionContext.logProto(
     contentHidden: Boolean = false
 ) {
     if (contentHidden) {
-        logger.debug("$prompt: data hidden")
+        logger.debug("$prompt: <content-hidden>")
         return
     }
 
