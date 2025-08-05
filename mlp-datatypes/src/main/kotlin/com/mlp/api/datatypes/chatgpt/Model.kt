@@ -2,6 +2,7 @@ package com.mlp.api.datatypes.chatgpt
 
 import java.util.Objects
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.mlp.api.datatypes.chatgpt.ModelRequestType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param id 
  * @param created 
  * @param ownedBy 
+ * @param supportedRequestTypes 
  */
 data class Model(
 
@@ -19,7 +21,10 @@ data class Model(
     @get:JsonProperty("created", required = true) val created: kotlin.Int,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("owned_by", required = true) val ownedBy: kotlin.String
+    @get:JsonProperty("owned_by", required = true) val ownedBy: kotlin.String,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("supported_request_types") val supportedRequestTypes: kotlin.collections.List<ModelRequestType>? = null
 ) {
 
 }
