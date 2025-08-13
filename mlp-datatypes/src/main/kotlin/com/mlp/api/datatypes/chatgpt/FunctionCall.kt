@@ -6,16 +6,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 
- * @param name 
  * @param arguments 
+ * @param name 
  */
 data class FunctionCall(
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("name", required = true) val name: kotlin.String,
+    @get:JsonProperty("arguments", required = true) val arguments: kotlin.String,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("arguments", required = true) val arguments: kotlin.String
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("name") val name: kotlin.String? = null
 ) {
 
 }
