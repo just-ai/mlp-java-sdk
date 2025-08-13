@@ -635,6 +635,8 @@ components:
           type: integer
         owned_by:
           type: string
+        modelVendor:
+          type: string
         supported_request_types:
           type: array
           items:
@@ -647,17 +649,17 @@ components:
     ModelRequestType:
       type: string
       enum:
-        - chat_completions
-        - responses
-        - realtime
-        - assistants
-        - batch_processing
-        - fine_tuning
-        - embeddings
-        - image_generation
-        - image_edit
-        - speech_generation
-        - transcription
-        - speech_to_text
-        - moderations
-        - completions
+        - CHAT_COMPLETIONS
+        - RESPONSES
+        - REALTIME
+        - ASSISTANTS
+        - BATCH_PROCESSING
+        - FINE_TUNING
+        - EMBEDDINGS
+        - IMAGE_GENERATION
+        - IMAGE_EDIT
+        - SPEECH_GENERATION
+        - TRANSCRIPTION
+        - SPEECH_TO_TEXT
+        - MODERATIONS
+        - COMPLETIONS
