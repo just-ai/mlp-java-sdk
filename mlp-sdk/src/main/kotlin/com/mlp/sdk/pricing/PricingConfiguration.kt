@@ -161,6 +161,8 @@ data class ModelPricing(
         YANDEX,
         /** Text Generation Inference */
         TGI,
+        /** Text Generation Inference */
+        DEEPSEEK,
         /** Unknown or unrecognized vendor */
         UNKNOWN
     }
@@ -257,3 +259,4 @@ class ModelVendorDeserializer : JsonDeserializer<ModelVendor>() {
         }
     }
 }
+
