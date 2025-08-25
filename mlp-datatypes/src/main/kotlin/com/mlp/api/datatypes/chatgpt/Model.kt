@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param id 
  * @param created 
  * @param ownedBy 
+ * @param modelVendor 
  * @param supportedRequestTypes 
  */
 data class Model(
@@ -22,6 +23,9 @@ data class Model(
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("owned_by", required = true) val ownedBy: kotlin.String,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("modelVendor") val modelVendor: kotlin.String? = null,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("supported_request_types") val supportedRequestTypes: kotlin.collections.List<ModelRequestType>? = null

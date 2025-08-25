@@ -49,7 +49,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = emptyList(),
                     currency = usd,
@@ -94,7 +94,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = emptyList(),
                     currency = usd,
@@ -121,7 +121,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = "v1.0",
+                    defaultSnapshot = "v1.0",
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -135,7 +135,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -166,7 +166,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -180,7 +180,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -211,7 +211,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -225,7 +225,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = "v1.0",
+                    defaultSnapshot = "v1.0",
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -246,7 +246,7 @@ class PricingSearchTest {
         val result = calculator.retrievePricingOrThrow("gpt-4")
         
         assertEquals("gpt-4", result.model)
-        assertNull(result.snapshot)
+        assertNull(result.defaultSnapshot)
     }
 
     @Test
@@ -256,7 +256,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = "v1.0",
+                    defaultSnapshot = "v1.0",
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -270,7 +270,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = "v2.0",
+                    defaultSnapshot = "v2.0",
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -291,7 +291,7 @@ class PricingSearchTest {
         val resultV1 = calculator.retrievePricingOrThrow("gpt-4")
         
         assertEquals("gpt-4", resultV1.model)
-        assertEquals("v1.0", resultV1.snapshot)
+        assertEquals("v1.0", resultV1.defaultSnapshot)
     }
 
     @Test
@@ -331,7 +331,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -345,7 +345,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -382,7 +382,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -396,7 +396,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -433,7 +433,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -464,7 +464,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "unknown-vendor-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.UNKNOWN,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -478,7 +478,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "openai-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -509,7 +509,7 @@ class PricingSearchTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -528,7 +528,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "llama-2",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.META,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -547,7 +547,7 @@ class PricingSearchTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(

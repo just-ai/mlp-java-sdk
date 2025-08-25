@@ -1,5 +1,6 @@
 package com.mlp.sdk.pricing
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
@@ -29,7 +30,7 @@ data class PricingConfiguration(
  * Pricing configuration for a specific model.
  * 
  * @property model Model identifier
- * @property snapshot Model snapshot version (optional)
+ * @property defaultSnapshot Model snapshot version used if calls model without any snapshot (optional)
  * @property modelVendor Model vendor/creator (optional)
  * @property pricing List of pricing rules for different unit types
  * @property currency Currency used for this model's pricing
@@ -37,10 +38,11 @@ data class PricingConfiguration(
  */
 data class ModelPricing(
     val model: String,
-    val snapshot: String?,
     val pricing: List<Pricing>,
     val currency: Currency? = null,
     val modelVendor: ModelVendor? = null,
+    @JsonAlias("snapshot")
+    val defaultSnapshot: String? = null,
     val isDefaultPricing: Boolean = false,
 ) {
 

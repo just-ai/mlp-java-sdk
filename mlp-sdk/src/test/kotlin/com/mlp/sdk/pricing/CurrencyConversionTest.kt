@@ -20,7 +20,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -53,7 +53,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -86,7 +86,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -119,7 +119,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -151,7 +151,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -184,7 +184,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -214,7 +214,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -245,7 +245,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -276,7 +276,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -302,7 +302,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -332,7 +332,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "eur-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -346,7 +346,7 @@ class CurrencyConversionTest {
                 ),
                 ModelPricing(
                     model = "fallback-usd",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -386,7 +386,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "eur-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -400,7 +400,7 @@ class CurrencyConversionTest {
                 ),
                 ModelPricing(
                     model = "gbp-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -414,7 +414,7 @@ class CurrencyConversionTest {
                 ),
                 ModelPricing(
                     model = "jpy-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -457,7 +457,7 @@ class CurrencyConversionTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "null-currency-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(

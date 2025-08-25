@@ -41,7 +41,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -72,7 +72,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -111,7 +111,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -154,7 +154,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -186,7 +186,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -218,7 +218,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -257,7 +257,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -296,7 +296,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -346,7 +346,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -387,7 +387,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -427,7 +427,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -457,7 +457,7 @@ class VolumePricingTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(

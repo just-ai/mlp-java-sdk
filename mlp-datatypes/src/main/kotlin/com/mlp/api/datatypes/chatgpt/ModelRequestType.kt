@@ -7,23 +7,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
 * 
-* Values: chat_completions,responses,realtime,assistants,batch_processing,fine_tuning,embeddings,image_generation,image_edit,speech_generation,transcription,speech_to_text,moderations,completions
+* Values: CHAT_COMPLETIONS,RESPONSES,REALTIME,ASSISTANTS,BATCH_PROCESSING,FINE_TUNING,EMBEDDINGS,IMAGE_GENERATION,IMAGE_EDIT,SPEECH_GENERATION,TRANSCRIPTION,SPEECH_TO_TEXT,MODERATIONS,COMPLETIONS
 */
 enum class ModelRequestType(val value: kotlin.String) {
 
-    @JsonProperty("chat_completions") chat_completions("chat_completions"),
-    @JsonProperty("responses") responses("responses"),
-    @JsonProperty("realtime") realtime("realtime"),
-    @JsonProperty("assistants") assistants("assistants"),
-    @JsonProperty("batch_processing") batch_processing("batch_processing"),
-    @JsonProperty("fine_tuning") fine_tuning("fine_tuning"),
-    @JsonProperty("embeddings") embeddings("embeddings"),
-    @JsonProperty("image_generation") image_generation("image_generation"),
-    @JsonProperty("image_edit") image_edit("image_edit"),
-    @JsonProperty("speech_generation") speech_generation("speech_generation"),
-    @JsonProperty("transcription") transcription("transcription"),
-    @JsonProperty("speech_to_text") speech_to_text("speech_to_text"),
-    @JsonProperty("moderations") moderations("moderations"),
-    @JsonProperty("completions") completions("completions")
+    @JsonProperty("CHAT_COMPLETIONS") CHAT_COMPLETIONS("CHAT_COMPLETIONS"),
+    @JsonProperty("RESPONSES") RESPONSES("RESPONSES"),
+    @JsonProperty("REALTIME") REALTIME("REALTIME"),
+    @JsonProperty("ASSISTANTS") ASSISTANTS("ASSISTANTS"),
+    @JsonProperty("BATCH_PROCESSING") BATCH_PROCESSING("BATCH_PROCESSING"),
+    @JsonProperty("FINE_TUNING") FINE_TUNING("FINE_TUNING"),
+    @JsonProperty("EMBEDDINGS") EMBEDDINGS("EMBEDDINGS"),
+    @JsonProperty("IMAGE_GENERATION") IMAGE_GENERATION("IMAGE_GENERATION"),
+    @JsonProperty("IMAGE_EDIT") IMAGE_EDIT("IMAGE_EDIT"),
+    @JsonProperty("SPEECH_GENERATION") SPEECH_GENERATION("SPEECH_GENERATION"),
+    @JsonProperty("TRANSCRIPTION") TRANSCRIPTION("TRANSCRIPTION"),
+    @JsonProperty("SPEECH_TO_TEXT") SPEECH_TO_TEXT("SPEECH_TO_TEXT"),
+    @JsonProperty("MODERATIONS") MODERATIONS("MODERATIONS"),
+    @JsonProperty("COMPLETIONS") COMPLETIONS("COMPLETIONS")
 }
 

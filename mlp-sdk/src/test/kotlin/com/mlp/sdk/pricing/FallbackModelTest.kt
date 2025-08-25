@@ -23,7 +23,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -37,7 +37,7 @@ class FallbackModelTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -68,7 +68,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "fallback-cheap",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -82,7 +82,7 @@ class FallbackModelTest {
                 ),
                 ModelPricing(
                     model = "fallback-expensive",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -113,7 +113,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "fallback-only",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -144,7 +144,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "fallback-usd",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -158,7 +158,7 @@ class FallbackModelTest {
                 ),
                 ModelPricing(
                     model = "fallback-eur",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -189,7 +189,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -220,7 +220,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -252,7 +252,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -266,7 +266,7 @@ class FallbackModelTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -296,7 +296,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "fallback-complex",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -343,7 +343,7 @@ class FallbackModelTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "normal-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -357,7 +357,7 @@ class FallbackModelTest {
                 ),
                 ModelPricing(
                     model = "fallback-first",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -371,7 +371,7 @@ class FallbackModelTest {
                 ),
                 ModelPricing(
                     model = "normal-model-2",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -385,7 +385,7 @@ class FallbackModelTest {
                 ),
                 ModelPricing(
                     model = "fallback-second",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(

@@ -81,7 +81,7 @@ class CostCalculatorTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "eur-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -95,7 +95,7 @@ class CostCalculatorTest {
                 ),
                 ModelPricing(
                     model = "usd-fallback",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -166,7 +166,7 @@ class CostCalculatorTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -202,7 +202,7 @@ class CostCalculatorTest {
                 ),
                 ModelPricing(
                     model = "llama-2",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.META,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -221,7 +221,7 @@ class CostCalculatorTest {
                 ),
                 ModelPricing(
                     model = "fallback-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(

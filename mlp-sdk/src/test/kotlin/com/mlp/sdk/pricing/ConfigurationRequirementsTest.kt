@@ -28,7 +28,7 @@ class ConfigurationRequirementsTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -60,7 +60,7 @@ class ConfigurationRequirementsTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -105,7 +105,7 @@ class ConfigurationRequirementsTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.UNKNOWN,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -137,7 +137,7 @@ class ConfigurationRequirementsTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -167,7 +167,7 @@ class ConfigurationRequirementsTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "openai-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -181,7 +181,7 @@ class ConfigurationRequirementsTest {
                 ),
                 ModelPricing(
                     model = "anthropic-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -195,7 +195,7 @@ class ConfigurationRequirementsTest {
                 ),
                 ModelPricing(
                     model = "default-vendor-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -230,7 +230,7 @@ class ConfigurationRequirementsTest {
 
                 ModelPricing(
                     model = "default-everything",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -245,7 +245,7 @@ class ConfigurationRequirementsTest {
 
                 ModelPricing(
                     model = "override-vendor",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -260,7 +260,7 @@ class ConfigurationRequirementsTest {
 
                 ModelPricing(
                     model = "override-currency",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -275,7 +275,7 @@ class ConfigurationRequirementsTest {
 
                 ModelPricing(
                     model = "override-both",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.META,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -339,7 +339,7 @@ class ConfigurationRequirementsTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -371,7 +371,7 @@ class ConfigurationRequirementsTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "openai-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.OPENAI,
                     pricing = listOf(ModelPricing.Pricing(unit = INPUT_TEXT_TOKENS, perUnit = 1000L, basePrice = BigDecimal("0.01"))),
                     currency = usd,
@@ -379,7 +379,7 @@ class ConfigurationRequirementsTest {
                 ),
                 ModelPricing(
                     model = "anthropic-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(ModelPricing.Pricing(unit = INPUT_TEXT_TOKENS, perUnit = 1000L, basePrice = BigDecimal("0.01"))),
                     currency = usd,
@@ -387,7 +387,7 @@ class ConfigurationRequirementsTest {
                 ),
                 ModelPricing(
                     model = "sber-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.SBER,
                     pricing = listOf(ModelPricing.Pricing(unit = INPUT_TEXT_TOKENS, perUnit = 1000L, basePrice = BigDecimal("0.01"))),
                     currency = usd,
@@ -395,7 +395,7 @@ class ConfigurationRequirementsTest {
                 ),
                 ModelPricing(
                     model = "yandex-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.YANDEX,
                     pricing = listOf(ModelPricing.Pricing(unit = INPUT_TEXT_TOKENS, perUnit = 1000L, basePrice = BigDecimal("0.01"))),
                     currency = usd,
@@ -403,7 +403,7 @@ class ConfigurationRequirementsTest {
                 ),
                 ModelPricing(
                     model = "unknown-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.UNKNOWN,
                     pricing = listOf(ModelPricing.Pricing(unit = INPUT_TEXT_TOKENS, perUnit = 1000L, basePrice = BigDecimal("0.01"))),
                     currency = usd,

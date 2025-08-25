@@ -111,7 +111,7 @@ class CostCalculationTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model-1k",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -125,7 +125,7 @@ class CostCalculationTest {
                 ),
                 ModelPricing(
                     model = "test-model-100k",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -157,7 +157,7 @@ class CostCalculationTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -188,7 +188,7 @@ class CostCalculationTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "test-model",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = null,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -272,7 +272,7 @@ class CostCalculationTest {
             modelsPricing = listOf(
                 ModelPricing(
                     model = "gpt-4",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.ANTHROPIC,
                     pricing = listOf(
                         ModelPricing.Pricing(
@@ -296,7 +296,7 @@ class CostCalculationTest {
                 ),
                 ModelPricing(
                     model = "llama-2",
-                    snapshot = null,
+                    defaultSnapshot = null,
                     modelVendor = ModelVendor.META,
                     pricing = listOf(
                         ModelPricing.Pricing(
