@@ -90,6 +90,11 @@ data class ModelPricing(
             OUTPUT_AUDIO_SECONDS,
             /** Audio pricing by character count for TTS */
             AUDIO_CHARACTERS,
+
+            /** Input video in seconds */
+            INPUT_VIDEO_SECONDS,
+            /** Output video in seconds */
+            OUTPUT_VIDEO_SECONDS,
             
             /** Embedding model tokens */
             EMBEDDING_TOKENS,
@@ -129,6 +134,7 @@ data class ModelPricing(
     data class Overrides(
         val volumePricing: List<VolumePricing>? = null,
         val imageTierPricing: List<ImageTierPricing>? = null,
+        val videoResolutionPricing: List<VideoResolutionPricing>? = null,
     )
 
     /**
@@ -216,6 +222,17 @@ data class ImageTierPricing(
     val price: BigDecimal,
     val resolution: String,
     val quality: String? = null,
+)
+
+/**
+ * Video resolution based pricing tier configuration for video generation with specific resolution.
+ *
+ * @property price Price for this video configuration
+ * @property resolution Image resolution (e.g., "360p", "720p")
+ */
+data class VideoResolutionPricing(
+    val price: BigDecimal,
+    val resolution: String
 )
 
 /**
