@@ -12,6 +12,7 @@ import com.mlp.gate.FitStatusProto
 import com.mlp.gate.PartialPredictRequestProto
 import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
+import com.mlp.gate.PredictRequestMetadataProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.gate.PredictResponseProto
 import com.mlp.gate.ServiceToGateProto
@@ -67,7 +68,12 @@ class TaskExecutor(
             val dataPayload = requireNotNull(request.data.getAsPayload(contentHidden)) { "Payload data" }
 
             runCatching {
-                when (val responsePayload = action.predict(dataPayload, request.config.getAsPayload(contentHidden))) {
+                val responsePayload = action.predict(
+                    req = dataPayload,
+                    config = request.config.getAsPayload(contentHidden),
+                    metadata = request.metadata.asPredictRequestMetadata(),
+                )
+                when (responsePayload) {
                     is PayloadInterface -> responseBuilder.setPredict(responsePayload)
                     is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload)
                     is MlpResponseException -> throw responsePayload.exception
@@ -390,3 +396,38 @@ private val Throwable.asErrorProto
         }
 
     }
+
+private fun PredictRequestMetadataProto.asPredictRequestMetadata(): PredictRequestMetadata =
+    PredictRequestMetadata(
+            requestId = requestId,
+            originalRequestId = originalRequestId?.takeIf { it.isNotEmpty() },
+
+            billingAccount = when {
+                hasNoAccount() -> NoBillingAccount()
+
+                hasApiTokenAccount() -> ApiTokenBillingAccount(
+                    callerAccountId = apiTokenAccount.accountId,
+                    apiTokenName = apiTokenAccount.apiTokenName,
+                )
+
+                hasBillingTokenAccount() -> BillingTokenBillingAccount(
+                    callerAccountId = billingTokenAccount.accountId,
+                    apiTokenName = billingTokenAccount.apiTokenName,
+                    billingAccountId = billingTokenAccount.billingAccountId,
+                    billingTokenName = billingTokenAccount.billingTokenName,
+                )
+
+                else -> throw IllegalArgumentException("No billing account information provided in metadata")
+            },
+            isPaymentRequired = isPaymentRequired,
+            maxPricePerCallCurrency = maxPricePerCallCurrency,
+            tokenToCurrencyRate = tokenToCurrencyRate,
+            model = PredictRequestModelMetadata(
+                id = model.id,
+                accountId = model.accountId,
+                name = model.name,
+                resourceGroup = model.resourceGroup?.takeIf { it.isNotEmpty() },
+                accountShortName = model.accountShortName,
+                billingUnitPriceInNanoToken = model.billingUnitPriceInNanoToken,
+            ),
+    )

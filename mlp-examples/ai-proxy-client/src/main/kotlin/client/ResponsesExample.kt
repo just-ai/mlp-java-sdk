@@ -17,12 +17,13 @@ import com.mlp.api.datatypes.chatgpt.responsesapi.ImageGenerationResponsesApiToo
 import com.mlp.api.datatypes.chatgpt.responsesapi.ImageGenerationSize
 import com.mlp.api.datatypes.chatgpt.responsesapi.InputItemType
 import com.mlp.api.datatypes.chatgpt.responsesapi.LocalShellResponsesApiTool
+import com.mlp.api.datatypes.chatgpt.responsesapi.MessageContentItemsInput
+import com.mlp.api.datatypes.chatgpt.responsesapi.MessageContentTextInput
 import com.mlp.api.datatypes.chatgpt.responsesapi.MessageInputFileInputItemContent
 import com.mlp.api.datatypes.chatgpt.responsesapi.MessageInputImageInputItemContent
 import com.mlp.api.datatypes.chatgpt.responsesapi.MessageInputItem
 import com.mlp.api.datatypes.chatgpt.responsesapi.MessageInputItemContentType
 import com.mlp.api.datatypes.chatgpt.responsesapi.MessageInputTextInputItemContent
-import com.mlp.api.datatypes.chatgpt.responsesapi.MessageOutputTextInputItemContent
 import com.mlp.api.datatypes.chatgpt.responsesapi.MessageRole
 import com.mlp.api.datatypes.chatgpt.responsesapi.Reasoning
 import com.mlp.api.datatypes.chatgpt.responsesapi.ReasoningEffort
@@ -100,32 +101,17 @@ private suspend fun runMultipleTextMessages() {
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputTextInputItemContent(
-                                type = MessageInputItemContentType.input_text,
-                                text = "Count to 3. On 3 write END"
-                            ),
-                        )
+                        content = MessageContentTextInput("Count to 3. On 3 write END"),
                     ),
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.assistant,
-                        content = listOf(
-                            MessageOutputTextInputItemContent(
-                                type = MessageInputItemContentType.output_text,
-                                text = "1"
-                            ),
-                        )
+                        content = MessageContentTextInput("1")
                     ),
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputTextInputItemContent(
-                                type = MessageInputItemContentType.input_text,
-                                text = "2"
-                            ),
-                        )
+                        content = MessageContentTextInput("2")
                     ),
                 )
             )
@@ -165,21 +151,18 @@ private suspend fun runImageInput() {
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputTextInputItemContent(
-                                type = MessageInputItemContentType.input_text,
-                                text = "what is in this image?"
-                            ),
-                        )
+                        content = MessageContentTextInput("what is in this image?")
                     ),
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputImageInputItemContent(
-                                type = MessageInputItemContentType.input_image,
-                                imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
-                                detail = ImageDetailLevel.auto,
+                        content = MessageContentItemsInput(
+                            items = listOf(
+                                MessageInputImageInputItemContent(
+                                    type = MessageInputItemContentType.input_image,
+                                    imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+                                    detail = ImageDetailLevel.auto,
+                                )
                             ),
                         )
                     ),
@@ -206,23 +189,20 @@ private suspend fun runPythonScript() {
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputTextInputItemContent(
-                                type = MessageInputItemContentType.input_text,
-                                text = "run this python script"
-                            ),
-                        )
+                        content = MessageContentTextInput("run this python script")
                     ),
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputFileInputItemContent(
-                                type = MessageInputItemContentType.input_file,
-                                fileData = fileData,
-                                filename = "script.py",
-                            ),
-                        )
+                        content = MessageContentItemsInput(
+                            items = listOf(
+                                MessageInputFileInputItemContent(
+                                    type = MessageInputItemContentType.input_file,
+                                    fileData = fileData,
+                                    filename = "script.py",
+                                )
+                            )
+                        ),
                     ),
                 )
             ),
@@ -316,12 +296,7 @@ private suspend fun runComputerUse() {
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputTextInputItemContent(
-                                type = MessageInputItemContentType.input_text,
-                                text = "Search 'cat images' on google.",
-                            ),
-                        )
+                        content = MessageContentTextInput("Search 'cat images' on google."),
                     )
                 ),
             ),
@@ -399,10 +374,12 @@ private suspend fun runLocalShell() {
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputTextInputItemContent(
-                                type = MessageInputItemContentType.input_text,
-                                text = "find the last 10 rows in file data.csv that contain string 'cat'",
+                        content = MessageContentItemsInput(
+                            items = listOf(
+                                MessageInputTextInputItemContent(
+                                    type = MessageInputItemContentType.input_text,
+                                    text = "find the last 10 rows in file data.csv that contain string 'cat'",
+                                )
                             ),
                         )
                     )
@@ -429,12 +406,7 @@ private suspend fun runGenerateImage() {
                     MessageInputItem(
                         type = InputItemType.message,
                         role = MessageRole.user,
-                        content = listOf(
-                            MessageInputTextInputItemContent(
-                                type = MessageInputItemContentType.input_text,
-                                text = "generate an image of a tree",
-                            ),
-                        )
+                        content = MessageContentTextInput("generate an image of a tree"),
                     )
                 ),
             ),
