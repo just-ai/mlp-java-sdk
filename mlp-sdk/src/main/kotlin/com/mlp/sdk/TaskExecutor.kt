@@ -370,18 +370,23 @@ private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<
 
 private val Throwable.asErrorProto
     get() = when (this) {
-        is MlpException ->
+        is MlpException -> {
+            var message = error.errorCode.message
+            error.args.forEach { (key, value) -> message = message.replace("\${$key}", value) }
+
             ApiErrorProto.newBuilder()
                 .setCode(error.errorCode.code)
-                .setMessage(error.errorCode.message)
+                .setMessage(message)
                 .setStatus(error.errorCode.status)
                 .putAllArgs(error.args)
+        }
 
-        else ->
+        else -> {
             ApiErrorProto.newBuilder()
                 .setCode(PROCESSING_EXCEPTION.code)
                 .setMessage(PROCESSING_EXCEPTION.message)
                 .setStatus(PROCESSING_EXCEPTION.status)
                 .putArgs("message", message ?: "")
+        }
 
     }

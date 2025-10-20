@@ -4,7 +4,7 @@ import com.mlp.gate.SimpleStatusProto
 
 class MlpException(
     val error: MlpError
-): RuntimeException(error.errorCode.message) {
+) : RuntimeException(error.errorCode.message) {
 
     constructor(error: MlpErrorCode, args: Map<String, String> = emptyMap()) : this(MlpError(error, args))
 
@@ -29,18 +29,39 @@ interface MlpErrorCode {
 }
 
 enum class CommonErrorCode(
-        override val code: String,
-        override val message: String,
-        override val status: SimpleStatusProto): MlpErrorCode {
-    INTERNAL_ERROR("mlp-action.common.internal-error", "Internal error. Message: \${message}", SimpleStatusProto.INTERNAL_SERVER_ERROR),
+    override val code: String,
+    override val message: String,
+    override val status: SimpleStatusProto
+) : MlpErrorCode {
+    INTERNAL_ERROR(
+        "mlp-action.common.internal-error",
+        "Internal error. Message: \${message}",
+        SimpleStatusProto.INTERNAL_SERVER_ERROR
+    ),
 
     BAD_REQUEST("mlp-action.common.bad-request", "Bad request", SimpleStatusProto.BAD_REQUEST),
 
-    PROCESSING_EXCEPTION("mlp-action.common.processing-exception", "Something went wrong during processing the request", SimpleStatusProto.INTERNAL_SERVER_ERROR),
+    PROCESSING_EXCEPTION(
+        "mlp-action.common.processing-exception",
+        "Something went wrong during processing the request",
+        SimpleStatusProto.INTERNAL_SERVER_ERROR
+    ),
 
-    REQUEST_TYPE_NOT_SUPPORTED("mlp-action.common.method-not-supported", "\${type} requests are not supported by this action", SimpleStatusProto.BAD_REQUEST),
+    REQUEST_TYPE_NOT_SUPPORTED(
+        "mlp-action.common.method-not-supported",
+        "\${type} requests are not supported by this action",
+        SimpleStatusProto.BAD_REQUEST
+    ),
 
-    PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH("mlp-action.common.no-partial-in-batch", "Partial response can not be used in batch", SimpleStatusProto.BAD_REQUEST),
+    PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH(
+        "mlp-action.common.no-partial-in-batch",
+        "Partial response can not be used in batch",
+        SimpleStatusProto.BAD_REQUEST
+    ),
 
-    RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH("mlp-action.common.no-raw-payload-in-batch", "Raw payload can not be used in batch", SimpleStatusProto.BAD_REQUEST),
+    RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH(
+        "mlp-action.common.no-raw-payload-in-batch",
+        "Raw payload can not be used in batch",
+        SimpleStatusProto.BAD_REQUEST
+    ),
 }
