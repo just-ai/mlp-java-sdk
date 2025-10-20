@@ -14,4 +14,8 @@ src/main/kotlin/com/mlp/api/datatypes/chatgpt/responsesapi/CodeInterpreterContai
 src/main/kotlin/com/mlp/api/datatypes/chatgpt/responsesapi/CodeInterpreterIdContainer.kt
 src/main/kotlin/com/mlp/api/datatypes/chatgpt/responsesapi/CodeInterpreterAutoContainer.kt
 
+src/main/kotlin/com/mlp/api/datatypes/chatgpt/responsesapi/MessageContentInput.kt
+src/main/kotlin/com/mlp/api/datatypes/chatgpt/responsesapi/MessageContentTextInput.kt
+src/main/kotlin/com/mlp/api/datatypes/chatgpt/responsesapi/MessageContentItemsInput.kt
+
 src/main/kotlin/com/mlp/api/datatypes/chatgpt/responsesapi/InputItem.kt

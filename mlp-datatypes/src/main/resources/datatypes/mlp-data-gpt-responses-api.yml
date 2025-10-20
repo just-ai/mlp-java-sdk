@@ -355,6 +355,28 @@ components:
         - code_interpreter_call
       default: message
 
+    MessageContentInput:
+      oneOf:
+        - $ref: '#/components/schemas/MessageContentTextInput'
+        - $ref: '#/components/schemas/MessageContentItemsInput'
+
+    MessageContentTextInput:
+      type: object
+      properties:
+        value:
+          type: string
+      required:
+        - value
+
+    MessageContentItemsInput:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageContentInputItem"
+      required:
+        - items
 
     MessageInputItem:
       type: object
@@ -371,9 +393,7 @@ components:
                 - completed
                 - incomplete
             content:
-              type: array
-              items:
-                $ref: "#/components/schemas/MessageContentInputItem"
+              $ref: '#/components/schemas/MessageContentInput'
           required:
             - role
             - content
@@ -833,24 +853,27 @@ components:
       required:
         - id
     FunctionCallOutputItemParamInputItem:
-      properties:
-        id:
-          type: string
-        call_id:
-          type: string
-        output:
-          type: string
-        status:
-          type: string
-          enum:
-            - in_progress
-            - completed
-            - incomplete
       type: object
-      required:
-        - call_id
-        - type
-        - output
+      allOf:
+        - $ref: '#/components/schemas/InputItem'
+        - properties:
+            id:
+              type: string
+            call_id:
+              type: string
+            output:
+              type: string
+            status:
+              type: string
+              enum:
+                - in_progress
+                - completed
+                - incomplete
+          type: object
+          required:
+            - call_id
+            - type
+            - output
 
 
     OutputItem:

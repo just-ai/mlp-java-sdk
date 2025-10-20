@@ -3,6 +3,7 @@ package com.platform.mpl.sdk
 import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.ExtendedRequestProto
 import com.mlp.gate.FitRequestProto
+import com.mlp.gate.PredictRequestMetadataProto
 import com.mlp.gate.PredictRequestProto.getDefaultInstance
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.*
