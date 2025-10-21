@@ -1,7 +1,6 @@
 package com.mlp.sdk
 
 import com.mlp.gate.DatasetInfoProto
-import com.mlp.gate.PredictRequestMetadataProto
 import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.CommonErrorCode.REQUEST_TYPE_NOT_SUPPORTED
@@ -14,10 +13,6 @@ abstract class MlpService : WithExecutionContext {
 
     open fun getDescriptor(): ServiceDescriptorProto {
         throw NotImplementedError()
-    }
-
-    open suspend fun predict(req: Payload, config: Payload?, metadata: PredictRequestMetadata): MlpResponse {
-        return predict(req)
     }
 
     open suspend fun predict(req: Payload, config: Payload?): MlpResponse {
