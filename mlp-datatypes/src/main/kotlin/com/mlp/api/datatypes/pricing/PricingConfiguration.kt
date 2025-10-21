@@ -1,18 +1,37 @@
-package com.mlp.sdk.pricing
+package com.mlp.api.datatypes.pricing
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.mlp.sdk.pricing.ModelPricing.ModelVendor
+import com.mlp.api.datatypes.pricing.ModelPricing.ModelVendor
 import java.math.BigDecimal
 import java.util.Currency
 
+/**
+ * Wrapper for the list of service pricing configurations.
+ *
+ * @property services List of service pricing configurations
+ */
+data class ServicesPrices(
+    val services: List<ServicePrices>,
+)
+
+/**
+ * Pricing configuration for a specific service.
+ *
+ * @property service Name of the service this pricing applies to
+ * @property prices Pricing configuration for the service
+ */
+data class ServicePrices(
+    val service: String,
+    val prices: PricingConfiguration,
+)
 
 /**
  * Complete pricing configuration for the system including models, exchange rates, and currency settings.
- * 
+ *
  * @property currency The default currency used if model pricing currency is null (optional)
  * @property modelVendor The default model vendor used if model pricing model vendor is null (optional)
  * @property modelsPricing List of pricing configurations for different models
@@ -23,12 +42,12 @@ data class PricingConfiguration(
     val modelVendor: ModelVendor? = null,
     val modelsPricing: List<ModelPricing>,
 
-    val exchangeRates: List<ExchangeRate>? = null
+    val exchangeRates: List<ExchangeRate>? = null,
 )
 
 /**
  * Pricing configuration for a specific model.
- * 
+ *
  * @property model Model identifier
  * @property defaultSnapshot Model snapshot version used if calls model without any snapshot (optional)
  * @property modelVendor Model vendor/creator (optional)
@@ -48,7 +67,7 @@ data class ModelPricing(
 
     /**
      * Pricing rule for a specific unit type.
-     * 
+     *
      * @property unit Type of billing unit (tokens, requests, etc.)
      * @property perUnit Number of units for the base price
      * @property basePrice Base price for the specified number of units
@@ -70,56 +89,70 @@ data class ModelPricing(
         enum class UnitType {
             /** Input text tokens */
             INPUT_TEXT_TOKENS,
+
             /** Output text tokens */
             OUTPUT_TEXT_TOKENS,
+
             /** Cached input text tokens */
             CACHED_INPUT_TEXT_TOKENS,
-            
+
             /** Input images for vision models */
             INPUT_IMAGES,
+
             /** Output images for image generation */
             OUTPUT_IMAGES,
+
             /** Input images counted as tokens */
             INPUT_IMAGE_TOKENS,
+
             /** Output images counted as tokens */
             OUTPUT_IMAGE_TOKENS,
-            
+
             /** Input audio in seconds */
             INPUT_AUDIO_SECONDS,
+
             /** Output audio in seconds */
             OUTPUT_AUDIO_SECONDS,
+
             /** Audio pricing by character count for TTS */
             AUDIO_CHARACTERS,
 
             /** Input video in seconds */
             INPUT_VIDEO_SECONDS,
+
             /** Output video in seconds */
             OUTPUT_VIDEO_SECONDS,
-            
+
             /** Embedding model tokens */
             EMBEDDING_TOKENS,
+
             /** Embedding requests */
             EMBEDDING_REQUESTS,
-            
+
             /** Training tokens for fine-tuning */
             TRAINING_TOKENS,
+
             /** Training epochs */
             TRAINING_EPOCHS,
+
             /** Hosted model hours */
             HOSTED_MODEL_HOURS,
-            
+
             /** API requests */
             REQUESTS,
+
             /** Character count */
             CHARACTERS,
+
             /** Long context input tokens */
             INPUT_CONTEXT_TOKENS,
+
             /** Batch API requests */
             BATCH_REQUESTS,
-            
+
             /** Content moderation requests */
             MODERATION_REQUESTS,
-            
+
             /** Unknown or unrecognized unit type */
             UNKNOWN
         }
@@ -127,7 +160,7 @@ data class ModelPricing(
 
     /**
      * Pricing overrides that can modify the base pricing rules.
-     * 
+     *
      * @property volumePricing Optional volume-based pricing tiers
      * @property imageTierPricing Optional image-based pricing tiers for different quality/resolution combinations
      */
@@ -145,32 +178,46 @@ data class ModelPricing(
     enum class ModelVendor {
         /** OpenAI */
         OPENAI,
+
         /** Anthropic */
         ANTHROPIC,
+
         /** Sberbank */
         SBER,
+
         /** Alibaba */
         ALIBABA,
+
         /** Meta (Facebook) */
         META,
+
         /** Google */
         GOOGLE,
+
         /** Mistral AI */
         MISTRAL,
+
         /** xAI (Elon Musk's AI company) */
         XAI,
+
         /** NVIDIA */
         NVIDIA,
+
         /** Cohere */
         COHERE,
+
         /** Hugging Face */
         HUGGINGFACE,
+
         /** Yandex */
         YANDEX,
+
         /** Text Generation Inference */
         TGI,
+
         /** Text Generation Inference */
         DEEPSEEK,
+
         /** Unknown or unrecognized vendor */
         UNKNOWN
     }
@@ -191,7 +238,7 @@ data class ExchangeRate(
 
 /**
  * Volume-based pricing tier configuration.
- * 
+ *
  * @property price Price for this volume tier
  * @property unitsRange Range of units this pricing applies to
  */
@@ -201,7 +248,7 @@ data class VolumePricing(
 ) {
     /**
      * Range of units for volume pricing.
-     * 
+     *
      * @property from Starting unit count for this range (inclusive)
      * @property to Ending unit count for this range (inclusive). Null means no upper limit
      */
@@ -213,7 +260,7 @@ data class VolumePricing(
 
 /**
  * Image-based pricing tier configuration for image generation with specific quality and resolution.
- * 
+ *
  * @property price Price for this image configuration
  * @property resolution Image resolution (e.g., "1024x1024", "1792x1024")
  * @property quality Optional image quality (e.g., "standard", "hd"). If null, applies to any quality
@@ -242,7 +289,7 @@ data class VideoResolutionPricing(
 class UnitTypeDeserializer : JsonDeserializer<ModelPricing.Pricing.UnitType>() {
     /**
      * Deserializes JSON string to UnitType enum.
-     * 
+     *
      * @param p JSON parser
      * @param ctxt Deserialization context
      * @return UnitType enum value, or UNKNOWN if the value cannot be parsed
@@ -264,7 +311,7 @@ class UnitTypeDeserializer : JsonDeserializer<ModelPricing.Pricing.UnitType>() {
 class ModelVendorDeserializer : JsonDeserializer<ModelVendor>() {
     /**
      * Deserializes JSON string to ModelVendor enum.
-     * 
+     *
      * @param p JSON parser
      * @param ctxt Deserialization context
      * @return ModelVendor enum value, or UNKNOWN if the value cannot be parsed
