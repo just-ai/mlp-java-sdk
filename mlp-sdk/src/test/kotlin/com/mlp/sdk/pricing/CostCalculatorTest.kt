@@ -1,9 +1,13 @@
 package com.mlp.sdk.pricing
 
-import com.mlp.sdk.pricing.ModelPricing.ModelVendor
-import com.mlp.sdk.pricing.ModelPricing.Pricing.UnitType.CACHED_INPUT_TEXT_TOKENS
-import com.mlp.sdk.pricing.ModelPricing.Pricing.UnitType.INPUT_TEXT_TOKENS
-import com.mlp.sdk.pricing.ModelPricing.Pricing.UnitType.OUTPUT_TEXT_TOKENS
+import com.mlp.api.datatypes.pricing.ExchangeRate
+import com.mlp.api.datatypes.pricing.ModelPricing
+import com.mlp.api.datatypes.pricing.ModelPricing.ModelVendor
+import com.mlp.api.datatypes.pricing.ModelPricing.Pricing.UnitType.CACHED_INPUT_TEXT_TOKENS
+import com.mlp.api.datatypes.pricing.ModelPricing.Pricing.UnitType.INPUT_TEXT_TOKENS
+import com.mlp.api.datatypes.pricing.ModelPricing.Pricing.UnitType.OUTPUT_TEXT_TOKENS
+import com.mlp.api.datatypes.pricing.PricingConfiguration
+import com.mlp.api.datatypes.pricing.VolumePricing
 import java.math.BigDecimal
 import java.util.Currency
 import org.junit.jupiter.api.Assertions.assertEquals

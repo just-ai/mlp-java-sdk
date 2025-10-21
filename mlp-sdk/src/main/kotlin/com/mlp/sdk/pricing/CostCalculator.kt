@@ -1,12 +1,14 @@
 package com.mlp.sdk.pricing
 
+import com.mlp.api.datatypes.pricing.ModelPricing
+import com.mlp.api.datatypes.pricing.ModelPricing.Pricing.UnitType
+import com.mlp.api.datatypes.pricing.ModelPricing.Pricing.UnitType.CACHED_INPUT_TEXT_TOKENS
+import com.mlp.api.datatypes.pricing.ModelPricing.Pricing.UnitType.INPUT_TEXT_TOKENS
+import com.mlp.api.datatypes.pricing.ModelPricing.Pricing.UnitType.OUTPUT_TEXT_TOKENS
+import com.mlp.api.datatypes.pricing.PricingConfiguration
 import com.mlp.sdk.CommonErrorCode
 import com.mlp.sdk.MlpError
 import com.mlp.sdk.MlpException
-import com.mlp.sdk.pricing.ModelPricing.Pricing.UnitType
-import com.mlp.sdk.pricing.ModelPricing.Pricing.UnitType.CACHED_INPUT_TEXT_TOKENS
-import com.mlp.sdk.pricing.ModelPricing.Pricing.UnitType.INPUT_TEXT_TOKENS
-import com.mlp.sdk.pricing.ModelPricing.Pricing.UnitType.OUTPUT_TEXT_TOKENS
 import com.mlp.sdk.utils.WithLogger
 import java.math.BigDecimal
 import java.math.RoundingMode.HALF_UP
@@ -98,7 +100,7 @@ class CostCalculator(private val configuration: PricingConfiguration, private va
         var price = unitPricing.basePrice
 
         unitPricing.overrides?.volumePricing?.sortedBy { it.unitsRange.from }
-            ?.lastOrNull { unitsCount >= it.unitsRange.from && (it.unitsRange.to == null || unitsCount < it.unitsRange.to) }
+            ?.lastOrNull { unitsCount >= it.unitsRange.from && (it.unitsRange.to == null || unitsCount < it.unitsRange.to!!) }
             ?.let { price = it.price }
 
         return price
