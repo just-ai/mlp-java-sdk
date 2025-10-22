@@ -123,6 +123,12 @@ data class ModelPricing(
             /** Output video in seconds */
             OUTPUT_VIDEO_SECONDS,
 
+            /** Output video without audio in seconds */
+            OUTPUT_VIDEO_ONLY_SECONDS,
+
+            /** Output video with audio in seconds */
+            OUTPUT_VIDEO_WITH_AUDIO_SECONDS,
+
             /** Embedding model tokens */
             EMBEDDING_TOKENS,
 
