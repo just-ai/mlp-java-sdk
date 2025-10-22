@@ -663,3 +663,4 @@ components:
         - SPEECH_TO_TEXT
         - MODERATIONS
         - COMPLETIONS
+        - VIDEO_GENERATION
