@@ -224,6 +224,9 @@ data class ModelPricing(
         /** Text Generation Inference */
         DEEPSEEK,
 
+        /** fal.ai */
+        FAL,
+
         /** Unknown or unrecognized vendor */
         UNKNOWN
     }
