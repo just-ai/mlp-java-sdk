@@ -129,6 +129,9 @@ data class ModelPricing(
             /** Output video with audio in seconds */
             OUTPUT_VIDEO_WITH_AUDIO_SECONDS,
 
+            /** Virtual currency */
+            VIRTUAL_CURRENCY,
+
             /** Embedding model tokens */
             EMBEDDING_TOKENS,
 
@@ -226,6 +229,9 @@ data class ModelPricing(
 
         /** fal.ai */
         FAL,
+
+        /** gamma */
+        GAMMA,
 
         /** Unknown or unrecognized vendor */
         UNKNOWN
