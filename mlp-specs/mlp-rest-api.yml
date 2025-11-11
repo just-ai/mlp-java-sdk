@@ -9129,6 +9129,8 @@ components:
             type: string
         restrictions:
           $ref: '#/components/schemas/TokenRestrictionsData'
+        jayGuardMaskingKey:
+          type: string
         emailsForNotifications:
           type: array
           items:
@@ -9156,6 +9158,8 @@ components:
             type: string
         restrictions:
           $ref: '#/components/schemas/TokenRestrictionsData'
+        jayGuardMaskingKey:
+          type: string
         emailsForNotifications:
           type: array
           items:
@@ -10679,6 +10683,8 @@ components:
         lastActivity:
           type: integer
           format: int64
+        jayGuardMaskingKey:
+          type: string
     AccountFeatureData:
       required:
       - features
@@ -10711,6 +10717,8 @@ components:
             type: string
         restrictions:
           $ref: '#/components/schemas/TokenRestrictionsData'
+        jayGuardMaskingKey:
+          type: string
         emailsForNotifications:
           type: array
           items:
@@ -11806,6 +11814,7 @@ components:
       - isArchiveEnabled
       - isBillingEnabled
       - isExtendedLanding
+      - isJayGuardEnabled
       - isSystemAccount
       - license
       - refillByManager
@@ -11817,6 +11826,8 @@ components:
         isBillingEnabled:
           type: boolean
         isArchiveEnabled:
+          type: boolean
+        isJayGuardEnabled:
           type: boolean
         isExtendedLanding:
           type: boolean
