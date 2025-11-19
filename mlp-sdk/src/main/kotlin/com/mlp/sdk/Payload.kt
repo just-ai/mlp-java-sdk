@@ -8,12 +8,18 @@ object BillingUnitsThreadLocal {
 
     private val detailedUnits = ThreadLocal<Map<String, Long>>()
 
+    private val deferredBillingRequestId = ThreadLocal<String>()
+
     fun clearUnits() {
         units.set(null)
     }
 
     fun clearDetails() {
         detailedUnits.set(null)
+    }
+
+    fun clearDeferredBillingRequestId() {
+        deferredBillingRequestId.set(null)
     }
 
     fun setUnits(units: Long) {
@@ -24,6 +30,10 @@ object BillingUnitsThreadLocal {
         this.detailedUnits.set(map)
     }
 
+    fun setDeferredBillingRequestId(id: String) {
+        this.deferredBillingRequestId.set(id)
+    }
+
     fun getUnits(): Long? {
         return units.get()
     }
@@ -32,6 +42,9 @@ object BillingUnitsThreadLocal {
         return detailedUnits.get()
     }
 
+    fun getDeferredBillingRequestId(): String? {
+        return deferredBillingRequestId.get()
+    }
 }
 
 sealed interface PayloadInterface {
