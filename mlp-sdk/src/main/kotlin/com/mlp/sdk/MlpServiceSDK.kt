@@ -114,6 +114,35 @@ class MlpServiceSDK(
         taskExecutor.connectorsPool.send(connectorId, toGateProto)
     }
 
+    /**
+     * Sends a deferred billing charge request.
+     *
+     * This method is used for background (deferred) billing of long-running ML operations.
+     * Before use, deferred billing must be initialized by setting
+     * appropriate headers in the first response (via BillingUnitsThreadLocal or DeferredBilling).
+     *
+     * @param billingRequestId Unique request ID that was set during initialization
+     * @param amountInUnits Amount to charge in billing units (must be > 0)
+     * @throws IllegalArgumentException if amountInUnits <= 0
+     */
+    suspend fun sendDeferredBillingCharge(
+        billingRequestId: String,
+        amountInUnits: Long
+    ) {
+        require(amountInUnits > 0) { "Amount must be positive, got: $amountInUnits" }
+
+        val proto = ServiceToGateProto.newBuilder()
+            .setDeferredBillingCharge(
+                com.mlp.gate.DeferredBillingChargeRequestProto.newBuilder()
+                    .setBillingRequestId(billingRequestId)
+                    .setAmountInUnits(amountInUnits)
+                    .build()
+            )
+            .build()
+
+        taskExecutor.connectorsPool.sendToAnyGate(proto)
+    }
+
     private fun setShutdownHook() {
         getRuntime().addShutdownHook(Thread {
             logger.info("Shutdown hook started")

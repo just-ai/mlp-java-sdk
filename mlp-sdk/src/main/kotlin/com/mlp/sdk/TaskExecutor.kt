@@ -321,6 +321,10 @@ private fun Builder.setPredict(prediction: PayloadInterface) {
     BillingUnitsThreadLocal.getDetailedUnits()?.also {
         putHeaders("Z-custom-billing-details", JSON.stringify(it))
     }
+    // Deferred billing headers
+    BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
+        putHeaders("Z-deferred-billing-id", it)
+    }
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
 }
 
@@ -330,6 +334,10 @@ private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolea
     }
     BillingUnitsThreadLocal.getDetailedUnits()?.also {
         putHeaders("Z-custom-billing-details", JSON.stringify(it))
+    }
+    // Deferred billing headers
+    BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
+        putHeaders("Z-deferred-billing-id", it)
     }
     setPartialPredict(PartialPredictResponseProto.newBuilder().setData(prediction.asProto).setFinish(last))
 }
