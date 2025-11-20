@@ -103,3 +103,9 @@ data class RawPayload(
 data class MlpResponseException(val exception: Throwable) : MlpResponse
 
 class MlpPartialBinaryResponse(): MlpResponse
+
+data class MlpHttpResponse(
+    val statusCode: Int = 200,
+    val body: Any? = null,
+    val headers: Map<String, String> = emptyMap()
+)
