@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: https://app.caila.io
+- url: https://mlp.caila-stable.test-ai.net
   description: Generated server url
 paths:
   /api/mlpcore/account/{account}/token/{token}:
@@ -1121,6 +1121,37 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/mlpcore/admin/instance/{instanceId}/restart:
+    post:
+      tags:
+      - admin-endpoint
+      operationId: restartInstance
+      parameters:
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: reason
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: errorLevel
+        in: query
+        required: true
+        schema:
+          type: boolean
+      - name: MLP-API-KEY
+        in: header
+        description: token to use instead of a session
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
   /api/mlpcore/admin/account/{account}/whiteList:
     post:
       tags:
@@ -9737,6 +9768,12 @@ components:
       - modelName
       type: object
       properties:
+        modelType:
+          type: string
+          enum:
+          - MLP_SERVICE
+          - WEB_APPLICATION
+          - MCP_SERVER
         modelName:
           type: string
         displayName:
@@ -10151,6 +10188,7 @@ components:
       - id
       - imageAccountId
       - modelName
+      - modelType
       - persistentVolumes
       - priorityQueue
       - protocols
@@ -10163,6 +10201,12 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/ModelInfoPK'
+        modelType:
+          type: string
+          enum:
+          - MLP_SERVICE
+          - WEB_APPLICATION
+          - MCP_SERVER
         modelAccountName:
           type: string
         modelAccountDisplayName:
@@ -10764,6 +10808,12 @@ components:
             - TCP
             - MLP_GRPC
             - MCP_STDIO
+        modelType:
+          type: string
+          enum:
+          - MLP_SERVICE
+          - WEB_APPLICATION
+          - MCP_SERVER
         archiveEnabled:
           type: boolean
         numberOfArchivedRequests:
