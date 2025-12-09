@@ -10,6 +10,12 @@ object BillingUnitsThreadLocal {
 
     private val deferredBillingRequestId = ThreadLocal<String>()
 
+    fun clearAll() {
+        clearUnits()
+        clearDetails()
+        clearDeferredBillingRequestId()
+    }
+
     fun clearUnits() {
         units.set(null)
     }

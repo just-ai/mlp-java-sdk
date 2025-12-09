@@ -279,6 +279,8 @@ class TaskExecutor(
         val ctx = MDC.getCopyOfContextMap()
         val job = scope.launch(start = CoroutineStart.LAZY) {
             withContext(MDCContext(ctx)) {
+                BillingUnitsThreadLocal.clearAll()
+
                 block.invoke()
             }
         }
@@ -325,6 +327,9 @@ private fun Builder.setPredict(prediction: PayloadInterface) {
     BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
         putHeaders("Z-deferred-billing-id", it)
     }
+
+    BillingUnitsThreadLocal.clearAll()
+
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
 }
 
@@ -339,6 +344,9 @@ private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolea
     BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
         putHeaders("Z-deferred-billing-id", it)
     }
+
+    BillingUnitsThreadLocal.clearAll()
+
     setPartialPredict(PartialPredictResponseProto.newBuilder().setData(prediction.asProto).setFinish(last))
 }
 
