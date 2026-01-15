@@ -34,8 +34,9 @@ object ChatMessageDeserializer : JsonDeserializer<ChatMessage>() {
                 p.codec.readValue(contentNode.traverse(p.codec), object : TypeReference<List<ContentPart>>() {})
             PartsChatMessage(role, content, toolCallId, name, toolCalls)
         } else {
-            val content = contentNode?.asText()
-            val thinking = node.get("thinking")?.asText()
+            val content = contentNode?.takeIf { !it.isNull }?.asText()
+            val thinkingNode = node.get("thinking")
+            val thinking = thinkingNode?.takeIf { !it.isNull }?.asText()
             TextChatMessage(role, content, toolCallId, name, toolCalls, thinking)
         }
     }
