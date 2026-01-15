@@ -57,6 +57,8 @@ components:
             $ref: '#/components/schemas/ToolCall'
         thinking:
           type: string
+        reasoning:
+          type: string
       oneOf:
         - $ref: '#/components/schemas/TextChatMessage'
         - $ref: '#/components/schemas/PartsChatMessage'

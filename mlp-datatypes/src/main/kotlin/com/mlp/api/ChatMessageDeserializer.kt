@@ -37,7 +37,9 @@ object ChatMessageDeserializer : JsonDeserializer<ChatMessage>() {
             val content = contentNode?.takeIf { !it.isNull }?.asText()
             val thinkingNode = node.get("thinking")
             val thinking = thinkingNode?.takeIf { !it.isNull }?.asText()
-            TextChatMessage(role, content, toolCallId, name, toolCalls, thinking)
+            val reasoningNode = node.get("reasoning")
+            val reasoning = reasoningNode?.takeIf { !it.isNull }?.asText()
+            TextChatMessage(role, content, toolCallId, name, toolCalls, thinking, reasoning)
         }
     }
 }
