@@ -72,6 +72,7 @@ data class ModelPricing(
      * @property perUnit Number of units for the base price
      * @property basePrice Base price for the specified number of units
      * @property overrides Optional pricing overrides (e.g., volume pricing)
+     * @property options Optional pricing additions (e.g., for additional web search)
      * @property compatibleUnits List of compatible unit types for backward compatibility
      */
     data class Pricing(
@@ -79,6 +80,7 @@ data class ModelPricing(
         val perUnit: Long,
         val basePrice: BigDecimal,
         val overrides: Overrides? = null,
+        val options: Options? = null,
         val compatibleUnits: List<UnitType>? = null, // Для обратной совместимости при добавлении нового юнита
     ) {
         /**
@@ -124,9 +126,11 @@ data class ModelPricing(
             OUTPUT_VIDEO_SECONDS,
 
             /** Output video without audio in seconds */
+            @Deprecated("Use options.audio for additional audio")
             OUTPUT_VIDEO_ONLY_SECONDS,
 
             /** Output video with audio in seconds */
+            @Deprecated("Use options.audio for additional audio")
             OUTPUT_VIDEO_WITH_AUDIO_SECONDS,
 
             /** Virtual currency */
@@ -162,6 +166,9 @@ data class ModelPricing(
             /** Content moderation requests */
             MODERATION_REQUESTS,
 
+            /** Pricing by computation seconds */
+            COMPUTE_SECONDS,
+
             /** Unknown or unrecognized unit type */
             UNKNOWN
         }
@@ -177,6 +184,35 @@ data class ModelPricing(
         val volumePricing: List<VolumePricing>? = null,
         val imageTierPricing: List<ImageTierPricing>? = null,
         val videoResolutionPricing: List<VideoResolutionPricing>? = null,
+    )
+
+    /**
+     * Configuration for additional options of model calls.
+     *
+     * @property webSearch Optional web search pricing
+     * @property audio Optional audio pricing for videos
+     */
+    data class Options(
+        val webSearch: WebSearchPricing? = null,
+        val audio: AudioPricing? = null,
+    )
+
+    /**
+     * Pricing configuration for optional web search.
+     *
+     * @property price Price for web search
+     */
+    data class WebSearchPricing(
+        val price: BigDecimal,
+    )
+
+    /**
+     * Pricing configuration for optional audio in video.
+     *
+     * @property price Price for audio
+     */
+    data class AudioPricing(
+        val price: BigDecimal,
     )
 
     /**
