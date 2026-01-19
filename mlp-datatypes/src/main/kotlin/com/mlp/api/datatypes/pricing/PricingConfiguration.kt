@@ -72,7 +72,7 @@ data class ModelPricing(
      * @property perUnit Number of units for the base price
      * @property basePrice Base price for the specified number of units
      * @property overrides Optional pricing overrides (e.g., volume pricing)
-     * @property options Optional pricing additions (e.g., for additional web search)
+     * @property options Options configuration for model calls (e.g., additional web search)
      * @property compatibleUnits List of compatible unit types for backward compatibility
      */
     data class Pricing(
@@ -200,19 +200,19 @@ data class ModelPricing(
     /**
      * Pricing configuration for optional web search.
      *
-     * @property price Price for web search
+     * @property additionalPrice Price for web search
      */
     data class WebSearchPricing(
-        val price: BigDecimal,
+        val additionalPrice: BigDecimal,
     )
 
     /**
      * Pricing configuration for optional audio in video.
      *
-     * @property price Price for audio
+     * @property additionalPrice Price for audio
      */
     data class AudioPricing(
-        val price: BigDecimal,
+        val additionalPrice: BigDecimal,
     )
 
     /**
