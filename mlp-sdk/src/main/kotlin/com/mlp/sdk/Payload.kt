@@ -81,7 +81,9 @@ data class Payload(
     }
 
     companion object {
-        val emptyPayload = Payload("{}")
+        const val EMPTY_DATA_TYPE = "application/x-empty"
+
+        val emptyPayload = Payload(EMPTY_DATA_TYPE, "{}")
     }
 }
 
