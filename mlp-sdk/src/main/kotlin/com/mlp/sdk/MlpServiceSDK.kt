@@ -163,7 +163,6 @@ class MlpServiceSDK(
         payload: PayloadInterface,
         isLast: Boolean,
         price: Long? = null,
-        billingId: String? = null,
         billingDetails: Map<String, Long>? = null,
     ) {
         val payloadProto = when (payload) {
@@ -196,7 +195,6 @@ class MlpServiceSDK(
             .putAllHeaders(headers)
 
         if (price != null) builder.putHeaders("Z-custom-billing", price.toString())
-        if (billingId != null) builder.putHeaders("Z-deferred-billing-id", billingId)
         if (billingDetails != null) builder.putHeaders("Z-custom-billing-details", JSON.stringify(billingDetails))
 
         send(connectorId, builder.build())
