@@ -266,6 +266,11 @@ fun <R : Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerato
                 .setDataType(TypeInfo.canonicalName(resultAndFinish.result.javaClass)).build()
         }
 
+        val headers = when (resultAndFinish.result) {
+            is MlpResponse -> resultAndFinish.result.headers
+            else -> emptyMap()
+        }
+
         val builder = ServiceToGateProto.newBuilder()
             .setRequestId(requestId)
             .setPartialPredict(
@@ -275,6 +280,7 @@ fun <R : Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerato
                         payload
                     )
             )
+            .putAllHeaders(headers)
 
         val billingUnits = resultAndFinish.price ?: BillingUnitsThreadLocal.getUnits()
         if (billingUnits != null) {

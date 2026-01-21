@@ -69,7 +69,7 @@ class TaskExecutor(
             runCatching {
                 when (val responsePayload = action.predict(dataPayload, request.config.getAsPayload(contentHidden))) {
                     is PayloadInterface -> responseBuilder.setPredict(responsePayload)
-                    is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload)
+                    is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload, responsePayload.headers)
                     is MlpResponseException -> throw responsePayload.exception
                     is MlpPartialBinaryResponse -> return@launchAndStore
                     // если partialResponse, то просто ничего не делаем. Респонзы будет отправлять сам сервис.
@@ -316,7 +316,7 @@ private fun PayloadProto.getAsPayload(contentHidden: Boolean): Payload =
 private fun PayloadProto.getAsPayloadInterface(contentHidden: Boolean): PayloadInterface =
     if (hasJson()) Payload(dataType, json, contentHidden) else ProtobufPayload(dataType, protobuf, contentHidden)
 
-private fun Builder.setPredict(prediction: PayloadInterface) {
+private fun Builder.setPredict(prediction: PayloadInterface, headers: Map<String, String> = emptyMap()) {
     BillingUnitsThreadLocal.getUnits()?.also {
         putHeaders("Z-custom-billing", it.toString())
     }
@@ -331,6 +331,7 @@ private fun Builder.setPredict(prediction: PayloadInterface) {
     BillingUnitsThreadLocal.clearAll()
 
     setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
+    putAllHeaders(headers)
 }
 
 private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolean) {
@@ -353,8 +354,9 @@ private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolea
 private fun Builder.setFit() =
     setFit(FitResponseProto.newBuilder())
 
-private fun Builder.setExt(extResult: PayloadInterface) =
+private fun Builder.setExt(extResult: PayloadInterface, headers: Map<String, String> = emptyMap()) =
     setExt(ExtendedResponseProto.newBuilder().setData(extResult.asProto))
+        .putAllHeaders(headers)
 
 private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<Long>): Builder {
     require(batchResult.size == requestsIdes.size) { "Batch responses size must be equal to requests size" }

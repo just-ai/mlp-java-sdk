@@ -1,6 +1,9 @@
 package com.mlp.sdk
 
-sealed interface MlpResponse
+sealed interface MlpResponse {
+    val headers: Map<String, String>
+        get() = emptyMap()
+}
 
 object BillingUnitsThreadLocal {
 
@@ -100,7 +103,7 @@ data class ProtobufPayload(
 data class RawPayload(
     val dataType: String?,
     val data: String,
-    val headers: Map<String, String> = emptyMap()
+    override val headers: Map<String, String> = emptyMap()
 ): MlpResponse {
     val asPayload
         get() = Payload(dataType, data)
