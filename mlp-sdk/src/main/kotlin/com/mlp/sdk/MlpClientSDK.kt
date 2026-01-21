@@ -249,6 +249,7 @@ class MlpClientSDK(
         return sendStream(clientRequestFlow).map {
             when (it) {
                 is Payload -> JSON.parseOrThrowBadRequestMlpException(it.data, AsrResponse::class.java)
+                is RawPayload -> JSON.parseOrThrowBadRequestMlpException(it.data, AsrResponse::class.java)
                 is ProtobufPayload -> JSON.parseOrThrowBadRequestMlpException(it.data.toStringUtf8(), AsrResponse::class.java)
             }
         }
@@ -571,6 +572,7 @@ class MlpClientSDK(
                         .apply {
                             when(data) {
                                 is Payload -> setJson(data.data)
+                                is RawPayload -> setJson(data.data)
                                 is ProtobufPayload -> setProtobuf(data.data)
                             }
                         }
@@ -582,6 +584,7 @@ class MlpClientSDK(
                             .apply {
                                 when(config) {
                                     is Payload -> setJson(config.data)
+                                    is RawPayload -> setJson(config.data)
                                     is ProtobufPayload -> setProtobuf(config.data)
                                 }
                             }
