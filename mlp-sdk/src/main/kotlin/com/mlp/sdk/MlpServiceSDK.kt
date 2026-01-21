@@ -1,6 +1,9 @@
 package com.mlp.sdk
 
+import com.mlp.gate.PartialPredictResponseProto
+import com.mlp.gate.PayloadProto
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.sdk.utils.JSON
 import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
@@ -141,6 +144,62 @@ class MlpServiceSDK(
             .build()
 
         taskExecutor.connectorsPool.sendToAnyGate(proto)
+    }
+
+    /**
+     * Sends a partial (streaming) response for the given request.
+     * Use this method to send intermediate results during long-running operations.
+     *
+     * @param requestId The request ID (from MDC "gateRequestId")
+     * @param connectorId The connector ID (from MDC "connectorId")
+     * @param payload The payload to send
+     * @param isLast Whether this is the last response in the stream
+     * @param price Optional billing units for this response
+     * @param billingDetails Optional detailed billing breakdown
+     */
+    suspend fun sendPartialResponse(
+        requestId: Long,
+        connectorId: Long,
+        payload: PayloadInterface,
+        isLast: Boolean,
+        price: Long? = null,
+        billingId: String? = null,
+        billingDetails: Map<String, Long>? = null,
+    ) {
+        val payloadProto = when (payload) {
+            is Payload -> PayloadProto.newBuilder()
+                .setJson(payload.data)
+                .setDataType(payload.dataType).build()
+
+            is RawPayload -> PayloadProto.newBuilder()
+                .setJson(payload.data)
+                .setDataType(payload.dataType).build()
+
+            is ProtobufPayload -> PayloadProto.newBuilder()
+                .setProtobuf(payload.data)
+                .setDataType(payload.dataType ?: "application/octet-stream")
+                .build()
+        }
+
+        val headers = when (payload) {
+            is RawPayload -> payload.headers
+            else -> emptyMap()
+        }
+
+        val builder = ServiceToGateProto.newBuilder()
+            .setRequestId(requestId)
+            .setPartialPredict(
+                PartialPredictResponseProto.newBuilder()
+                    .setFinish(isLast)
+                    .setData(payloadProto)
+            )
+            .putAllHeaders(headers)
+
+        if (price != null) builder.putHeaders("Z-custom-billing", price.toString())
+        if (billingId != null) builder.putHeaders("Z-deferred-billing-id", billingId)
+        if (billingDetails != null) builder.putHeaders("Z-custom-billing-details", JSON.stringify(billingDetails))
+
+        send(connectorId, builder.build())
     }
 
     private fun setShutdownHook() {

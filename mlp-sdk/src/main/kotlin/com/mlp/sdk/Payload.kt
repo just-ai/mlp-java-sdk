@@ -103,10 +103,12 @@ data class ProtobufPayload(
 
 
 data class RawPayload(
-    val dataType: String?,
     val data: String,
+    override val dataType: String?,
     override val headers: Map<String, String> = emptyMap()
-): MlpResponse {
+): MlpResponse, PayloadInterface {
+    override fun stringData(): String = data
+
     val asPayload
         get() = Payload(dataType, data)
 }

@@ -10,11 +10,9 @@ import com.mlp.api.client.ProcessEndpointApi
 import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.MethodDescriptorProto
 import com.mlp.gate.ParamDescriptorProto
-import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
-import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.datatypes.asr.common.AsrRequest
 import com.mlp.sdk.datatypes.asr.common.RecognitionConfig
@@ -252,46 +250,22 @@ fun <R : Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerato
 
     return MlpServiceBase.ResultGenerator { resultAndFinish ->
         val payload = when (resultAndFinish.result) {
-            is PayloadProto -> resultAndFinish.result
-            is Payload -> PayloadProto.newBuilder()
-                .setJson(resultAndFinish.result.data)
-                .setDataType(resultAndFinish.result.dataType).build()
+            is PayloadInterface -> resultAndFinish.result
 
-            is RawPayload -> PayloadProto.newBuilder()
-                .setJson(resultAndFinish.result.data)
-                .setDataType(resultAndFinish.result.dataType).build()
-
-            else -> PayloadProto.newBuilder()
-                .setJson(JSON.stringify(resultAndFinish.result))
-                .setDataType(TypeInfo.canonicalName(resultAndFinish.result.javaClass)).build()
-        }
-
-        val headers = when (resultAndFinish.result) {
-            is MlpResponse -> resultAndFinish.result.headers
-            else -> emptyMap()
-        }
-
-        val builder = ServiceToGateProto.newBuilder()
-            .setRequestId(requestId)
-            .setPartialPredict(
-                PartialPredictResponseProto.newBuilder()
-                    .setFinish(resultAndFinish.last)
-                    .setData(
-                        payload
-                    )
+            else -> Payload(
+                data = JSON.stringify(resultAndFinish.result),
+                dataType = TypeInfo.canonicalName(resultAndFinish.result.javaClass)
             )
-            .putAllHeaders(headers)
-
-        val billingUnits = resultAndFinish.price ?: BillingUnitsThreadLocal.getUnits()
-        if (billingUnits != null) {
-            builder.putHeaders("Z-custom-billing", billingUnits.toString())
-        }
-        val detailedUnits = resultAndFinish.billingDetails ?: BillingUnitsThreadLocal.getDetailedUnits()
-        if (detailedUnits != null) {
-            builder.putHeaders("Z-custom-billing-details", JSON.stringify(detailedUnits))
         }
 
-        sdk.send(connectorId, builder.build())
+        sdk.sendPartialResponse(
+            requestId = requestId,
+            connectorId = connectorId,
+            payload = payload,
+            isLast = resultAndFinish.last,
+            price = resultAndFinish.price,
+            billingDetails = resultAndFinish.billingDetails,
+        )
     }
 }
 

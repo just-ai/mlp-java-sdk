@@ -305,6 +305,7 @@ internal val PayloadInterface.asProto
     get() = PayloadProto.newBuilder().also { builder ->
         when (this) {
             is Payload -> builder.setJson(data)
+            is RawPayload -> builder.setJson(data)
             is ProtobufPayload -> builder.setProtobuf(data)
         }
         dataType?.let { builder.dataType = it }
@@ -371,13 +372,14 @@ private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<
                         .setCode(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.code)
                         .setMessage(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.message)
                         .setStatus(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.status)
+                        .setStatusCode(CommonErrorCode.PARTIAL_RESPONSE_NOT_SUPPORTED_IN_BATCH.status.number)
                 )
 
                 is RawPayload -> builder.setError(
                     ApiErrorProto.newBuilder()
                         .setCode(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.code)
                         .setMessage(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.message)
-                        .setStatus(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.status)
+                        .setStatusCode(CommonErrorCode.RAW_PAYLOAD_NOT_SUPPORTED_IN_BATCH.status.number)
                 )
             }
             builder.build()
@@ -396,6 +398,7 @@ private val Throwable.asErrorProto
                 .setCode(error.errorCode.code)
                 .setMessage(message)
                 .setStatus(error.errorCode.status)
+                .setStatusCode(error.errorCode.statusCode)
                 .putAllArgs(error.args)
         }
 
@@ -404,6 +407,7 @@ private val Throwable.asErrorProto
                 .setCode(PROCESSING_EXCEPTION.code)
                 .setMessage(PROCESSING_EXCEPTION.message)
                 .setStatus(PROCESSING_EXCEPTION.status)
+                .setStatusCode(PROCESSING_EXCEPTION.statusCode)
                 .putArgs("message", message ?: "")
         }
 

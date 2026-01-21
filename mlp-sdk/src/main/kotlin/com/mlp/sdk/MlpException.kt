@@ -26,6 +26,7 @@ interface MlpErrorCode {
     val code: String
     val message: String
     val status: SimpleStatusProto
+    val statusCode: Int get() = status.number
 }
 
 enum class CommonErrorCode(
