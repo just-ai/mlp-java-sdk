@@ -25,6 +25,7 @@ class MlpClientConfig(
     val clientApiGateUrl: String? = null,
     val clientPredictRetryConfig: ClientPredictRetryConfig = ClientPredictRetryConfig(),
     val billingToken: String? = null,
+    val clientId: String? = null,
 
     val keepAliveTimeSeconds: Long = CLIENT_KEEP_ALIVE_TIME_SECONDS,
     val keepAliveTimeoutSeconds: Long = CLIENT_KEEP_ALIVE_TIMEOUT_SECONDS,
@@ -64,6 +65,7 @@ fun loadClientConfig(configPath: String? = null, environment: Environment): MlpC
         restUrl = props["MLP_REST_URL"],
         clientToken = props["MLP_CLIENT_TOKEN"],
         billingToken = props["MLP_BILLING_TOKEN"],
+        clientId = props["MLP_CLIENT_ID"],
         clientPredictTimeoutMs = props["MLP_CLIENT_PREDICT_TIMEOUT_MS"]?.toLong()
             ?: CLIENT_PREDICT_TIMEOUT_MS,
         shutdownConfig = ClientShutdownConfig(

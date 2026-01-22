@@ -15,12 +15,16 @@ abstract class MlpService : WithExecutionContext {
         throw NotImplementedError()
     }
 
+    open suspend fun predict(req: Payload): MlpResponse {
+        throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
+    }
+
     open suspend fun predict(req: Payload, config: Payload?): MlpResponse {
         return predict(req)
     }
 
-    open suspend fun predict(req: Payload): MlpResponse {
-        throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "predict"))
+    open suspend fun predict(req: Payload, config: Payload?, context: RequestContext): MlpResponse {
+        return predict(req, config)
     }
 
     open suspend fun streamPredictRaw(stream: Flow<PayloadWithConfig>): Flow<StreamPayloadInterface> {
@@ -48,3 +52,12 @@ abstract class MlpService : WithExecutionContext {
         throw MlpException(REQUEST_TYPE_NOT_SUPPORTED, mapOf("type" to "batch"))
     }
 }
+
+data class RequestContext(
+    val callerAccountId: Long? = null,
+    val noContentLogging: Boolean = false,
+    val requestId: String,
+    val billingKey: String?,
+    val connectorId: Long,
+    val gateRequestId: Long,
+)

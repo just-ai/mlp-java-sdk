@@ -91,7 +91,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         dataset: DatasetInfoProto
     )
 
-    override suspend fun predict(req: Payload, config: Payload?): MlpResponse {
+    override suspend fun predict(req: Payload, config: Payload?, context: RequestContext): MlpResponse {
         // парсим request и config.
         val request =
             JSON.parseOrThrowBadRequestMlpException(req.data, predictRequestExample.javaClass) // TODO: handle datatype
@@ -101,7 +101,7 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         } else null
 
         // вызываем predict
-        val res = this.predict(request, conf)
+        val res = this.predict(request, conf, context)
 
         // в зависимости от того, создали ли генератор стрим, возвращаем ответ либо сразу, либо возвращаем пустой ответ
         return if (res != null) {
@@ -189,7 +189,11 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
         }
     }
 
-    abstract suspend fun predict(request: P, config: C?): R?
+    open suspend fun predict(request: P, config: C?): R? {
+        throw NotImplementedError()
+    }
+
+    open suspend fun predict(request: P, config: C?, context: RequestContext): R? = predict(request, config)
 
     open suspend fun streamPredict(stream: Flow<Pair<P, C?>>): Flow<R?> {
         return stream.map { predict(it.first, it.second) }

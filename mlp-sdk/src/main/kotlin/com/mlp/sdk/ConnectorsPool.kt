@@ -139,9 +139,9 @@ class ConnectorsPool(
 internal fun WithExecutionContext.logProto(
     body: MessageLite,
     prompt: String,
-    contentHidden: Boolean = false
+    noContentLogging: Boolean = false
 ) {
-    if (contentHidden) {
+    if (noContentLogging) {
         logger.debug("$prompt: <content-hidden>")
         return
     }

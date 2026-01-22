@@ -49,6 +49,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import org.slf4j.MDC
 
+const val CALLER_ACCOUNT_ID = "Z-callerAccountId"
 const val CONTENT_HIDDEN_HEADER = "Content-Hidden"
 
 class Connector(
@@ -276,7 +277,7 @@ class Connector(
             if (grpcResponse.hasHeartBeat())
                 logger.trace("ServiceToGateProto: heartbeat")
             else
-                logProto(grpcResponse, prompt = "ServiceToGate", contentHidden = contentHidden)
+                logProto(grpcResponse, prompt = "ServiceToGate", noContentLogging = contentHidden)
 
             check(!state.notStarted && !state.shutdown) { "$this: can't send message in state $state" }
 
@@ -287,36 +288,35 @@ class Connector(
 
         override fun onNext(request: GateToServiceProto) {
             val tracker = TimeTracker()
-            val requestId = request.headersMap["Z-requestId"] ?: request.requestId.toString()
+            val requestContext = buildRequestContext(request)
+
             MDC.setContextMap(mapOf(
-                "requestId" to requestId,
-                "connectorId" to connectorId.toString(),
-                "gateRequestId" to request.requestId.toString(),
-                "MLP-BILLING-KEY" to request.headersMap["MLP-BILLING-KEY"],
+                "requestId" to requestContext.requestId,
+                "connectorId" to requestContext.connectorId.toString(),
+                "gateRequestId" to requestContext.gateRequestId.toString(),
+                "MLP-BILLING-KEY" to requestContext.billingKey,
             ))
             try {
-                processRequest(request, tracker)
+                processRequest(request, requestContext, tracker)
             } finally {
                 MDC.clear()
             }
         }
 
-        private fun processRequest(request: GateToServiceProto, tracker: TimeTracker) {
-            val contentHidden = request.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean()
-
+        private fun processRequest(request: GateToServiceProto, requestContext: RequestContext, tracker: TimeTracker) {
             if (request.hasHeartBeat())
                 logger.trace("GateToService (connector $connectorId, requestId: ${request.requestId}): heartbeat")
             else
-                logProto(request, prompt = "GateToService (connector $connectorId)", contentHidden = contentHidden)
+                logProto(request, prompt = "GateToService (connector $connectorId)", noContentLogging = requestContext.noContentLogging)
 
             when (request.bodyCase) {
                 HEARTBEAT -> processHeartbeat(request.heartBeat)
                 CLUSTER -> processCluster(request.cluster)
-                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker, contentHidden)
-                PARTIALPREDICT -> executor.streamPredict(request.partialPredict, request.requestId, connectorId, grpcChannelId, contentHidden)
-                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId, contentHidden)
-                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId, contentHidden)
-                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId, contentHidden)
+                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker, requestContext)
+                PARTIALPREDICT -> executor.streamPredict(request.partialPredict, request.requestId, connectorId, grpcChannelId, requestContext)
+                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId, requestContext)
+                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId, requestContext)
+                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId, requestContext)
                 ERROR -> processError(request.error)
                 CANCEL -> executor.cancelRequest(connectorId, request.cancel.requestIdToCancel)
                 STOPSERVING -> processStopServing()
@@ -576,6 +576,17 @@ class Connector(
     private fun logConnecting(message: String, vararg args: Any) {
         if (gatewayPermanentlyUnavailable) return
         logger.debug(message, *args)
+    }
+
+    private fun buildRequestContext(request: GateToServiceProto): RequestContext {
+        return RequestContext(
+            callerAccountId = request.getHeadersOrDefault(CALLER_ACCOUNT_ID, null)?.toLongOrNull(),
+            noContentLogging = request.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean(),
+            requestId = request.headersMap["Z-requestId"] ?: request.requestId.toString(),
+            billingKey = request.headersMap["MLP-BILLING-KEY"],
+            connectorId = connectorId,
+            gateRequestId = request.requestId,
+        )
     }
 }
 

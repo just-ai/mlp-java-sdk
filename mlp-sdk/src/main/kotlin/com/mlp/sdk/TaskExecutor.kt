@@ -62,15 +62,17 @@ class TaskExecutor(
         connectorId: Long,
         grpcChannelId: Long,
         tracker: TimeTracker,
-        contentHidden: Boolean
+        requestContext: RequestContext
     ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
+            val dataPayload = requireNotNull(request.data.getAsPayload(requestContext.noContentLogging)) { "Payload data" }
+            val configPayload = request.config.getAsPayload(requestContext.noContentLogging)
+
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
-            val dataPayload = requireNotNull(request.data.getAsPayload(contentHidden)) { "Payload data" }
+                .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
             runCatching {
-                val responsePayload = action.predict(dataPayload, request.config.getAsPayload(contentHidden))
+                val responsePayload = action.predict(dataPayload, request.config.getAsPayload(requestContext.noContentLogging))
                 val headers = responsePayload.headers
                 val statusCode = responsePayload.statusCode
                 when (responsePayload) {
@@ -101,7 +103,7 @@ class TaskExecutor(
         requestId: Long,
         connectorId: Long,
         grpcChannelId: Long,
-        contentHidden: Boolean
+        requestContext: RequestContext
     ) {
         val channel = channelsContainer.computeIfAbsent(requestId) {
             val channel = Channel<PayloadWithConfig>()
@@ -116,13 +118,13 @@ class TaskExecutor(
                     }.catch {
                         logger.error("requestId: $requestId Error while processing stream predict request", it)
                         val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                            .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                            .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
                         responseBuilder.setError(it.asErrorProto)
                         runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                             .onFailure { logger.error("Error while sending predict response", it) }
                     }.collect { response ->
                         val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                            .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                            .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
                         responseBuilder.setPartialPredict(response.payload, response.last)
                         runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                             .onFailure { logger.error("Error while sending predict response", it) }
@@ -132,7 +134,7 @@ class TaskExecutor(
                     channel.close(it)
                     channelsContainer.remove(requestId)
                     val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                        .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                        .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
                     responseBuilder.setError(it.asErrorProto)
                     runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
                         .onFailure { logger.error("Error while sending predict response", it) }
@@ -142,25 +144,28 @@ class TaskExecutor(
         }
 
         if (request.hasData()) {
-            val dataPayload = requireNotNull(request.data?.getAsPayloadInterface(contentHidden)) { "Payload data" }
-            val config =
-                if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(
-                    contentHidden
-                )
+            val dataPayload = requireNotNull(request.data?.getAsPayloadInterface(requestContext.noContentLogging)) { "Payload data" }
+            val config = if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(requestContext.noContentLogging)
             runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
         }
 
         if (request.finish) channel.close()
     }
 
-    fun fit(request: FitRequestProto, requestId: Long, connectorId: Long, grpcChannelId: Long, contentHidden: Boolean) {
+    fun fit(
+        request: FitRequestProto,
+        requestId: Long,
+        connectorId: Long,
+        grpcChannelId: Long,
+        requestContext: RequestContext
+    ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
-            val trainPayload = request.trainData.getAsPayload(contentHidden)
-            val targetsPayload = request.targetsData?.getAsPayload(contentHidden)
-            val configPayload = request.config?.getAsPayload(contentHidden)
+            val trainPayload = request.trainData.getAsPayload(requestContext.noContentLogging)
+            val targetsPayload = request.targetsData?.getAsPayload(requestContext.noContentLogging)
+            val configPayload = request.config?.getAsPayload(requestContext.noContentLogging)
             val modelDir = request.modelDir
 
             runCatching {
@@ -168,7 +173,7 @@ class TaskExecutor(
                     runCatching {
                         val status = FitStatusProto.newBuilder().setPercentage(percentage).build()
                         val proto = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                            .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                            .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
                             .setFitStatus(status).build()
                         connectorsPool.send(connectorId, proto)
                     }
@@ -195,15 +200,15 @@ class TaskExecutor(
         requestId: Long,
         connectorId: Long,
         grpcChannelId: Long,
-        contentHidden: Boolean
+        requestContext: RequestContext
     ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
             val methodName = requireNotNull(request.methodName) { "methodName" }
             val params =
-                requireNotNull(request.paramsMap.mapValues { requireNotNull(it.value.getAsPayload(contentHidden)) }) { "paramsMap" }
+                requireNotNull(request.paramsMap.mapValues { requireNotNull(it.value.getAsPayload(requestContext.noContentLogging)) }) { "paramsMap" }
 
             runCatching {
                 val responsePayload = action.ext(methodName, params)
@@ -231,19 +236,19 @@ class TaskExecutor(
         requestId: Long,
         connectorId: Long,
         grpcChannelId: Long,
-        contentHidden: Boolean
+        requestContext: RequestContext
     ) {
         launchAndStore(requestId, connectorId, grpcChannelId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
-                .putHeaders(CONTENT_HIDDEN_HEADER, contentHidden.toString())
+                .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
             val data = request.dataList
 
-            val payloadData = data.map { it.data.getAsPayload(contentHidden) }
+            val payloadData = data.map { it.data.getAsPayload(requestContext.noContentLogging) }
             val requestsIdes = data.map { it.requestId }
 
             runCatching {
-                val responses = action.batch(payloadData, request.config.getAsPayload(contentHidden))
+                val responses = action.batch(payloadData, request.config.getAsPayload(requestContext.noContentLogging))
                 responseBuilder.setBatch(responses, requestsIdes)
             }.onFailure {
                 logger.error("Error while processing batch request", it)
@@ -328,11 +333,11 @@ internal val PayloadInterface.asProto
         dataType?.let { builder.dataType = it }
     }
 
-private fun PayloadProto.getAsPayload(contentHidden: Boolean): Payload =
-    Payload(dataType, json, contentHidden)
+private fun PayloadProto.getAsPayload(noContentLogging: Boolean): Payload =
+    Payload(dataType, json, noContentLogging)
 
-private fun PayloadProto.getAsPayloadInterface(contentHidden: Boolean): PayloadInterface =
-    if (hasJson()) Payload(dataType, json, contentHidden) else ProtobufPayload(dataType, protobuf, contentHidden)
+private fun PayloadProto.getAsPayloadInterface(noContentLogging: Boolean): PayloadInterface =
+    if (hasJson()) Payload(dataType, json, noContentLogging) else ProtobufPayload(dataType, protobuf, noContentLogging)
 
 private fun Builder.setPredict(prediction: PayloadInterface, headers: Map<String, String>?, statusCode: Int?) {
     val messageHeaders = headers?.toMutableMap() ?: mutableMapOf()
