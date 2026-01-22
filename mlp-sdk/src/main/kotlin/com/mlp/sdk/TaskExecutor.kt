@@ -17,6 +17,7 @@ import com.mlp.gate.PredictResponseProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.ServiceToGateProto.Builder
 import com.mlp.sdk.CommonErrorCode.PROCESSING_EXCEPTION
+import com.mlp.sdk.Payload.Companion.emptyPayload
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JSON
 import com.mlp.sdk.utils.JobsContainer
@@ -47,7 +48,9 @@ class TaskExecutor(
 
     private val jobsContainer = JobsContainer(config, context)
     private val channelsContainer = ConcurrentHashMap<Long, Channel<PayloadWithConfig>>() // requestId to Channel
-    private val scope = CoroutineScope( SupervisorJob() + (dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher()))
+    private val scope = CoroutineScope(
+        SupervisorJob() + (dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
+    )
     internal lateinit var connectorsPool: ConnectorsPool
 
     fun isAbleProcessNewJobs(connectorId: Long, grpcChannelId: Long) =
@@ -67,11 +70,14 @@ class TaskExecutor(
             val dataPayload = requireNotNull(request.data.getAsPayload(contentHidden)) { "Payload data" }
 
             runCatching {
-                when (val responsePayload = action.predict(dataPayload, request.config.getAsPayload(contentHidden))) {
-                    is PayloadInterface -> responseBuilder.setPredict(responsePayload)
-                    is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload, responsePayload.headers)
+                val responsePayload = action.predict(dataPayload, request.config.getAsPayload(contentHidden))
+                val headers = responsePayload.headers
+                val statusCode = responsePayload.statusCode
+                when (responsePayload) {
+                    is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload, headers, statusCode)
+                    is PayloadInterface -> responseBuilder.setPredict(responsePayload, headers, statusCode)
                     is MlpResponseException -> throw responsePayload.exception
-                    is MlpPartialBinaryResponse -> return@launchAndStore
+                    is MlpPartialBinaryResponse -> responseBuilder.setStartPartialPredict(headers, statusCode)
                     // если partialResponse, то просто ничего не делаем. Респонзы будет отправлять сам сервис.
                 }
             }.onFailure {
@@ -133,7 +139,10 @@ class TaskExecutor(
 
         if (request.hasData()) {
             val dataPayload = requireNotNull(request.data?.getAsPayloadInterface(contentHidden)) { "Payload data" }
-            val config = if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(contentHidden)
+            val config =
+                if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(
+                    contentHidden
+                )
             runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
         }
 
@@ -193,9 +202,13 @@ class TaskExecutor(
                 requireNotNull(request.paramsMap.mapValues { requireNotNull(it.value.getAsPayload(contentHidden)) }) { "paramsMap" }
 
             runCatching {
+                val responsePayload = action.ext(methodName, params)
+                val headers = responsePayload.headers
+                val statusCode = responsePayload.statusCode
+
                 when (val responsePayload = action.ext(methodName, params)) {
-                    is PayloadInterface -> responseBuilder.setExt(responsePayload)
-                    is RawPayload -> responseBuilder.setExt(responsePayload.asPayload)
+                    is RawPayload -> responseBuilder.setExt(responsePayload.asPayload, headers, statusCode)
+                    is PayloadInterface -> responseBuilder.setExt(responsePayload, headers, statusCode)
                     is MlpResponseException -> throw responsePayload.exception
                     is MlpPartialBinaryResponse -> throw NotImplementedError()
                 }
@@ -317,47 +330,63 @@ private fun PayloadProto.getAsPayload(contentHidden: Boolean): Payload =
 private fun PayloadProto.getAsPayloadInterface(contentHidden: Boolean): PayloadInterface =
     if (hasJson()) Payload(dataType, json, contentHidden) else ProtobufPayload(dataType, protobuf, contentHidden)
 
-private fun Builder.setPredict(prediction: PayloadInterface, headers: Map<String, String> = emptyMap()) {
-    BillingUnitsThreadLocal.getUnits()?.also {
-        putHeaders("Z-custom-billing", it.toString())
-    }
-    BillingUnitsThreadLocal.getDetailedUnits()?.also {
-        putHeaders("Z-custom-billing-details", JSON.stringify(it))
-    }
-    // Deferred billing headers
-    BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
-        putHeaders("Z-deferred-billing-id", it)
-    }
+private fun Builder.setPredict(prediction: PayloadInterface, headers: Map<String, String>, statusCode: Int) {
+    val messageHeaders = headers.toMutableMap()
 
-    BillingUnitsThreadLocal.clearAll()
+    flushBillingHeaders(messageHeaders)
 
-    setPredict(PredictResponseProto.newBuilder().setData(prediction.asProto))
-    putAllHeaders(headers)
+    setPredict(
+        PredictResponseProto
+            .newBuilder()
+            .setData(prediction.asProto)
+            .setStatusCode(statusCode)
+            .putAllHeaders(messageHeaders)
+    )
+    putAllHeaders(messageHeaders)
+}
+
+private fun Builder.setStartPartialPredict(headers: Map<String, String>, statusCode: Int) {
+    val messageHeaders = headers.toMutableMap()
+
+    flushBillingHeaders(messageHeaders)
+
+    setPartialPredict(
+        PartialPredictResponseProto
+            .newBuilder()
+            .setData(emptyPayload.asProto)
+            .setStart(true)
+            .setStatusCode(statusCode)
+            .putAllHeaders(messageHeaders)
+    )
+    putAllHeaders(messageHeaders)
 }
 
 private fun Builder.setPartialPredict(prediction: PayloadInterface, last: Boolean) {
-    BillingUnitsThreadLocal.getUnits()?.also {
-        putHeaders("Z-custom-billing", it.toString())
-    }
-    BillingUnitsThreadLocal.getDetailedUnits()?.also {
-        putHeaders("Z-custom-billing-details", JSON.stringify(it))
-    }
-    // Deferred billing headers
-    BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
-        putHeaders("Z-deferred-billing-id", it)
-    }
+    val messageHeaders = headers.toMutableMap()
 
-    BillingUnitsThreadLocal.clearAll()
+    flushBillingHeaders(messageHeaders)
 
-    setPartialPredict(PartialPredictResponseProto.newBuilder().setData(prediction.asProto).setFinish(last))
+    setPartialPredict(
+        PartialPredictResponseProto
+            .newBuilder()
+            .setData(prediction.asProto)
+            .setFinish(last)
+    )
 }
+
 
 private fun Builder.setFit() =
     setFit(FitResponseProto.newBuilder())
 
-private fun Builder.setExt(extResult: PayloadInterface, headers: Map<String, String> = emptyMap()) =
-    setExt(ExtendedResponseProto.newBuilder().setData(extResult.asProto))
-        .putAllHeaders(headers)
+private fun Builder.setExt(extResult: PayloadInterface, headers: Map<String, String>, statusCode: Int): Builder? {
+    return setExt(
+        ExtendedResponseProto
+            .newBuilder()
+            .setData(extResult.asProto)
+            .setStatusCode(statusCode)
+            .putAllHeaders(headers)
+    ).putAllHeaders(headers)
+}
 
 private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<Long>): Builder {
     require(batchResult.size == requestsIdes.size) { "Batch responses size must be equal to requests size" }
@@ -386,6 +415,21 @@ private fun Builder.setBatch(batchResult: List<MlpResponse>, requestsIdes: List<
         }
 
     return setBatch(BatchResponseProto.newBuilder().addAllData(actionToGateProtos))
+}
+
+private fun flushBillingHeaders(messageHeaders: MutableMap<String, String>) {
+    BillingUnitsThreadLocal.getUnits()?.also {
+        messageHeaders += "Z-custom-billing" to it.toString()
+    }
+    BillingUnitsThreadLocal.getDetailedUnits()?.also {
+        messageHeaders += "Z-custom-billing-details" to JSON.stringify(it)
+    }
+    // Deferred billing headers
+    BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
+        messageHeaders += "Z-deferred-billing-id" to it
+    }
+
+    BillingUnitsThreadLocal.clearAll()
 }
 
 private val Throwable.asErrorProto

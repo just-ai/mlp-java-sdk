@@ -3,6 +3,8 @@ package com.mlp.sdk
 sealed interface MlpResponse {
     val headers: Map<String, String>
         get() = emptyMap()
+    val statusCode: Int
+        get() = 200
 }
 
 object BillingUnitsThreadLocal {
@@ -105,7 +107,8 @@ data class ProtobufPayload(
 data class RawPayload(
     val data: String,
     override val dataType: String?,
-    override val headers: Map<String, String> = emptyMap()
+    override val headers: Map<String, String> = emptyMap(),
+    override val statusCode: Int = 200,
 ): MlpResponse, PayloadInterface {
     override fun stringData(): String = data
 
@@ -115,7 +118,10 @@ data class RawPayload(
 
 data class MlpResponseException(val exception: Throwable) : MlpResponse
 
-class MlpPartialBinaryResponse(): MlpResponse
+class MlpPartialBinaryResponse(
+    override val headers: Map<String, String> = emptyMap(),
+    override val statusCode: Int = 200
+) : MlpResponse
 
 data class MlpHttpResponse(
     val statusCode: Int = 200,
