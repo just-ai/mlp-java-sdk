@@ -58,6 +58,10 @@ object JSON {
     inline fun <reified T> parse(json: String):T =
             mapper.readValue(json, T::class.java)
 
+    inline fun <reified T> parseOrNull(json: String?): T? =
+            runCatching { mapper.readValue(json, T::class.java) }
+                .getOrNull()
+
     inline fun <reified T> parseList(json: String):List<T> {
         val array = mapper.readTree(json) as ArrayNode
         return array.map { mapper.treeToValue(it, T::class.java) }
