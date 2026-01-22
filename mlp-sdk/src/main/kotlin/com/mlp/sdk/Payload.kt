@@ -1,9 +1,9 @@
 package com.mlp.sdk
 
 sealed interface MlpResponse {
-    val headers: Map<String, String>
+    val headers: Map<String, String>?
         get() = emptyMap()
-    val statusCode: Int
+    val statusCode: Int?
         get() = 200
 }
 
@@ -119,8 +119,8 @@ data class RawPayload(
 data class MlpResponseException(val exception: Throwable) : MlpResponse
 
 class MlpPartialBinaryResponse(
-    override val headers: Map<String, String> = emptyMap(),
-    override val statusCode: Int = 200
+    override val headers: Map<String, String>? = null,
+    override val statusCode: Int? = null
 ) : MlpResponse
 
 data class MlpHttpResponse(

@@ -77,7 +77,11 @@ class TaskExecutor(
                     is RawPayload -> responseBuilder.setPredict(responsePayload.asPayload, headers, statusCode)
                     is PayloadInterface -> responseBuilder.setPredict(responsePayload, headers, statusCode)
                     is MlpResponseException -> throw responsePayload.exception
-                    is MlpPartialBinaryResponse -> responseBuilder.setStartPartialPredict(headers, statusCode)
+                    is MlpPartialBinaryResponse ->
+                        if (headers == null && statusCode == null)
+                            return@launchAndStore
+                        else
+                            responseBuilder.setStartPartialPredict(headers, statusCode)
                     // если partialResponse, то просто ничего не делаем. Респонзы будет отправлять сам сервис.
                 }
             }.onFailure {
@@ -203,8 +207,8 @@ class TaskExecutor(
 
             runCatching {
                 val responsePayload = action.ext(methodName, params)
-                val headers = responsePayload.headers
-                val statusCode = responsePayload.statusCode
+                val headers = responsePayload.headers ?: emptyMap()
+                val statusCode = responsePayload.statusCode ?: 200
 
                 when (val responsePayload = action.ext(methodName, params)) {
                     is RawPayload -> responseBuilder.setExt(responsePayload.asPayload, headers, statusCode)
@@ -330,8 +334,8 @@ private fun PayloadProto.getAsPayload(contentHidden: Boolean): Payload =
 private fun PayloadProto.getAsPayloadInterface(contentHidden: Boolean): PayloadInterface =
     if (hasJson()) Payload(dataType, json, contentHidden) else ProtobufPayload(dataType, protobuf, contentHidden)
 
-private fun Builder.setPredict(prediction: PayloadInterface, headers: Map<String, String>, statusCode: Int) {
-    val messageHeaders = headers.toMutableMap()
+private fun Builder.setPredict(prediction: PayloadInterface, headers: Map<String, String>?, statusCode: Int?) {
+    val messageHeaders = headers?.toMutableMap() ?: mutableMapOf()
 
     flushBillingHeaders(messageHeaders)
 
@@ -339,14 +343,14 @@ private fun Builder.setPredict(prediction: PayloadInterface, headers: Map<String
         PredictResponseProto
             .newBuilder()
             .setData(prediction.asProto)
-            .setStatusCode(statusCode)
+            .setStatusCode(statusCode ?: 200)
             .putAllHeaders(messageHeaders)
     )
     putAllHeaders(messageHeaders)
 }
 
-private fun Builder.setStartPartialPredict(headers: Map<String, String>, statusCode: Int) {
-    val messageHeaders = headers.toMutableMap()
+private fun Builder.setStartPartialPredict(headers: Map<String, String>?, statusCode: Int?) {
+    val messageHeaders = headers?.toMutableMap() ?: mutableMapOf()
 
     flushBillingHeaders(messageHeaders)
 
@@ -355,7 +359,7 @@ private fun Builder.setStartPartialPredict(headers: Map<String, String>, statusC
             .newBuilder()
             .setData(emptyPayload.asProto)
             .setStart(true)
-            .setStatusCode(statusCode)
+            .setStatusCode(statusCode ?: 200)
             .putAllHeaders(messageHeaders)
     )
     putAllHeaders(messageHeaders)
