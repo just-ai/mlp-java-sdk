@@ -32,15 +32,15 @@ class TaskExecutorTest {
         val connectorId_1 = 1L
         val connectorId_2 = 2L
 
-        taskExecutor.predict(getDefaultInstance(), 1, connectorId_1, connectorId_1, TimeTracker(), false)
-        taskExecutor.predict(getDefaultInstance(), 2, connectorId_1, connectorId_1, TimeTracker(), false)
+        taskExecutor.predict(getDefaultInstance(), 1, connectorId_1, connectorId_1, TimeTracker(), RequestContext())
+        taskExecutor.predict(getDefaultInstance(), 2, connectorId_1, connectorId_1, TimeTracker(), RequestContext())
         launch(Dispatchers.Default) {
             delay(100)
-            taskExecutor.fit(FitRequestProto.getDefaultInstance(), 3, connectorId_1, connectorId_1, false)
+            taskExecutor.fit(FitRequestProto.getDefaultInstance(), 3, connectorId_1, connectorId_1, RequestContext())
         }
         launch(Dispatchers.Default) {
             delay(100)
-            taskExecutor.ext(ExtendedRequestProto.getDefaultInstance(), 1, connectorId_2, connectorId_2, false)
+            taskExecutor.ext(ExtendedRequestProto.getDefaultInstance(), 1, connectorId_2, connectorId_2, RequestContext())
         }
         taskExecutor.gracefulShutdownAll(connectorId_1, Long.MAX_VALUE)
 
