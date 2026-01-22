@@ -56,8 +56,8 @@ abstract class MlpService : WithExecutionContext {
 data class RequestContext(
     val callerAccountId: Long? = null,
     val noContentLogging: Boolean = false,
-    val requestId: String,
-    val billingKey: String?,
-    val connectorId: Long,
-    val gateRequestId: Long,
+    val requestId: String = "",
+    val billingKey: String? = null,
+    val connectorId: Long = 0L,
+    val gateRequestId: Long = 0,
 )
