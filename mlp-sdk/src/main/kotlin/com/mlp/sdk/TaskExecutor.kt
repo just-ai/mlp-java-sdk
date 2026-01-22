@@ -72,7 +72,7 @@ class TaskExecutor(
                 .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
             runCatching {
-                val responsePayload = action.predict(dataPayload, request.config.getAsPayload(requestContext.noContentLogging))
+                val responsePayload = action.predict(dataPayload, configPayload, requestContext)
                 val headers = responsePayload.headers
                 val statusCode = responsePayload.statusCode
                 when (responsePayload) {
