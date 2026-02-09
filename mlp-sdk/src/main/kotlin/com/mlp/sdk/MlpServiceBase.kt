@@ -1,16 +1,15 @@
 package com.mlp.sdk
 
 import com.fasterxml.jackson.databind.JsonMappingException
-import com.mlp.api.ApiClient
+import com.justai.caila.core.api.ApiClient
+import com.justai.caila.core.api.client.DatasetEndpointApi
+import com.justai.caila.core.api.client.JobEndpointApi
+import com.justai.caila.core.api.client.ModelEndpointApi
+import com.justai.caila.core.api.client.ProcessEndpointApi
 import com.mlp.api.TypeInfo
-import com.mlp.api.client.DatasetEndpointApi
-import com.mlp.api.client.JobEndpointApi
-import com.mlp.api.client.ModelEndpointApi
-import com.mlp.api.client.ProcessEndpointApi
 import com.mlp.gate.DatasetInfoProto
 import com.mlp.gate.MethodDescriptorProto
 import com.mlp.gate.ParamDescriptorProto
-import com.mlp.gate.PayloadProto
 import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext

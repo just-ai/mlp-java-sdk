@@ -1,6 +1,6 @@
 package com.mlp.sdk
 
-import com.mlp.api.ApiClient
+import com.justai.caila.core.api.ApiClient
 import com.mlp.sdk.utils.JSON
 import java.io.ByteArrayInputStream
 import java.io.File
