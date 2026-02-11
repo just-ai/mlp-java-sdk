@@ -156,6 +156,7 @@ class MlpServiceSDK(
      * @param isLast Whether this is the last response in the stream
      * @param price Optional billing units for this response
      * @param billingDetails Optional detailed billing breakdown
+     * @param billingCurrencyType Optional billing currency type
      */
     suspend fun sendPartialResponse(
         requestId: Long,
@@ -164,6 +165,7 @@ class MlpServiceSDK(
         isLast: Boolean,
         price: Long? = null,
         billingDetails: Map<String, Long>? = null,
+        billingCurrencyType: String? = null,
     ) {
         val payloadProto = when (payload) {
             is Payload -> PayloadProto.newBuilder()
@@ -196,6 +198,7 @@ class MlpServiceSDK(
 
         if (price != null) builder.putHeaders("Z-custom-billing", price.toString())
         if (billingDetails != null) builder.putHeaders("Z-custom-billing-details", JSON.stringify(billingDetails))
+        if (billingCurrencyType != null) builder.putHeaders("Z-billing-currency-type", billingCurrencyType)
 
         send(connectorId, builder.build())
     }

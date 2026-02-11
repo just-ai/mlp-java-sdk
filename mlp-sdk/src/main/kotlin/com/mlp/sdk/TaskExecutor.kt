@@ -437,6 +437,9 @@ private fun flushBillingHeaders(messageHeaders: MutableMap<String, String>) {
     BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
         messageHeaders += "Z-deferred-billing-id" to it
     }
+    BillingUnitsThreadLocal.getBillingCurrencyType()?.also {
+        messageHeaders += "Z-billing-currency-type" to it
+    }
 
     BillingUnitsThreadLocal.clearAll()
 }
