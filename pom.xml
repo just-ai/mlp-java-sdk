@@ -4,7 +4,6 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>mlp-client-generator</module>
         <module>mlp-datatypes</module>
         <module>mlp-sdk</module>
         <module>mlp-examples/mlp-fit-action</module>
@@ -17,19 +16,20 @@
 
     <groupId>com.mlp</groupId>
     <artifactId>mlp-java-sdk</artifactId>
-    <version>dev-SNAPSHOT</version>
+    <version>${revision}</version>
 
     <name>mlp-java-sdk</name>
     <description>MLP Java SDK</description>
 
     <properties>
+        <revision>2.0.0</revision>
+
         <branch.name.lower>local</branch.name.lower>
         <branch.name.python>local</branch.name.python>
-        <build.number>0</build.number>
 
-        <java.version>9</java.version>
-        <maven.compiler.source>9</maven.compiler.source>
-        <maven.compiler.target>9</maven.compiler.target>
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
         <kotlin.version>1.8.22</kotlin.version>
         <coroutines.version>1.6.4</coroutines.version>
@@ -45,6 +45,11 @@
         <protobuf.version>3.25.6</protobuf.version>
 
         <slf4j.version>1.7.32</slf4j.version>
+
+        <spring-boot.version>2.7.12</spring-boot.version>
+
+        <mlp-core.version>20260209201531</mlp-core.version>
+        <mlp-gateway.version>20260209201531</mlp-gateway.version>
     </properties>
 
     <repositories>
@@ -53,6 +58,32 @@
             <url>https://nexus.just-ai.com/repository/maven-public/</url>
         </repository>
     </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-bom</artifactId>
+                <version>${protobuf.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <pluginRepositories>
         <pluginRepository>
@@ -67,6 +98,38 @@
             <url>${deploymentRepo}</url>
         </repository>
     </distributionManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>flatten-maven-plugin</artifactId>
+                    <version>1.5.0</version>
+                    <configuration>
+                        <updatePomFile>true</updatePomFile>
+                        <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>flatten</id>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>flatten</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>flatten.clean</id>
+                            <phase>clean</phase>
+                            <goals>
+                                <goal>clean</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <profiles>
         <profile>

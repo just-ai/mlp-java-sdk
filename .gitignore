@@ -52,3 +52,5 @@ mlp-datatypes/src/main/kotlin/**/*.kt
 !mlp-datatypes/src/main/kotlin/com/mlp/api/TypeInfo.kt
 
 .openapi-generator
+
+.flattened-pom.xml

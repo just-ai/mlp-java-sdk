@@ -1,15 +1,15 @@
 package com.mlp.sdk
 
-import com.mlp.api.client.model.CreateOrUpdateDatasetInfoData
-import com.mlp.api.client.model.FitRequestData
-import com.mlp.api.client.model.JobStatusData
-import com.mlp.api.client.model.ModelInfoPK
+import com.justai.caila.core.api.client.model.CreateOrUpdateDatasetInfoData
+import com.justai.caila.core.api.client.model.FitRequestData
+import com.justai.caila.core.api.client.model.JobStatusData
+import com.justai.caila.core.api.client.model.ModelInfoPK
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
-import org.slf4j.Logger
 import java.io.File
-import java.lang.Thread.*
+import java.lang.Thread.sleep
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+import org.slf4j.Logger
 
 interface MlpClientHelper: WithExecutionContext {
 
