@@ -9,10 +9,14 @@ pipeline {
     agent {
         label 'caila-dev-cloud-agent'
     }
+    parameters {
+        string(name: "BRANCH", defaultValue: "release", description: "")
+    }
     stages {
         stage('Prepare') {
             steps {
                 script {
+                    env.BRANCH_NAME = env.gitlabBranch != null ? env.gitlabBranch : params.BRANCH
                     addBadge(cssClass: "badge-text--background badge-text--bordered", text: env.BRANCH_NAME)
                 }
                 updateGitlabCommitStatus name: "build", state: "running"
