@@ -351,17 +351,25 @@ class MlpClientSDK(
 
         return when {
             response.hasPredict() ->
-                RawPayload(response.predict.data.dataType, response.predict.data.json, response.headersMap)
+                RawPayload(
+                    data = response.predict.data.json,
+                    dataType = response.predict.data.dataType,
+                    headers = response.headersMap
+                )
 
             response.hasPartialPredict() ->
                 RawPayload(
-                    response.partialPredict.data.dataType,
-                    response.partialPredict.data.json,
-                    response.headersMap
+                    data = response.partialPredict.data.json,
+                    dataType = response.partialPredict.data.dataType,
+                    headers = response.headersMap
                 )
 
             response.hasExt() ->
-                RawPayload(response.ext.data.dataType, response.ext.data.json, response.headersMap)
+                RawPayload(
+                    data = response.ext.data.json,
+                    dataType = response.ext.data.dataType,
+                    headers = response.headersMap
+                )
 
             else ->
                 throw MlpClientException(
