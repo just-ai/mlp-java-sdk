@@ -21,6 +21,8 @@ import com.mlp.sdk.Payload.Companion.emptyPayload
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JSON
 import com.mlp.sdk.utils.JobsContainer
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors.newFixedThreadPool
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -36,35 +38,33 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import kotlinx.coroutines.withContext
 import org.slf4j.MDC
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors.newFixedThreadPool
 
 class TaskExecutor(
     val action: MlpService,
     val config: MlpServiceConfig,
     dispatcher: CoroutineDispatcher?,
     override val context: MlpExecutionContext
-) : WithExecutionContext, WithState(ACTIVE) {
+) : WithState(ACTIVE) {
 
-    private val jobsContainer = JobsContainer(config, context)
+    private val jobsContainer = JobsContainer(config)
     private val channelsContainer = ConcurrentHashMap<Long, Channel<PayloadWithConfig>>() // requestId to Channel
     private val scope = CoroutineScope(
         SupervisorJob() + (dispatcher ?: newFixedThreadPool(config.threadPoolSize).asCoroutineDispatcher())
     )
     internal lateinit var connectorsPool: ConnectorsPool
 
-    fun isAbleProcessNewJobs(connectorId: Long, grpcChannelId: Long) =
-        jobsContainer.isAbleProcessNewJobs(connectorId, grpcChannelId)
+    fun isAbleProcessNewJobs(connectorId: Long) =
+        jobsContainer.isAbleProcessNewJobs(connectorId)
 
     fun predict(
         request: PredictRequestProto,
-        requestId: Long,
-        connectorId: Long,
-        grpcChannelId: Long,
         tracker: TimeTracker,
-        requestContext: RequestContext
+        requestContext: RequestContext,
     ) {
-        launchAndStore(requestId, connectorId, grpcChannelId) {
+        val requestId = requestContext.gateRequestId
+        val connectorId = requestContext.connectorId
+
+        launchAndStore(requestId, connectorId) {
             val dataPayload = requireNotNull(request.data.getAsPayload(requestContext.noContentLogging)) { "Payload data" }
             val configPayload = request.config.getAsPayload(requestContext.noContentLogging)
 
@@ -93,21 +93,21 @@ class TaskExecutor(
 
             val elapsed = System.currentTimeMillis() - tracker.startTime
             responseBuilder.putHeaders("Z-Server-Time", elapsed.toString())
-            runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+            runCatching { connectorsPool.send(connectorId, responseBuilder) }
                 .onFailure { logger.error("Error while sending predict response", it) }
         }
     }
 
     fun streamPredict(
         request: PartialPredictRequestProto,
-        requestId: Long,
-        connectorId: Long,
-        grpcChannelId: Long,
-        requestContext: RequestContext
+        requestContext: RequestContext,
     ) {
+        val requestId = requestContext.gateRequestId
+        val connectorId = requestContext.connectorId
+
         val channel = channelsContainer.computeIfAbsent(requestId) {
             val channel = Channel<PayloadWithConfig>()
-            launchAndStore(requestId, connectorId, grpcChannelId) {
+            launchAndStore(requestId, connectorId) {
                 runCatching {
                     action.streamPredictRaw(channel.receiveAsFlow()).onStart {
                         logger.info("requestId: $requestId Start processing stream flow")
@@ -120,13 +120,13 @@ class TaskExecutor(
                         val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                             .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
                         responseBuilder.setError(it.asErrorProto)
-                        runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+                        runCatching { connectorsPool.send(connectorId, responseBuilder) }
                             .onFailure { logger.error("Error while sending predict response", it) }
                     }.collect { response ->
                         val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                             .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
                         responseBuilder.setPartialPredict(response.payload, response.last)
-                        runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+                        runCatching { connectorsPool.send(connectorId, responseBuilder) }
                             .onFailure { logger.error("Error while sending predict response", it) }
                     }
                 }.onFailure {
@@ -136,7 +136,7 @@ class TaskExecutor(
                     val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                         .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
                     responseBuilder.setError(it.asErrorProto)
-                    runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+                    runCatching { connectorsPool.send(connectorId, responseBuilder) }
                         .onFailure { logger.error("Error while sending predict response", it) }
                 }
             }
@@ -145,7 +145,8 @@ class TaskExecutor(
 
         if (request.hasData()) {
             val dataPayload = requireNotNull(request.data?.getAsPayloadInterface(requestContext.noContentLogging)) { "Payload data" }
-            val config = if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(requestContext.noContentLogging)
+            val config =
+                if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(requestContext.noContentLogging)
             runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
         }
 
@@ -154,12 +155,12 @@ class TaskExecutor(
 
     fun fit(
         request: FitRequestProto,
-        requestId: Long,
-        connectorId: Long,
-        grpcChannelId: Long,
-        requestContext: RequestContext
+        requestContext: RequestContext,
     ) {
-        launchAndStore(requestId, connectorId, grpcChannelId) {
+        val requestId = requestContext.gateRequestId
+        val connectorId = requestContext.connectorId
+
+        launchAndStore(requestId, connectorId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                 .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
@@ -174,7 +175,7 @@ class TaskExecutor(
                         val status = FitStatusProto.newBuilder().setPercentage(percentage).build()
                         val proto = ServiceToGateProto.newBuilder().setRequestId(requestId)
                             .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
-                            .setFitStatus(status).build()
+                            .setFitStatus(status)
                         connectorsPool.send(connectorId, proto)
                     }
                 }
@@ -190,19 +191,19 @@ class TaskExecutor(
                 responseBuilder.setError(it.asErrorProto)
             }
 
-            runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+            runCatching { connectorsPool.send(connectorId, responseBuilder) }
                 .onFailure { logger.error("Error while sending fit response", it) }
         }
     }
 
     fun ext(
         request: ExtendedRequestProto,
-        requestId: Long,
-        connectorId: Long,
-        grpcChannelId: Long,
-        requestContext: RequestContext
+        requestContext: RequestContext,
     ) {
-        launchAndStore(requestId, connectorId, grpcChannelId) {
+        val requestId = requestContext.gateRequestId
+        val connectorId = requestContext.connectorId
+
+        launchAndStore(requestId, connectorId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                 .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
@@ -226,19 +227,19 @@ class TaskExecutor(
                 responseBuilder.setError(it.asErrorProto)
             }
 
-            runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+            runCatching { connectorsPool.send(connectorId, responseBuilder) }
                 .onFailure { logger.error("Error while sending ext response", it) }
         }
     }
 
     fun batch(
         request: BatchRequestProto,
-        requestId: Long,
-        connectorId: Long,
-        grpcChannelId: Long,
-        requestContext: RequestContext
+        requestContext: RequestContext,
     ) {
-        launchAndStore(requestId, connectorId, grpcChannelId) {
+        val requestId = requestContext.gateRequestId
+        val connectorId = requestContext.connectorId
+
+        launchAndStore(requestId, connectorId) {
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                 .putHeaders(CONTENT_HIDDEN_HEADER, requestContext.noContentLogging.toString())
 
@@ -255,7 +256,7 @@ class TaskExecutor(
                 responseBuilder.setError(it.asErrorProto)
             }
 
-            runCatching { connectorsPool.send(connectorId, responseBuilder.build()) }
+            runCatching { connectorsPool.send(connectorId, responseBuilder) }
                 .onFailure { logger.error("Error while sending batch response", it) }
         }
     }
@@ -264,9 +265,9 @@ class TaskExecutor(
         jobsContainer.cancelRequest(connectorId, requestId)
     }
 
-    fun enableNewTasks(connectorId: Long, grpcChannelId: Long) {
+    fun initContainer(connectorId: Long) {
         logger.info("$this: enable new requests for connector $connectorId")
-        jobsContainer.enableNewOnes(connectorId, grpcChannelId)
+        jobsContainer.initContainer(connectorId)
     }
 
     fun cancelAll() {
@@ -274,28 +275,21 @@ class TaskExecutor(
         runCatching { jobsContainer.cancelAllForever() }
     }
 
-    fun cancelAll(connectorId: Long, grpcChannelId: Long) {
-        logger.info("$this: cancelling all tasks of connector $connectorId ...")
-        runCatching { jobsContainer.cancel(connectorId, grpcChannelId) }
-        logger.info("$this: cancelled all tasks of connector $connectorId")
-    }
-
-    suspend fun gracefulShutdownAll(connectorId: Long, grpcChannelId: Long) {
+    suspend fun gracefulShutdownAll(connectorId: Long) {
         logger.info("$this: graceful shutting down all tasks of connector $connectorId ...")
-        runCatching { jobsContainer.gracefulShutdownByConnector(connectorId, grpcChannelId) }
+        runCatching { jobsContainer.gracefulShutdownByConnector(connectorId) }
         logger.info("$this: graceful shut down all tasks of connector $connectorId")
     }
 
     private suspend fun sendException(connectorId: Long, responseBuilder: Builder, throwable: Throwable) {
         responseBuilder.setError(throwable.asErrorProto)
         logger.error("Exception while handle request", throwable)
-        connectorsPool.send(connectorId, responseBuilder.build())
+        connectorsPool.send(connectorId, responseBuilder)
     }
 
     private fun launchAndStore(
         requestId: Long,
         connectorId: Long,
-        grpcChannelId: Long,
         block: suspend () -> Unit
     ) {
         val ctx = MDC.getCopyOfContextMap()
@@ -311,7 +305,7 @@ class TaskExecutor(
             jobsContainer.remove(connectorId, requestId)
         }
 
-        val added = jobsContainer.put(connectorId, grpcChannelId, requestId, job)
+        val added = jobsContainer.put(connectorId, requestId, job)
 
         if (added) {
             job.start()

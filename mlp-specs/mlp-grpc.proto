@@ -77,6 +77,8 @@ message ServiceToGateProto {
   }
 
   map<string, string> headers = 1000;
+  string runningInstanceId = 1001;
+  int64 sequenceNumber = 1002;
 }
 
 message GateToServiceProto {
@@ -99,6 +101,8 @@ message GateToServiceProto {
     PartialPredictRequestProto partialPredict = 107;
     CancelRequestProto cancel = 108;
 
+    SyncSequenceNumbersProto syncSequenceNumbers = 109;
+
     ApiErrorProto error = 201;
   }
 
@@ -120,6 +124,8 @@ message StartServingProto {
   optional string hostname = 4;
   optional int64 version = 5;
   optional string image = 6;
+
+  int64 runningInstanceSequenceNumber = 8;
 }
 
 message StopServingProto {
@@ -233,6 +239,13 @@ message StatusResponseProto {
 
 message CancelRequestProto {
   int64 requestIdToCancel = 101;
+}
+
+message SyncSequenceNumbersProto {
+  oneof body {
+    int64 initialGateSequenceNumber = 1;
+    int64 lastProcessedSequenceNumber = 2;
+  }
 }
 
 message PayloadProto {

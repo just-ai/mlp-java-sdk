@@ -33,13 +33,13 @@ class ConnectorsPool(
         launchConnectorsMonitor()
     }
 
-    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto) {
+    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto.Builder) {
         connectors[connectorId]
             ?.sendServiceToGate(toGateProto)
             ?: throw NoSuchElementException("There is no connector $connectorId")
     }
 
-    suspend fun sendToAnyGate(toGateProto: ServiceToGateProto) {
+    suspend fun sendToAnyGate(toGateProto: ServiceToGateProto.Builder) {
         connectors.values
             .filter { it.isAvailableToSendGrpc() }
             .randomOrNull()

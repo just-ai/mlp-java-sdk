@@ -113,7 +113,7 @@ class MlpServiceSDK(
         state.shutdown()
     }
 
-    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto) {
+    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto.Builder) {
         taskExecutor.connectorsPool.send(connectorId, toGateProto)
     }
 
@@ -141,7 +141,6 @@ class MlpServiceSDK(
                     .setAmountInUnits(amountInUnits)
                     .build()
             )
-            .build()
 
         taskExecutor.connectorsPool.sendToAnyGate(proto)
     }
@@ -200,7 +199,7 @@ class MlpServiceSDK(
         if (billingDetails != null) builder.putHeaders("Z-custom-billing-details", JSON.stringify(billingDetails))
         if (billingCurrencyType != null) builder.putHeaders("Z-billing-currency-type", billingCurrencyType)
 
-        send(connectorId, builder.build())
+        send(connectorId, builder)
     }
 
     private fun setShutdownHook() {

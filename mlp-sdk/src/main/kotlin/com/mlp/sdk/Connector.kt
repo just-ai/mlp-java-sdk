@@ -4,22 +4,12 @@ import com.mlp.gate.ApiErrorProto
 import com.mlp.gate.ClusterUpdateProto
 import com.mlp.gate.GateGrpc
 import com.mlp.gate.GateToServiceProto
-import com.mlp.gate.GateToServiceProto.BodyCase.BATCH
-import com.mlp.gate.GateToServiceProto.BodyCase.BODY_NOT_SET
-import com.mlp.gate.GateToServiceProto.BodyCase.CANCEL
-import com.mlp.gate.GateToServiceProto.BodyCase.CLUSTER
-import com.mlp.gate.GateToServiceProto.BodyCase.ERROR
-import com.mlp.gate.GateToServiceProto.BodyCase.EXT
-import com.mlp.gate.GateToServiceProto.BodyCase.FIT
-import com.mlp.gate.GateToServiceProto.BodyCase.HEARTBEAT
-import com.mlp.gate.GateToServiceProto.BodyCase.PARTIALPREDICT
-import com.mlp.gate.GateToServiceProto.BodyCase.PREDICT
-import com.mlp.gate.GateToServiceProto.BodyCase.STOPSERVING
 import com.mlp.gate.HeartBeatProto
-import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.gate.ServiceToGateProtoOrBuilder
 import com.mlp.gate.StartServingProto
 import com.mlp.gate.StopServingProto
+import com.mlp.gate.SyncSequenceNumbersProto
 import com.mlp.sdk.State.Condition.ACTIVE
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -31,10 +21,11 @@ import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofMillis
 import java.time.Instant.now
+import java.util.UUID
+import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.Long.Companion.MIN_VALUE
 import kotlin.math.min
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -59,35 +50,23 @@ class Connector(
     val executor: TaskExecutor,
     val config: MlpServiceConfig,
     val scope: CoroutineScope,
-    override val context: MlpExecutionContext
+    override val context: MlpExecutionContext,
 ) : WithExecutionContext, WithState(ACTIVE) {
 
     val connectorId = lastConnectorId.getAndIncrement()
     private var gatewayPermanentlyUnavailable = true
 
-    private val startServingProto = ServiceToGateProto.newBuilder()
-        .setStartServing(
-            StartServingProto.newBuilder()
-                .setConnectionToken(pool.token)
-                .setHostname(context.environment["HOSTNAME"] ?: "localhost")
-                .setVersion(SDK_VERSION)
-                .setImage(context.environment["IMAGE_NAME"] ?: "")
-                .setServiceDescriptor(executor.action.getDescriptor())
-                .build()
-        )
-        .build()
     private val grpcChannel = AtomicReference<GrpcChannel?>(null)
     private val keepConnectionJob: Job
+
+    private val serviceToGateMessageStorage = ConcurrentSkipListMap<Long, ServiceToGateProto>()
 
     init {
         keepConnectionJob = launchKeepConnectionJob()
     }
 
-    suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto) {
-        check(isAvailableToSendGrpc()) { "$this: cannot send message because it is not connected. Current grpcChannel state ${grpcChannel.get()?.state}" }
-
-        grpcChannel.get()
-            ?.send(grpcResponse)
+    suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto.Builder) {
+        grpcChannel.get()?.send(grpcResponse)
     }
 
     suspend fun gracefulShutdown() {
@@ -98,7 +77,7 @@ class Connector(
         state.shuttingDown()
         logger.debug("{}: graceful shutting down ...", this)
 
-        runCatching { runBlocking { keepConnectionJob.cancelAndJoin() } }
+        runCatching { keepConnectionJob.cancelAndJoin() }
             .onFailure { logger.error("$this: error while keep connection job cancelling", it) }
 
         grpcChannel.get()?.gracefulShutdown()
@@ -166,7 +145,7 @@ class Connector(
                     progressiveDelay = 100L
                     gatewayPermanentlyUnavailable = false
 
-                    if (!executor.isAbleProcessNewJobs(connectorId, grpcChannel.grpcChannelId())) {
+                    if (!executor.isAbleProcessNewJobs(connectorId)) {
                         logger.error("${this@Connector}: grpc channel is active, but can not process new jobs")
                     }
                 }
@@ -195,8 +174,6 @@ class Connector(
     }
 
     private suspend fun tryGrpcShutdown() {
-//        logger.debug("${this@Connector}: grpc channel is not active for 10 seconds, reconnecting ...")
-
         runCatching {
             grpcChannel.getAndSet(null)
                 ?.shutdownNow()
@@ -206,7 +183,6 @@ class Connector(
     }
 
     private suspend fun tryConnectOrShutdown(): Boolean {
-//        logger.debug("${this@Connector}: creating new grpc channel ...")
         val newGrpcChannel = GrpcChannel(context)
 
         return runCatching {
@@ -221,12 +197,6 @@ class Connector(
 
     override fun toString() = "Connector(id='$connectorId', url='$targetUrl')"
 
-    companion object {
-        private val lastConnectorId = AtomicLong()
-        private val lastGrpcChannelId = AtomicLong()
-        const val LIVENESS_PROBE = "/tmp/liveness-probe"
-    }
-
     private inner class GrpcChannel(
         override val context: MlpExecutionContext
     ) : StreamObserver<GateToServiceProto>, WithExecutionContext, WithState(logsEnabled = false) {
@@ -236,8 +206,8 @@ class Connector(
 
         private val lastServerHeartbeat = AtomicReference(now())
         private val heartbeatInterval = AtomicReference<Duration>(null)
+
         private val grpcMutex = Mutex()
-        val grpcChannelId = lastGrpcChannelId.getAndIncrement()
 
         init {
             launchHeartbeatJob()
@@ -268,20 +238,39 @@ class Connector(
                 .processAsync(this)
 
             sendStartServingProto()
-            executor.enableNewTasks(connectorId, grpcChannelId)
+            executor.initContainer(connectorId)
         }
 
-        suspend fun send(grpcResponse: ServiceToGateProto) {
+        suspend fun send(grpcResponse: ServiceToGateProto.Builder) {
             val contentHidden = grpcResponse.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean()
-
-            if (grpcResponse.hasHeartBeat())
-                logger.trace("ServiceToGateProto: heartbeat")
-            else
-                logProto(grpcResponse, prompt = "ServiceToGate", noContentLogging = contentHidden)
 
             check(!state.notStarted && !state.shutdown) { "$this: can't send message in state $state" }
 
             grpcMutex.withLock {
+                val grpcResponse = grpcResponse
+                    .setSequenceNumber(if (grpcResponse.isSequenced()) lastSentSequenceNumber.incrementAndGet() else -1)
+                    .setRunningInstanceId(runningInstanceId)
+                    .build()
+
+                if (grpcResponse.sequenceNumber > 0) {
+                    serviceToGateMessageStorage[grpcResponse.sequenceNumber] = grpcResponse
+                }
+
+                if (grpcResponse.hasHeartBeat()) {
+                    logger.trace("ServiceToGateProto: heartbeat")
+                } else {
+                    logProto(grpcResponse, prompt = "ServiceToGate", noContentLogging = contentHidden)
+                }
+
+                stream.onNext(grpcResponse)
+            }
+        }
+
+        suspend fun resend(grpcResponse: ServiceToGateProto) {
+            val contentHidden = grpcResponse.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean()
+
+            grpcMutex.withLock {
+                logProto(grpcResponse, prompt = "ServiceToGate", noContentLogging = contentHidden)
                 stream.onNext(grpcResponse)
             }
         }
@@ -290,12 +279,14 @@ class Connector(
             val tracker = TimeTracker()
             val requestContext = buildRequestContext(request)
 
-            MDC.setContextMap(mapOf(
-                "requestId" to requestContext.requestId,
-                "connectorId" to requestContext.connectorId.toString(),
-                "gateRequestId" to requestContext.gateRequestId.toString(),
-                "MLP-BILLING-KEY" to requestContext.billingKey,
-            ))
+            MDC.setContextMap(
+                mapOf(
+                    "requestId" to requestContext.requestId,
+                    "connectorId" to requestContext.connectorId.toString(),
+                    "gateRequestId" to requestContext.gateRequestId.toString(),
+                    "MLP-BILLING-KEY" to requestContext.billingKey,
+                )
+            )
             try {
                 processRequest(request, requestContext, tracker)
             } finally {
@@ -310,17 +301,18 @@ class Connector(
                 logProto(request, prompt = "GateToService (connector $connectorId)", noContentLogging = requestContext.noContentLogging)
 
             when (request.bodyCase) {
-                HEARTBEAT -> processHeartbeat(request.heartBeat)
-                CLUSTER -> processCluster(request.cluster)
-                PREDICT -> executor.predict(request.predict, request.requestId, connectorId, grpcChannelId, tracker, requestContext)
-                PARTIALPREDICT -> executor.streamPredict(request.partialPredict, request.requestId, connectorId, grpcChannelId, requestContext)
-                FIT -> executor.fit(request.fit, request.requestId, connectorId, grpcChannelId, requestContext)
-                EXT -> executor.ext(request.ext, request.requestId, connectorId, grpcChannelId, requestContext)
-                BATCH -> executor.batch(request.batch, request.requestId, connectorId, grpcChannelId, requestContext)
-                ERROR -> processError(request.error)
-                CANCEL -> executor.cancelRequest(connectorId, request.cancel.requestIdToCancel)
-                STOPSERVING -> processStopServing()
-                BODY_NOT_SET -> logger.warn("Request body is not set")
+                GateToServiceProto.BodyCase.HEARTBEAT -> processHeartbeat(request.heartBeat)
+                GateToServiceProto.BodyCase.CLUSTER -> processCluster(request.cluster)
+                GateToServiceProto.BodyCase.PREDICT -> executor.predict(request.predict, tracker, requestContext)
+                GateToServiceProto.BodyCase.PARTIALPREDICT -> executor.streamPredict(request.partialPredict, requestContext)
+                GateToServiceProto.BodyCase.FIT -> executor.fit(request.fit, requestContext)
+                GateToServiceProto.BodyCase.EXT -> executor.ext(request.ext, requestContext)
+                GateToServiceProto.BodyCase.BATCH -> executor.batch(request.batch, requestContext)
+                GateToServiceProto.BodyCase.ERROR -> processError(request.error)
+                GateToServiceProto.BodyCase.CANCEL -> executor.cancelRequest(connectorId, request.cancel.requestIdToCancel)
+                GateToServiceProto.BodyCase.STOPSERVING -> processStopServing()
+                GateToServiceProto.BodyCase.SYNCSEQUENCENUMBERS -> syncSequenceNumbers(request.syncSequenceNumbers)
+                GateToServiceProto.BodyCase.BODY_NOT_SET -> logger.warn("Request body is not set")
                 null -> logger.error("Connector $connectorId: body case is null")
                 else -> logger.debug("Could not find request bodyCase with type {}", request.bodyCase)
             }
@@ -334,7 +326,6 @@ class Connector(
             logger.error("$this: RECEIVED error ${e.message}", e)
             state.shuttingDown()
 
-            executor.cancelAll(connectorId, grpcChannelId)
             gracefulShutdownManagedChannel()
         }
 
@@ -342,7 +333,6 @@ class Connector(
             state.shuttingDown()
             logger.info("$this: RECEIVED completed")
 
-            executor.cancelAll(connectorId, grpcChannelId)
             gracefulShutdownManagedChannel()
         }
 
@@ -362,6 +352,31 @@ class Connector(
 
             scope.launch {
                 gracefulShutdownPrivate()
+            }
+        }
+
+        private fun syncSequenceNumbers(sequenceNumbers: SyncSequenceNumbersProto) {
+            logger.debug("Connector $connectorId received sequenceNumber $sequenceNumbers")
+            when (sequenceNumbers.bodyCase) {
+                SyncSequenceNumbersProto.BodyCase.LASTPROCESSEDSEQUENCENUMBER -> {
+                    serviceToGateMessageStorage.headMap(sequenceNumbers.lastProcessedSequenceNumber + 1).clear()
+                }
+
+                SyncSequenceNumbersProto.BodyCase.INITIALGATESEQUENCENUMBER -> {
+                    runBlocking {
+                        logger.info(
+                            "Connector $connectorId received initialGateSequenceNumber=${sequenceNumbers.initialGateSequenceNumber}, " +
+                                    "adapter lastSentSequenceNumber=${lastSentSequenceNumber.get()}"
+                        )
+                        serviceToGateMessageStorage.headMap(sequenceNumbers.initialGateSequenceNumber + 1).clear()
+                        serviceToGateMessageStorage.headMap(lastSentSequenceNumber.get() + 1).forEach { (_, proto) ->
+                            resend(proto)
+                        }
+                        setActiveState()
+                    }
+                }
+
+                SyncSequenceNumbersProto.BodyCase.BODY_NOT_SET, null -> {}
             }
         }
 
@@ -403,11 +418,11 @@ class Connector(
         }
 
         private suspend fun gracefulShutdownPrivate() {
-            executor.gracefulShutdownAll(connectorId, grpcChannelId)
-
             logConnecting("{}: completing stream to {} ...", this, targetUrl)
-            runCatching { grpcMutex.withLock { stream.onCompleted() } }
-                .onFailure { if (it !is IllegalStateException) logger.error("$this: can't complete stream", it) }
+
+            grpcMutex.withLock {
+                stream.onCompleted()
+            }
 
             gracefulShutdownManagedChannel()
         }
@@ -429,10 +444,10 @@ class Connector(
                 .onFailure { logger.error("$this: can't send stop serving", it) }
 
             logConnecting("{}: completing stream to {} ...", this, targetUrl)
-            runCatching { grpcMutex.withLock { stream.onCompleted() } }
-                .onFailure { logger.error("$this: can't complete stream", it) }
 
-            executor.cancelAll(connectorId, grpcChannelId)
+            grpcMutex.withLock {
+                stream.onCompleted()
+            }
 
             shutdownNowManagedChannel()
         }
@@ -440,7 +455,28 @@ class Connector(
         private suspend fun sendStartServingProto() {
             logger.info("Connector $connectorId: sending start serving to $targetUrl ...")
             runCatching {
-                send(startServingProto)
+                send(
+                    ServiceToGateProto.newBuilder()
+                        .setStartServing(
+                            StartServingProto.newBuilder()
+                                .setRunningInstanceSequenceNumber(lastSentSequenceNumber.get())
+                                .setConnectionToken(pool.token)
+                                .setHostname(context.environment["HOSTNAME"] ?: "localhost")
+                                .setVersion(SDK_VERSION)
+                                .setImage(context.environment["IMAGE_NAME"] ?: "")
+                                .setServiceDescriptor(executor.action.getDescriptor())
+                                .build()
+                        )
+                )
+            }.onFailure {
+                logger.error("Connector $connectorId: error on first start serving to $targetUrl", it)
+                gracefulShutdownManagedChannel()
+            }
+        }
+
+        private fun setActiveState() {
+            logger.info("Connector $connectorId: sending start serving to $targetUrl ...")
+            runCatching {
                 state.active()
             }.onFailure {
                 logger.error("Connector $connectorId: error on first start serving to $targetUrl", it)
@@ -502,10 +538,12 @@ class Connector(
         }
 
         private fun processHeartbeat(heartBeat: HeartBeatProto) {
+            logger.info("Connector $connectorId: received heartbeat: $heartBeat")
             lastServerHeartbeat.set(now())
 
-            if (heartbeatInterval.get() == null)
+            if (heartbeatInterval.get() == null) {
                 heartbeatInterval.set(ofMillis(heartBeat.interval.toLong()))
+            }
         }
 
         private fun processCluster(cluster: ClusterUpdateProto) {
@@ -562,17 +600,6 @@ class Connector(
         override fun toString() = "GrpcChannel($targetUrl) of ${this@Connector}"
     }
 
-    private fun AtomicReference<GrpcChannel?>.isShutdownStateOrNull() = get() == null
-        || get()?.state?.shutdown == true
-
-    private fun AtomicReference<GrpcChannel?>.isActiveState() = get()
-        ?.state
-        ?.active == true
-
-    private fun AtomicReference<GrpcChannel?>.grpcChannelId() = get()
-        ?.grpcChannelId
-        ?: MIN_VALUE
-
     private fun logConnecting(message: String, vararg args: Any) {
         if (gatewayPermanentlyUnavailable) return
         logger.debug(message, *args)
@@ -588,17 +615,43 @@ class Connector(
             gateRequestId = request.requestId,
         )
     }
+
+    companion object {
+        private val lastConnectorId = AtomicLong()
+        private val lastSentSequenceNumber = AtomicLong(0)
+        private val runningInstanceId = UUID.randomUUID().toString()
+        private const val LIVENESS_PROBE = "/tmp/liveness-probe"
+
+        private fun AtomicReference<GrpcChannel?>.isShutdownStateOrNull() = get() == null
+                || get()?.state?.shutdown == true
+
+        private fun AtomicReference<GrpcChannel?>.isActiveState() = get()
+            ?.state
+            ?.active == true
+    }
 }
 
-private val ServiceInfoProto.asModelInfo
-    get() = ModelInfo(
-        accountId,
-        modelId,
-        modelName
-    )
+private val stopServingProto: ServiceToGateProto.Builder =
+    ServiceToGateProto.newBuilder().setStopServing(StopServingProto.getDefaultInstance())
 
-private val stopServingProto: ServiceToGateProto =
-    ServiceToGateProto.newBuilder().setStopServing(StopServingProto.getDefaultInstance()).build()
+private val heartbeatProto: ServiceToGateProto.Builder =
+    ServiceToGateProto.newBuilder().setHeartBeat(HeartBeatProto.getDefaultInstance())
 
-private val heartbeatProto: ServiceToGateProto =
-    ServiceToGateProto.newBuilder().setHeartBeat(HeartBeatProto.getDefaultInstance()).build()
+fun ServiceToGateProtoOrBuilder.isSequenced() = when (bodyCase) {
+    ServiceToGateProto.BodyCase.PREDICT,
+    ServiceToGateProto.BodyCase.PARTIALPREDICT,
+    ServiceToGateProto.BodyCase.FIT,
+    ServiceToGateProto.BodyCase.EXT,
+    ServiceToGateProto.BodyCase.BATCH,
+    ServiceToGateProto.BodyCase.ERROR,
+    ServiceToGateProto.BodyCase.DEFERREDBILLINGCHARGE -> true
+
+    ServiceToGateProto.BodyCase.HEARTBEAT,
+    ServiceToGateProto.BodyCase.STARTSERVING,
+    ServiceToGateProto.BodyCase.STOPSERVING,
+    ServiceToGateProto.BodyCase.STATUS,
+    ServiceToGateProto.BodyCase.FITSTATUS,
+    ServiceToGateProto.BodyCase.BODY_NOT_SET -> false
+
+    null -> false
+}
