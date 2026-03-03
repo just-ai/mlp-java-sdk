@@ -19,7 +19,7 @@ class JobsContainer(
         logger.info("$this: enable new tasks of connector $connectorId")
     }
 
-    fun isAbleProcessNewJobs(connectorId: Long): Boolean {
+    fun canProcessNewJobs(connectorId: Long): Boolean {
         val container = containers[connectorId] ?: return true
         return !container.disabledAllNewRequests.get()
     }
