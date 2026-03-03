@@ -13,11 +13,31 @@ import com.mlp.gate.PartialPredictRequestProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.gate.SyncSequenceNumbersProto
-import com.mlp.sdk.utils.CALLER_ACCOUNT_ID
+import com.mlp.sdk.utils.CALLER_ACCOUNT_ID_HEADER
+import com.mlp.sdk.utils.CONNECTOR_ID_MDC_PARAM
 import com.mlp.sdk.utils.CONTENT_HIDDEN_HEADER
+import com.mlp.sdk.utils.GATE_REQUEST_ID_MDC_PARAM
+import com.mlp.sdk.utils.MLP_BILLING_KEY_HEADER
+import com.mlp.sdk.utils.MLP_BILLING_KEY_MDC_PARAM
+import com.mlp.sdk.utils.REQUEST_ID_HEADER
+import com.mlp.sdk.utils.REQUEST_ID_MDC_PARAM
+import com.mlp.sdk.utils.SERVER_TIME_HEADER
 import com.mlp.sdk.utils.WithLogger
+import com.mlp.sdk.utils.asErrorProto
+import com.mlp.sdk.utils.getAsPayload
+import com.mlp.sdk.utils.getAsPayloadInterface
 import com.mlp.sdk.utils.logProto
+import com.mlp.sdk.utils.setBatch
+import com.mlp.sdk.utils.setExt
+import com.mlp.sdk.utils.setFit
+import com.mlp.sdk.utils.setPartialPredict
+import com.mlp.sdk.utils.setPredict
+import com.mlp.sdk.utils.setStartPartialPredict
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.slf4j.MDC
@@ -39,10 +59,10 @@ class GateToServiceMessageProcessor(
 
         MDC.setContextMap(
             mapOf(
-                "requestId" to requestContext.requestId,
-                "connectorId" to connectorId.toString(),
-                "gateRequestId" to requestContext.gateRequestId.toString(),
-                "MLP-BILLING-KEY" to requestContext.billingKey,
+                REQUEST_ID_MDC_PARAM to requestContext.requestId,
+                CONNECTOR_ID_MDC_PARAM to connectorId.toString(),
+                GATE_REQUEST_ID_MDC_PARAM to requestContext.gateRequestId.toString(),
+                MLP_BILLING_KEY_MDC_PARAM to requestContext.billingKey,
             )
         )
         try {
@@ -53,29 +73,37 @@ class GateToServiceMessageProcessor(
     }
 
     private fun process(request: GateToServiceProto, context: RequestContext, tracker: TimeTracker) {
-        if (request.hasHeartBeat())
+        if (request.hasHeartBeat()) {
             logger.trace("GateToService (connector $connectorId, requestId: ${request.requestId}): heartbeat")
-        else
+        } else {
             logProto(request, prompt = "GateToService (connector $connectorId)", noContentLogging = context.noContentLogging)
+        }
 
         when (request.bodyCase) {
+            // System messages
+            GateToServiceProto.BodyCase.CANCEL -> processCancelRequest(request.cancel)
             GateToServiceProto.BodyCase.CLUSTER -> processCluster(request.cluster)
             GateToServiceProto.BodyCase.ERROR -> processError(request.error)
             GateToServiceProto.BodyCase.HEARTBEAT -> processHeartbeat(request.heartBeat)
             GateToServiceProto.BodyCase.STOPSERVING -> processStopServing()
             GateToServiceProto.BodyCase.SYNCSEQUENCENUMBERS -> processSyncSequenceNumbers(request.syncSequenceNumbers)
 
+            // Business messages
             GateToServiceProto.BodyCase.BATCH -> processBatch(request.batch, context)
-            GateToServiceProto.BodyCase.CANCEL -> processCancelRequest(request.cancel)
             GateToServiceProto.BodyCase.EXT -> processExt(request.ext, context)
             GateToServiceProto.BodyCase.FIT -> processFit(request.fit, context)
             GateToServiceProto.BodyCase.PARTIALPREDICT -> processPartialPredict(request.partialPredict, context)
             GateToServiceProto.BodyCase.PREDICT -> processPredict(request.predict, tracker, context)
 
+            // Other
             GateToServiceProto.BodyCase.BODY_NOT_SET -> logger.warn("Request body is not set")
             null -> logger.error("Connector $connectorId: body case is null")
             else -> logger.debug("Could not find request bodyCase with type {}", request.bodyCase)
         }
+    }
+
+    private fun processCancelRequest(request: CancelRequestProto) {
+        executor.cancelRequest(connector.connectorId, request.requestIdToCancel)
     }
 
     private fun processCluster(cluster: ClusterUpdateProto) {
@@ -101,6 +129,11 @@ class GateToServiceMessageProcessor(
         }
     }
 
+    private fun processTokenNotFound() {
+        logger.warn("Connector $connectorId: Receive instance_by_token_not_found error, so shutdown grpc channel")
+        connector.grpcChannel?.gracefulShutdownFromGate(reason = "instance_by_token_not_found")
+    }
+
     private fun processHeartbeat(heartBeat: HeartBeatProto) {
         logger.info("Connector $connectorId: received heartbeat: $heartBeat")
         connector.grpcChannel?.updateHeartbeat(heartBeat.interval.toLong())
@@ -112,7 +145,7 @@ class GateToServiceMessageProcessor(
     }
 
     private fun processSyncSequenceNumbers(sequenceNumbers: SyncSequenceNumbersProto) {
-        logger.debug("Connector $connectorId received sequenceNumber $sequenceNumbers")
+        logger.debug("Connector {} received sequenceNumber {}", connectorId, sequenceNumbers)
 
         when (sequenceNumbers.bodyCase) {
             SyncSequenceNumbersProto.BodyCase.LASTPROCESSEDSEQUENCENUMBER -> {
@@ -138,7 +171,7 @@ class GateToServiceMessageProcessor(
     }
 
     private fun processBatch(request: BatchRequestProto, context: RequestContext) {
-        executor.runJob(context) { action ->
+        executor.runAsync(context) { action ->
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(context.gateRequestId)
                 .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
 
@@ -160,12 +193,8 @@ class GateToServiceMessageProcessor(
         }
     }
 
-    private fun processCancelRequest(request: CancelRequestProto) {
-        executor.cancelRequest(connector.connectorId, request.requestIdToCancel)
-    }
-
     private fun processExt(request: ExtendedRequestProto, context: RequestContext) {
-        executor.runJob(context) { action ->
+        executor.runAsync(context) { action ->
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(context.gateRequestId)
                 .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
 
@@ -195,7 +224,7 @@ class GateToServiceMessageProcessor(
     }
 
     private fun processFit(request: FitRequestProto, context: RequestContext) {
-        executor.runJob(context) { action ->
+        executor.runAsync(context) { action ->
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(context.gateRequestId)
                 .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
 
@@ -232,11 +261,53 @@ class GateToServiceMessageProcessor(
     }
 
     private fun processPartialPredict(request: PartialPredictRequestProto, context: RequestContext) {
+        val requestId = context.gateRequestId
+        val connectorId = context.connectorId
 
+        executor.runAsyncWithChannel(context, { action, channel ->
+            runCatching {
+                action.streamPredictRaw(channel.receiveAsFlow()).onStart {
+                    logger.info("requestId: $requestId Start processing stream flow")
+                }.onCompletion {
+                    logger.info("requestId: $requestId Finish processing stream flow")
+                    channel.close(it)
+                }.catch {
+                    logger.error("requestId: $requestId Error while processing stream predict request", it)
+                    val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                        .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
+                    responseBuilder.setError(it.asErrorProto)
+                    runCatching { pool.send(connectorId, responseBuilder) }
+                        .onFailure { logger.error("Error while sending predict response", it) }
+                }.collect { response ->
+                    val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                        .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
+                    responseBuilder.setPartialPredict(response.payload, response.last)
+                    runCatching { pool.send(connectorId, responseBuilder) }
+                        .onFailure { logger.error("Error while sending predict response", it) }
+                }
+            }.onFailure {
+                logger.error("Error while processing predict request", it)
+                channel.close(it)
+                val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
+                    .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
+                responseBuilder.setError(it.asErrorProto)
+                runCatching { pool.send(connectorId, responseBuilder) }
+                    .onFailure { logger.error("Error while sending predict response", it) }
+            }
+        }, { channel ->
+            if (request.hasData()) {
+                val dataPayload = requireNotNull(request.data?.getAsPayloadInterface(context.noContentLogging)) { "Payload data" }
+                val config =
+                    if (request.config == request.config.defaultInstanceForType) null else request.config?.getAsPayload(context.noContentLogging)
+                runBlocking { channel.send(PayloadWithConfig(dataPayload, config)) }
+            }
+
+            if (request.finish) channel.close()
+        })
     }
 
     private fun processPredict(request: PredictRequestProto, tracker: TimeTracker, context: RequestContext) {
-        executor.runJob(context) { action ->
+        executor.runAsync(context) { action ->
             val dataPayload = requireNotNull(request.data.getAsPayload(context.noContentLogging)) { "Payload data" }
             val configPayload = request.config.getAsPayload(context.noContentLogging)
 
@@ -253,7 +324,7 @@ class GateToServiceMessageProcessor(
                     is MlpResponseException -> throw responsePayload.exception
                     is MlpPartialBinaryResponse ->
                         if (headers == null && statusCode == null)
-                            return@runJob
+                            return@runAsync
                         else
                             responseBuilder.setStartPartialPredict(headers, statusCode)
                     // если partialResponse, то просто ничего не делаем. Респонзы будет отправлять сам сервис.
@@ -264,15 +335,10 @@ class GateToServiceMessageProcessor(
             }
 
             val elapsed = System.currentTimeMillis() - tracker.startTime
-            responseBuilder.putHeaders("Z-Server-Time", elapsed.toString())
+            responseBuilder.putHeaders(SERVER_TIME_HEADER, elapsed.toString())
             runCatching { pool.send(connectorId, responseBuilder) }
                 .onFailure { logger.error("Error while sending predict response", it) }
         }
-    }
-
-    private fun processTokenNotFound() {
-        logger.warn("Connector $connectorId: Receive instance_by_token_not_found error, so shutdown grpc channel")
-        connector.grpcChannel?.gracefulShutdownFromGate(reason = "instance_by_token_not_found")
     }
 
     private fun buildRequestContext(
@@ -281,10 +347,10 @@ class GateToServiceMessageProcessor(
     ): RequestContext {
         return RequestContext(
             connectorId = connector.connectorId,
-            callerAccountId = request.getHeadersOrDefault(CALLER_ACCOUNT_ID, null)?.toLongOrNull(),
+            callerAccountId = request.getHeadersOrDefault(CALLER_ACCOUNT_ID_HEADER, null)?.toLongOrNull(),
             noContentLogging = request.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean(),
-            requestId = request.headersMap["Z-requestId"] ?: request.requestId.toString(),
-            billingKey = request.headersMap["MLP-BILLING-KEY"],
+            requestId = request.headersMap[REQUEST_ID_HEADER] ?: request.requestId.toString(),
+            billingKey = request.headersMap[MLP_BILLING_KEY_HEADER],
             gateRequestId = request.requestId,
         )
     }

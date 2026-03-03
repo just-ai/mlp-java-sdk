@@ -1,6 +1,7 @@
 package com.mlp.sdk.utils
 
 import com.mlp.sdk.MlpServiceConfig
+import com.mlp.sdk.RequestContext
 import java.time.Duration.ofMillis
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
@@ -24,19 +25,19 @@ class JobsContainer(
         return !container.disabledAllNewRequests.get()
     }
 
-    fun put(connectorId: Long, requestId: Long, job: Job): Boolean {
-        val connectorContainer = containers.computeIfAbsent(connectorId) { ConnectorContainer() }
+    fun put(requestContext: RequestContext, job: Job): Boolean {
+        val connectorContainer = containers.computeIfAbsent(requestContext.connectorId) { ConnectorContainer() }
 
         return if (!connectorContainer.disabledAllNewRequests.get()) {
-            connectorContainer.requestJobMap[requestId] = job
+            connectorContainer.requestJobMap[requestContext.gateRequestId] = job
             true
         } else false
     }
 
-    fun remove(connectorId: Long, requestId: Long) {
-        containers[connectorId]
+    fun remove(requestContext: RequestContext) {
+        containers[requestContext.connectorId]
             ?.requestJobMap
-            ?.remove(requestId)
+            ?.remove(requestContext.gateRequestId)
     }
 
     fun cancelRequest(connectorId: Long, requestId: Long) {

@@ -53,12 +53,26 @@ class GrpcChannel(
         launchHeartbeatJob()
     }
 
-    fun updateHeartbeat(intervalMs: Long) {
-        lastServerHeartbeat.set(now())
+    override fun onNext(request: GateToServiceProto) {
+        processor.process(request)
+    }
 
-        if (heartbeatInterval.get() == null) {
-            heartbeatInterval.set(ofMillis(intervalMs))
+    override fun onError(e: Throwable) {
+        if (e is StatusRuntimeException && e.status == Status.UNAVAILABLE) {
+            // shutdown method has been called
+            return
         }
+        logger.error("$this: RECEIVED error ${e.message}", e)
+        state.shuttingDown()
+
+        gracefulShutdownManagedChannel()
+    }
+
+    override fun onCompleted() {
+        state.shuttingDown()
+        logger.info("$this: RECEIVED completed")
+
+        gracefulShutdownManagedChannel()
     }
 
     suspend fun tryConnect() {
@@ -124,26 +138,12 @@ class GrpcChannel(
         }
     }
 
-    override fun onNext(request: GateToServiceProto) {
-        processor.process(request)
-    }
+    fun updateHeartbeat(intervalMs: Long) {
+        lastServerHeartbeat.set(now())
 
-    override fun onError(e: Throwable) {
-        if (e is StatusRuntimeException && e.status == Status.UNAVAILABLE) {
-            // shutdown method has been called
-            return
+        if (heartbeatInterval.get() == null) {
+            heartbeatInterval.set(ofMillis(intervalMs))
         }
-        logger.error("$this: RECEIVED error ${e.message}", e)
-        state.shuttingDown()
-
-        gracefulShutdownManagedChannel()
-    }
-
-    override fun onCompleted() {
-        state.shuttingDown()
-        logger.info("$this: RECEIVED completed")
-
-        gracefulShutdownManagedChannel()
     }
 
     suspend fun gracefulShutdown() {
