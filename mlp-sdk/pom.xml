@@ -16,6 +16,11 @@
         <!-- JustAI -->
         <dependency>
             <groupId>com.mlp</groupId>
+            <artifactId>mlp-grpc</artifactId>
+            <version>${mlp-grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mlp</groupId>
             <artifactId>mlp-datatypes</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -263,60 +268,6 @@
                         <goals>
                             <goal>test-compile</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.6.1</version>
-                <configuration>
-                    <protoSourceRoot>${project.basedir}/../mlp-specs</protoSourceRoot>
-                    <includes>
-                        <include>**/*.proto</include>
-                    </includes>
-                </configuration>
-
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>compile-custom</goal>
-                        </goals>
-                        <configuration>
-                            <protocArtifact>
-                                com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
-                            </protocArtifact>
-                            <pluginId>grpc-java</pluginId>
-                            <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
-                            </pluginArtifact>
-                            <protocPlugins>
-                                <protocPlugin>
-                                    <id>grpc-kotlin</id>
-                                    <groupId>io.grpc</groupId>
-                                    <artifactId>protoc-gen-grpc-kotlin</artifactId>
-                                    <version>${grpc.kotlin.version}</version>
-                                    <classifier>jdk8</classifier>
-                                    <mainClass>io.grpc.kotlin.generator.GeneratorRunner</mainClass>
-                                </protocPlugin>
-                            </protocPlugins>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>compile-kt</id>
-                        <goals>
-                            <goal>compile-custom</goal>
-                        </goals>
-                        <configuration>
-                            <protocArtifact>
-                                com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
-                            </protocArtifact>
-                            <outputDirectory>${project.build.directory}/generated-sources/protobuf/kotlin
-                            </outputDirectory>
-                            <pluginId>kotlin</pluginId>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

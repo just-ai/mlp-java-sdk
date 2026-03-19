@@ -15,6 +15,10 @@ import com.mlp.sdk.datatypes.asr.common.AsrRequest
 import com.mlp.sdk.datatypes.asr.common.AsrResponse
 import com.mlp.sdk.utils.JSON
 import com.mlp.sdk.utils.JSON.parseOrThrowBadRequestMlpException
+import com.mlp.sdk.utils.MLP_BILLING_KEY_HEADER
+import com.mlp.sdk.utils.MLP_BILLING_KEY_MDC_PARAM
+import com.mlp.sdk.utils.REQUEST_ID_HEADER
+import com.mlp.sdk.utils.REQUEST_ID_MDC_PARAM
 import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -331,7 +335,7 @@ class MlpClientSDK(
                         response.error.code,
                         response.error.message,
                         response.error.argsMap,
-                        response.headersMap["Z-requestId"]
+                        response.headersMap[REQUEST_ID_HEADER]
                     )
                 }
 
@@ -340,7 +344,7 @@ class MlpClientSDK(
                         "wrong-response",
                         "Wrong response type: $response",
                         emptyMap(),
-                        response.headersMap["Z-requestId"]
+                        response.headersMap[REQUEST_ID_HEADER]
                     )
             }
         }
@@ -376,7 +380,7 @@ class MlpClientSDK(
                     "wrong-response",
                     "Wrong response type: $response",
                     emptyMap(),
-                    response.headersMap["Z-requestId"]
+                    response.headersMap[REQUEST_ID_HEADER]
                 )
         }
     }
@@ -391,7 +395,7 @@ class MlpClientSDK(
                 response.error.code,
                 response.error.message,
                 response.error.argsMap,
-                response.headersMap["Z-requestId"]
+                response.headersMap[REQUEST_ID_HEADER]
             )
         }
         return response
@@ -434,7 +438,7 @@ class MlpClientSDK(
 
     private fun processResultFailure(exception: Throwable): Nothing = when (exception) {
         is TimeoutCancellationException ->
-            throw MlpClientException("timeout", exception.message ?: "$exception", emptyMap(), MDC.get("requestId"))
+            throw MlpClientException("timeout", exception.message ?: "$exception", emptyMap(), MDC.get(REQUEST_ID_MDC_PARAM))
 
         is StatusRuntimeException, is StatusException ->
             throw exception
@@ -444,7 +448,7 @@ class MlpClientSDK(
                 "wrong-response",
                 exception.message ?: "$exception",
                 emptyMap(),
-                MDC.get("requestId")
+                MDC.get(REQUEST_ID_MDC_PARAM)
             )
     }
 
@@ -515,12 +519,12 @@ class MlpClientSDK(
 
         builder.putAllHeaders(requestHeaders)
 
-        if (MDC.get("requestId") != null)
-            builder.putHeaders("Z-requestId", MDC.get("requestId"))
+        if (MDC.get(REQUEST_ID_MDC_PARAM) != null)
+            builder.putHeaders(REQUEST_ID_HEADER, MDC.get(REQUEST_ID_MDC_PARAM))
 
-        val billingKey = billingToken ?: MDC.get("MLP-BILLING-KEY")
+        val billingKey = billingToken ?: MDC.get(MLP_BILLING_KEY_MDC_PARAM)
         if (billingKey != null)
-            builder.putHeaders("MLP-BILLING-KEY", billingKey)
+            builder.putHeaders(MLP_BILLING_KEY_HEADER, billingKey)
 
         if (timeout != null)
             builder.timeoutSec = timeout.seconds.toInt()
@@ -549,8 +553,8 @@ class MlpClientSDK(
                 }
             )
 
-        if (MDC.get("requestId") != null)
-            builder.putHeaders("Z-requestId", MDC.get("requestId"))
+        if (MDC.get(REQUEST_ID_MDC_PARAM) != null)
+            builder.putHeaders(REQUEST_ID_HEADER, MDC.get(REQUEST_ID_MDC_PARAM))
 
         if (timeout != null)
             builder.timeoutSec = timeout.seconds.toInt()
@@ -603,12 +607,12 @@ class MlpClientSDK(
 
         builder.putAllHeaders(requestHeaders)
 
-        if (MDC.get("requestId") != null)
-            builder.putHeaders("Z-requestId", MDC.get("requestId"))
+        if (MDC.get(REQUEST_ID_MDC_PARAM) != null)
+            builder.putHeaders(REQUEST_ID_HEADER, MDC.get(REQUEST_ID_MDC_PARAM))
 
-        val billingKey = billingToken ?: MDC.get("MLP-BILLING-KEY")
+        val billingKey = billingToken ?: MDC.get(MLP_BILLING_KEY_MDC_PARAM)
         if (billingKey != null)
-            builder.putHeaders("MLP-BILLING-KEY", billingKey)
+            builder.putHeaders(MLP_BILLING_KEY_HEADER, billingKey)
 
         if (timeout != null)
             builder.timeoutSec = timeout.seconds.toInt()

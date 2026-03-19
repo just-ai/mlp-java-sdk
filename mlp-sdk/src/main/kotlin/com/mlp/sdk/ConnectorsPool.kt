@@ -1,6 +1,5 @@
 package com.mlp.sdk
 
-import com.google.protobuf.MessageLite
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.State.Condition.ACTIVE
 import java.time.Duration.ofSeconds
@@ -11,7 +10,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -33,13 +31,13 @@ class ConnectorsPool(
         launchConnectorsMonitor()
     }
 
-    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto) {
+    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto.Builder) {
         connectors[connectorId]
             ?.sendServiceToGate(toGateProto)
             ?: throw NoSuchElementException("There is no connector $connectorId")
     }
 
-    suspend fun sendToAnyGate(toGateProto: ServiceToGateProto) {
+    suspend fun sendToAnyGate(toGateProto: ServiceToGateProto.Builder) {
         connectors.values
             .filter { it.isAvailableToSendGrpc() }
             .randomOrNull()
@@ -56,10 +54,8 @@ class ConnectorsPool(
             state.shuttingDown()
             logger.info("$this: graceful shutting down connectors pool ...")
 
-            runBlocking {
-                connectors.values.forEach {
-                    launch { it.gracefulShutdown() }
-                }
+            connectors.values.forEach {
+                scope.launch { it.gracefulShutdown() }
             }
 
             state.shutdown()
@@ -105,11 +101,9 @@ class ConnectorsPool(
             logger.info("$this: ... connectors are updated")
         }
 
-        runBlocking {
-            logger.info("$this: shutting down old connectors ...")
-            connectorsToShutdown.forEach {
-                launch { it.gracefulShutdown() }
-            }
+        logger.info("$this: shutting down old connectors ...")
+        connectorsToShutdown.forEach {
+            scope.launch { it.gracefulShutdown() }
         }
 
         logger.info("$this: ... old connectors are shut down")
@@ -119,7 +113,7 @@ class ConnectorsPool(
         logger.info("$this: launched connectors monitor")
         var lastActiveTime = now()
         while (state.active && isActive) {
-            if (connectors.values.any {it.isConnected()})
+            if (connectors.values.any { it.isGrpcChannelActive() })
                 lastActiveTime = now()
 
             if (now() > lastActiveTime + ofSeconds(5)) {
@@ -134,33 +128,4 @@ class ConnectorsPool(
     }
 
     override fun toString() = "ConnectorsPool"
-}
-
-internal fun WithExecutionContext.logProto(
-    body: MessageLite,
-    prompt: String,
-    noContentLogging: Boolean = false
-) {
-    if (noContentLogging) {
-        logger.debug("$prompt: <content-hidden>")
-        return
-    }
-
-    // This size is always smaller than string version
-    val approximateSize = body.serializedSize
-    if (approximateSize > 1000) {
-        logger.debug("$prompt: data length at least $approximateSize")
-        return
-    }
-
-    // Stringify can produce OOM for large bodies
-    val minimizedRequest = body.toString()
-        .replace("\n", " ")
-        .replace("  ", " ")
-    val messageFitted = minimizedRequest.length <= 1000
-
-    if (messageFitted)
-        logger.debug("$prompt: \t$minimizedRequest")
-    else
-        logger.debug("$prompt: data length ${minimizedRequest.length}")
 }

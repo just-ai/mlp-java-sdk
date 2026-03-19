@@ -15,6 +15,8 @@ import com.mlp.gate.ServiceInfoProto
 import com.mlp.sdk.MlpExecutionContext.Companion.systemContext
 import com.mlp.sdk.datatypes.asr.common.AsrRequest
 import com.mlp.sdk.datatypes.asr.common.RecognitionConfig
+import com.mlp.sdk.utils.CONNECTOR_ID_MDC_PARAM
+import com.mlp.sdk.utils.GATE_REQUEST_ID_MDC_PARAM
 import com.mlp.sdk.utils.JSON
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -248,8 +250,8 @@ abstract class MlpServiceBase<F : Any, FC : Any, P : Any, C : Any, R : Any>(
 }
 
 fun <R : Any> createGenerator(sdk: MlpServiceSDK): MlpServiceBase.ResultGenerator<R> {
-    val requestId = MDC.get("gateRequestId").toLong()
-    val connectorId = MDC.get("connectorId").toLong()
+    val requestId = MDC.get(GATE_REQUEST_ID_MDC_PARAM).toLong()
+    val connectorId = MDC.get(CONNECTOR_ID_MDC_PARAM).toLong()
 
     return MlpServiceBase.ResultGenerator { resultAndFinish ->
         val payload = when (resultAndFinish.result) {

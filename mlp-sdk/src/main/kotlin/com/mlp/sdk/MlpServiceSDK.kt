@@ -3,6 +3,9 @@ package com.mlp.sdk
 import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.sdk.utils.BILLING_CURRENCY_TYPE_HEADER
+import com.mlp.sdk.utils.CUSTOM_BILLING_DETAILS_HEADER
+import com.mlp.sdk.utils.CUSTOM_BILLING_HEADER
 import com.mlp.sdk.utils.JSON
 import java.io.File
 import java.lang.Runtime.getRuntime
@@ -113,7 +116,7 @@ class MlpServiceSDK(
         state.shutdown()
     }
 
-    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto) {
+    suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto.Builder) {
         taskExecutor.connectorsPool.send(connectorId, toGateProto)
     }
 
@@ -141,7 +144,6 @@ class MlpServiceSDK(
                     .setAmountInUnits(amountInUnits)
                     .build()
             )
-            .build()
 
         taskExecutor.connectorsPool.sendToAnyGate(proto)
     }
@@ -196,11 +198,11 @@ class MlpServiceSDK(
             )
             .putAllHeaders(headers)
 
-        if (price != null) builder.putHeaders("Z-custom-billing", price.toString())
-        if (billingDetails != null) builder.putHeaders("Z-custom-billing-details", JSON.stringify(billingDetails))
-        if (billingCurrencyType != null) builder.putHeaders("Z-billing-currency-type", billingCurrencyType)
+        if (price != null) builder.putHeaders(CUSTOM_BILLING_HEADER, price.toString())
+        if (billingDetails != null) builder.putHeaders(CUSTOM_BILLING_DETAILS_HEADER, JSON.stringify(billingDetails))
+        if (billingCurrencyType != null) builder.putHeaders(BILLING_CURRENCY_TYPE_HEADER, billingCurrencyType)
 
-        send(connectorId, builder.build())
+        send(connectorId, builder)
     }
 
     private fun setShutdownHook() {
