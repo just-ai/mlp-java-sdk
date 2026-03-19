@@ -17,9 +17,9 @@ class ServiceToGateMessageStorage {
     fun setSequenceNumberAndStoreMessage(message: ServiceToGateProto.Builder): ServiceToGateProto.Builder {
         if (!message.isSequenced()) return message
 
-        message.sequenceNumber = lastSentSequenceNumberRef.incrementAndGet()
-
-        messagesBySequenceNumbers[message.sequenceNumber] = message
+//        message.sequenceNumber = lastSentSequenceNumberRef.incrementAndGet()
+//
+//        messagesBySequenceNumbers[message.sequenceNumber] = message
 
         return message
     }

@@ -12,7 +12,6 @@ import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.PartialPredictRequestProto
 import com.mlp.gate.PredictRequestProto
 import com.mlp.gate.ServiceToGateProto
-import com.mlp.gate.SyncSequenceNumbersProto
 import com.mlp.sdk.utils.CALLER_ACCOUNT_ID_HEADER
 import com.mlp.sdk.utils.CONNECTOR_ID_MDC_PARAM
 import com.mlp.sdk.utils.CONTENT_HIDDEN_HEADER
@@ -86,7 +85,7 @@ class GateToServiceMessageProcessor(
             GateToServiceProto.BodyCase.ERROR -> processError(request.error)
             GateToServiceProto.BodyCase.HEARTBEAT -> processHeartbeat(request.heartBeat)
             GateToServiceProto.BodyCase.STOPSERVING -> processStopServing()
-            GateToServiceProto.BodyCase.SYNCSEQUENCENUMBERS -> processSyncSequenceNumbers(request.syncSequenceNumbers)
+//            GateToServiceProto.BodyCase.SYNCSEQUENCENUMBERS -> processSyncSequenceNumbers(request.syncSequenceNumbers)
 
             // Business messages
             GateToServiceProto.BodyCase.BATCH -> processBatch(request.batch, context)
@@ -144,31 +143,31 @@ class GateToServiceMessageProcessor(
         connector.grpcChannel?.gracefulShutdownFromGate()
     }
 
-    private fun processSyncSequenceNumbers(sequenceNumbers: SyncSequenceNumbersProto) {
-        logger.debug("Connector {} received sequenceNumber {}", connectorId, sequenceNumbers)
-
-        when (sequenceNumbers.bodyCase) {
-            SyncSequenceNumbersProto.BodyCase.LASTPROCESSEDSEQUENCENUMBER -> {
-                storage.removeMessagesUntilSequenceNumber(sequenceNumbers.lastProcessedSequenceNumber)
-            }
-
-            SyncSequenceNumbersProto.BodyCase.INITIALGATESEQUENCENUMBER -> {
-                runBlocking {
-                    logger.info(
-                        "Connector $connectorId received initialGateSequenceNumber=${sequenceNumbers.initialGateSequenceNumber}, " +
-                                "adapter lastSentSequenceNumber=${storage.lastSentSequenceNumber}"
-                    )
-                    storage.removeMessagesUntilSequenceNumber(sequenceNumbers.initialGateSequenceNumber)
-                    storage.getAllStoredMessages().forEach { message ->
-                        connector.grpcChannel?.resend(message)
-                    }
-                    connector.grpcChannel?.setActiveState()
-                }
-            }
-
-            SyncSequenceNumbersProto.BodyCase.BODY_NOT_SET, null -> {}
-        }
-    }
+//    private fun processSyncSequenceNumbers(sequenceNumbers: SyncSequenceNumbersProto) {
+//        logger.debug("Connector {} received sequenceNumber {}", connectorId, sequenceNumbers)
+//
+//        when (sequenceNumbers.bodyCase) {
+//            SyncSequenceNumbersProto.BodyCase.LASTPROCESSEDSEQUENCENUMBER -> {
+//                storage.removeMessagesUntilSequenceNumber(sequenceNumbers.lastProcessedSequenceNumber)
+//            }
+//
+//            SyncSequenceNumbersProto.BodyCase.INITIALGATESEQUENCENUMBER -> {
+//                runBlocking {
+//                    logger.info(
+//                        "Connector $connectorId received initialGateSequenceNumber=${sequenceNumbers.initialGateSequenceNumber}, " +
+//                                "adapter lastSentSequenceNumber=${storage.lastSentSequenceNumber}"
+//                    )
+//                    storage.removeMessagesUntilSequenceNumber(sequenceNumbers.initialGateSequenceNumber)
+//                    storage.getAllStoredMessages().forEach { message ->
+//                        connector.grpcChannel?.resend(message)
+//                    }
+//                    connector.grpcChannel?.setActiveState()
+//                }
+//            }
+//
+//            SyncSequenceNumbersProto.BodyCase.BODY_NOT_SET, null -> {}
+//        }
+//    }
 
     private fun processBatch(request: BatchRequestProto, context: RequestContext) {
         executor.runAsync(context) { action ->

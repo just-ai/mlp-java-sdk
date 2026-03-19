@@ -109,10 +109,10 @@ class GrpcChannel(
         check(!state.notStarted && !state.shutdown) { "$this: can't send message in state $state" }
 
         grpcMutex.withLock {
-            storage.setSequenceNumberAndStoreMessage(grpcResponse)
+//            storage.setSequenceNumberAndStoreMessage(grpcResponse)
 
             val grpcResponse = grpcResponse
-                .setRunningInstanceId(runningInstanceId)
+//                .setRunningInstanceId(runningInstanceId)
                 .build()
 
             if (grpcResponse.hasHeartBeat()) {
@@ -129,7 +129,7 @@ class GrpcChannel(
         val contentHidden = grpcResponse.getHeadersOrDefault(CONTENT_HIDDEN_HEADER, "false").toBoolean()
 
         val grpcResponse = grpcResponse
-            .setRunningInstanceId(runningInstanceId)
+//            .setRunningInstanceId(runningInstanceId)
             .build()
 
         grpcMutex.withLock {
@@ -225,7 +225,7 @@ class GrpcChannel(
                 ServiceToGateProto.newBuilder()
                     .setStartServing(
                         StartServingProto.newBuilder()
-                            .setRunningInstanceSequenceNumber(storage.lastSentSequenceNumber)
+//                            .setRunningInstanceSequenceNumber(storage.lastSentSequenceNumber)
                             .setConnectionToken(pool.token)
                             .setHostname(context.environment["HOSTNAME"] ?: "localhost")
                             .setVersion(SDK_VERSION)
