@@ -101,6 +101,8 @@ class GrpcChannel(
 
         sendStartServingProto()
         executor.initContainer(connectorId)
+
+        setActiveState()
     }
 
     suspend fun send(grpcResponse: ServiceToGateProto.Builder) {
