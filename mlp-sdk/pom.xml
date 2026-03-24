@@ -71,7 +71,7 @@
         <!-- GRPC -->
         <dependency>
             <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty</artifactId>
+            <artifactId>grpc-netty-shaded</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
