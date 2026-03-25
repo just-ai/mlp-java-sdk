@@ -33,7 +33,7 @@ class Connector(
     private val grpcChannelRef = AtomicReference<GrpcChannel?>(null)
 
     val grpcChannel: GrpcChannel?
-        get() = grpcChannelRef.get()
+        get() = runCatching { grpcChannelRef.get() }.getOrNull()
 
     private val storage = ServiceToGateMessageStorage()
     private val processor = GateToServiceMessageProcessor(this, storage)
