@@ -20,10 +20,11 @@ class MlpServiceSDK(
 ) : WithExecutionContext, WithState() {
 
     init {
-        if (action is MlpServiceBase<*,*,*,*,*>) {
+        if (action is MlpServiceBase<*, *, *, *, *>) {
             action.sdk = this
         }
     }
+
     /**
      * @param actionProvider Function that provides the MlpService, given an InstanceContext.
      * @param config Optional configuration for the MlpService; defaults to null.
@@ -33,7 +34,7 @@ class MlpServiceSDK(
         actionProvider: () -> MlpService,
         config: MlpServiceConfig? = null,
         dispatcher: CoroutineDispatcher? = null
-    ): this(actionProvider(), config, dispatcher)
+    ) : this(actionProvider(), config, dispatcher)
 
     override val context: MlpExecutionContext = action.context
 
@@ -42,6 +43,7 @@ class MlpServiceSDK(
     @Deprecated("Use accountId instead", ReplaceWith("accountId"))
     val ACCOUNT_ID
         get() = environment.getOrThrow("MLP_ACCOUNT_ID")
+
     @Deprecated("Use modelId instead", ReplaceWith("modelId"))
     val MODEL_ID
         get() = environment.getOrThrow("MLP_MODEL_ID")
@@ -141,6 +143,37 @@ class MlpServiceSDK(
             .setDeferredBillingCharge(
                 com.mlp.gate.DeferredBillingChargeRequestProto.newBuilder()
                     .setBillingRequestId(billingRequestId)
+                    .setAmountInUnits(amountInUnits)
+                    .build()
+            )
+
+        taskExecutor.connectorsPool.sendToAnyGate(proto)
+    }
+
+    /**
+     * Sends a recurring billing charge request.
+     *
+     * This method is used for background (recurring) billing of long-running ML operations.
+     * Before use, recurring billing must be initialized by setting
+     * appropriate headers in the first response (via BillingUnitsThreadLocal).
+     *
+     * @param billingRequestId Unique request ID that was set during initialization
+     * @param chargeId Unique charge ID for this billing event (used for idempotency)
+     * @param amountInUnits Amount to charge in billing units (must be > 0)
+     * @throws IllegalArgumentException if amountInUnits <= 0
+     */
+    suspend fun sendRecurringBillingCharge(
+        billingRequestId: String,
+        chargeId: String,
+        amountInUnits: Long
+    ) {
+        require(amountInUnits > 0) { "Amount must be positive, got: $amountInUnits" }
+
+        val proto = ServiceToGateProto.newBuilder()
+            .setRecurringBillingCharge(
+                com.mlp.gate.RecurringBillingChargeRequestProto.newBuilder()
+                    .setBillingRequestId(billingRequestId)
+                    .setChargeId(chargeId)
                     .setAmountInUnits(amountInUnits)
                     .build()
             )

@@ -15,6 +15,8 @@ object BillingUnitsThreadLocal {
 
     private val deferredBillingRequestId = ThreadLocal<String>()
 
+    private val recurringBillingRequestId = ThreadLocal<String>()
+
     private val billingCurrencyType = ThreadLocal<String>()
 
     fun clearAll() {
@@ -36,6 +38,10 @@ object BillingUnitsThreadLocal {
         deferredBillingRequestId.set(null)
     }
 
+    fun clearRecurringBillingRequestId() {
+        recurringBillingRequestId.set(null)
+    }
+
     fun clearBillingCurrencyType() {
         billingCurrencyType.set(null)
     }
@@ -52,6 +58,10 @@ object BillingUnitsThreadLocal {
         this.deferredBillingRequestId.set(id)
     }
 
+    fun setRecurringBillingRequestId(id: String) {
+        this.recurringBillingRequestId.set(id)
+    }
+
     fun setBillingCurrencyType(currencyType: String) {
         this.billingCurrencyType.set(currencyType)
     }
@@ -66,6 +76,10 @@ object BillingUnitsThreadLocal {
 
     fun getDeferredBillingRequestId(): String? {
         return deferredBillingRequestId.get()
+    }
+
+    fun getRecurringBillingRequestId(): String? {
+        return recurringBillingRequestId.get()
     }
 
     fun getBillingCurrencyType(): String? {

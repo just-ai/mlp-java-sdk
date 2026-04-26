@@ -136,6 +136,9 @@ private fun flushBillingHeaders(messageHeaders: MutableMap<String, String>) {
     BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
         messageHeaders += DEFERRED_BILLING_ID_HEADER to it
     }
+    BillingUnitsThreadLocal.getRecurringBillingRequestId()?.also {
+        messageHeaders += RECURRING_BILLING_ID_HEADER to it
+    }
     BillingUnitsThreadLocal.getBillingCurrencyType()?.also {
         messageHeaders += BILLING_CURRENCY_TYPE_HEADER to it
     }
