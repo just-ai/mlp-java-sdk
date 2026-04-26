@@ -2,7 +2,9 @@ package com.mlp.sdk
 
 import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
+import com.mlp.gate.RecurringBillingChargeRequestProto
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.sdk.datatypes.billing.RecurringBillingCharge
 import com.mlp.sdk.utils.BILLING_CURRENCY_TYPE_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_DETAILS_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_HEADER
@@ -162,19 +164,22 @@ class MlpServiceSDK(
      * @param amountInUnits Amount to charge in billing units (must be > 0)
      * @throws IllegalArgumentException if amountInUnits <= 0
      */
-    suspend fun sendRecurringBillingCharge(
+    suspend fun sendRecurringBillingCharges(
         billingRequestId: String,
-        chargeId: String,
-        amountInUnits: Long
+        charges: Collection<RecurringBillingCharge>,
+        removeBilling: Boolean,
     ) {
-        require(amountInUnits > 0) { "Amount must be positive, got: $amountInUnits" }
-
         val proto = ServiceToGateProto.newBuilder()
-            .setRecurringBillingCharge(
-                com.mlp.gate.RecurringBillingChargeRequestProto.newBuilder()
+            .setRecurringBillingCharges(
+                com.mlp.gate.RecurringBillingChargesRequestProto.newBuilder()
                     .setBillingRequestId(billingRequestId)
-                    .setChargeId(chargeId)
-                    .setAmountInUnits(amountInUnits)
+                    .addAllCharges(charges.map {
+                        RecurringBillingChargeRequestProto.newBuilder()
+                            .setChargeId(it.chargeId)
+                            .setAmountInUnits(it.amountInUnits)
+                            .build()
+                    })
+                    .setRemoveBilling(removeBilling)
                     .build()
             )
 

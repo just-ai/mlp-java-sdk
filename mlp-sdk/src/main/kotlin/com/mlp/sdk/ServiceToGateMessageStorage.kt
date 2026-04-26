@@ -39,7 +39,7 @@ class ServiceToGateMessageStorage {
         ServiceToGateProto.BodyCase.BATCH,
         ServiceToGateProto.BodyCase.ERROR,
         ServiceToGateProto.BodyCase.DEFERREDBILLINGCHARGE,
-        ServiceToGateProto.BodyCase.RECURRINGBILLINGCHARGE -> true
+        ServiceToGateProto.BodyCase.RECURRINGBILLINGCHARGES -> true
 
         ServiceToGateProto.BodyCase.HEARTBEAT,
         ServiceToGateProto.BodyCase.STARTSERVING,
