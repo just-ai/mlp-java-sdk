@@ -324,8 +324,11 @@ class GateToServiceMessageProcessor(
             val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(context.gateRequestId)
                 .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
 
+            var capturedResponsePayload: MlpResponse? = null
             runCatching {
                 val responsePayload = action.predict(dataPayload, configPayload, context)
+                capturedResponsePayload = responsePayload
+
                 val headers = responsePayload.headers
                 val statusCode = responsePayload.statusCode
                 when (responsePayload) {
@@ -348,6 +351,8 @@ class GateToServiceMessageProcessor(
             responseBuilder.putHeaders(SERVER_TIME_HEADER, elapsed.toString())
             runCatching { pool.send(connectorId, responseBuilder) }
                 .onFailure { logger.error("Error while sending predict response", it) }
+
+            capturedResponsePayload?.callback?.invoke()
         }
     }
 

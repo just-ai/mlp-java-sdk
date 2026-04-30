@@ -5,6 +5,8 @@ sealed interface MlpResponse {
         get() = emptyMap()
     val statusCode: Int?
         get() = 200
+    val callback: () -> Unit
+        get() = { }
 }
 
 object BillingUnitsThreadLocal {
@@ -100,7 +102,7 @@ data class Payload(
     override val dataType: String?,
     val data: String,
     val contentHidden: Boolean = false
-): MlpResponse, PayloadInterface {
+) : MlpResponse, PayloadInterface {
     constructor(data: String) : this(null, data)
 
     override fun stringData(): String = data
@@ -122,7 +124,7 @@ data class ProtobufPayload(
     override val dataType: String?,
     val data: com.google.protobuf.ByteString,
     val contentHidden: Boolean = false
-): MlpResponse, PayloadInterface {
+) : MlpResponse, PayloadInterface {
     override fun stringData(): String = data.toStringUtf8()
 
     override fun toString(): String {
@@ -138,7 +140,7 @@ data class RawPayload(
     override val dataType: String?,
     override val headers: Map<String, String> = emptyMap(),
     override val statusCode: Int = 200,
-): MlpResponse, PayloadInterface {
+) : MlpResponse, PayloadInterface {
     override fun stringData(): String = data
 
     val asPayload
@@ -149,7 +151,8 @@ data class MlpResponseException(val exception: Throwable) : MlpResponse
 
 class MlpPartialBinaryResponse(
     override val headers: Map<String, String>? = null,
-    override val statusCode: Int? = null
+    override val statusCode: Int? = null,
+    override val callback: () -> Unit = {},
 ) : MlpResponse
 
 data class MlpHttpResponse(
