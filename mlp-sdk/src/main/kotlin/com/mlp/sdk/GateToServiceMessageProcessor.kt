@@ -11,13 +11,18 @@ import com.mlp.gate.GateToServiceProto
 import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.PartialPredictRequestProto
 import com.mlp.gate.PredictRequestProto
+import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.utils.CALLER_ACCOUNT_ID_HEADER
 import com.mlp.sdk.utils.CONNECTOR_ID_MDC_PARAM
 import com.mlp.sdk.utils.CONTENT_HIDDEN_HEADER
 import com.mlp.sdk.utils.GATE_REQUEST_ID_MDC_PARAM
+import com.mlp.sdk.utils.MLP_API_KEY_NAME_HEADER
+import com.mlp.sdk.utils.MLP_BILLING_ACCOUNT_ID_HEADER
 import com.mlp.sdk.utils.MLP_BILLING_KEY_HEADER
 import com.mlp.sdk.utils.MLP_BILLING_KEY_MDC_PARAM
+import com.mlp.sdk.utils.MLP_BILLING_KEY_NAME_HEADER
+import com.mlp.sdk.utils.MLP_BILLING_USER_ID_HEADER
 import com.mlp.sdk.utils.REQUEST_ID_HEADER
 import com.mlp.sdk.utils.REQUEST_ID_MDC_PARAM
 import com.mlp.sdk.utils.SERVER_TIME_HEADER
@@ -80,6 +85,7 @@ class GateToServiceMessageProcessor(
 
         when (request.bodyCase) {
             // System messages
+            GateToServiceProto.BodyCase.SERVICEINFO -> processServiceInfo(request.serviceInfo)
             GateToServiceProto.BodyCase.CANCEL -> processCancelRequest(request.cancel)
             GateToServiceProto.BodyCase.CLUSTER -> processCluster(request.cluster)
             GateToServiceProto.BodyCase.ERROR -> processError(request.error)
@@ -99,6 +105,11 @@ class GateToServiceMessageProcessor(
             null -> logger.error("Connector $connectorId: body case is null")
             else -> logger.debug("Could not find request bodyCase with type {}", request.bodyCase)
         }
+    }
+
+    private fun processServiceInfo(serviceInfo: ServiceInfoProto) {
+        connector.serviceInfo = serviceInfo
+        logger.info("Connector $connectorId: service info updated: modelId=${serviceInfo.modelId}, accountId=${serviceInfo.accountId}")
     }
 
     private fun processCancelRequest(request: CancelRequestProto) {
@@ -351,6 +362,12 @@ class GateToServiceMessageProcessor(
             requestId = request.headersMap[REQUEST_ID_HEADER] ?: request.requestId.toString(),
             billingKey = request.headersMap[MLP_BILLING_KEY_HEADER],
             gateRequestId = request.requestId,
+            modelId = connector.serviceInfo?.modelId ?: 0L,
+            modelAccountId = connector.serviceInfo?.accountId ?: 0L,
+            apiKeyName = request.getHeadersOrDefault(MLP_API_KEY_NAME_HEADER, null),
+            billingKeyName = request.getHeadersOrDefault(MLP_BILLING_KEY_NAME_HEADER, null),
+            billingAccountId = request.getHeadersOrDefault(MLP_BILLING_ACCOUNT_ID_HEADER, null)?.toLongOrNull(),
+            billingUserId = request.getHeadersOrDefault(MLP_BILLING_USER_ID_HEADER, null)
         )
     }
 }

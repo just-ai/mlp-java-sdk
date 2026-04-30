@@ -60,4 +60,13 @@ data class RequestContext(
     val billingKey: String? = null,
     val connectorId: Long = 0L,
     val gateRequestId: Long = 0,
+
+    val modelId: Long = 0,
+    val modelAccountId: Long = 0,
+
+    val apiKeyName: String? = null,
+    val billingKeyName: String? = null,
+
+    val billingAccountId: Long? = null,
+    val billingUserId: String? = null,
 )

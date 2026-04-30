@@ -1,5 +1,6 @@
 package com.mlp.sdk
 
+import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.State.Condition.ACTIVE
 import java.time.Duration.ofMillis
@@ -24,6 +25,8 @@ class Connector(
     val scope: CoroutineScope,
     override val context: MlpExecutionContext,
 ) : WithExecutionContext, WithState(ACTIVE) {
+
+    var serviceInfo: ServiceInfoProto? = null
 
     val connectorId = lastConnectorId.getAndIncrement()
     private var gatewayPermanentlyUnavailable = true

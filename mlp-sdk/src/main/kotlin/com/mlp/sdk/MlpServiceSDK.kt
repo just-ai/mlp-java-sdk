@@ -1,14 +1,17 @@
 package com.mlp.sdk
 
+import com.mlp.gate.DeferredBillingChargeProto
+import com.mlp.gate.DeferredBillingParamsProto
 import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
-import com.mlp.gate.RecurringBillingChargeRequestProto
 import com.mlp.gate.ServiceToGateProto
-import com.mlp.sdk.datatypes.billing.RecurringBillingCharge
+import com.mlp.sdk.datatypes.billing.DeferredBillingCharge
+import com.mlp.sdk.datatypes.billing.DeferredBillingParams
 import com.mlp.sdk.utils.BILLING_CURRENCY_TYPE_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_DETAILS_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_HEADER
 import com.mlp.sdk.utils.JSON
+import com.mlp.sdk.utils.JSON.asJson
 import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
@@ -135,6 +138,7 @@ class MlpServiceSDK(
      * @param amountInUnits Amount to charge in billing units (must be > 0)
      * @throws IllegalArgumentException if amountInUnits <= 0
      */
+    @Deprecated("Replace with sendDeferredBillingCharges", ReplaceWith("sendDeferredBillingCharges"))
     suspend fun sendDeferredBillingCharge(
         billingRequestId: String,
         amountInUnits: Long
@@ -152,38 +156,56 @@ class MlpServiceSDK(
         taskExecutor.connectorsPool.sendToAnyGate(proto)
     }
 
-    /**
-     * Sends a recurring billing charge request.
-     *
-     * This method is used for background (recurring) billing of long-running ML operations.
-     * Before use, recurring billing must be initialized by setting
-     * appropriate headers in the first response (via BillingUnitsThreadLocal).
-     *
-     * @param billingRequestId Unique request ID that was set during initialization
-     * @param chargeId Unique charge ID for this billing event (used for idempotency)
-     * @param amountInUnits Amount to charge in billing units (must be > 0)
-     * @throws IllegalArgumentException if amountInUnits <= 0
-     */
-    suspend fun sendRecurringBillingCharges(
-        billingRequestId: String,
-        charges: Collection<RecurringBillingCharge>,
-        removeBilling: Boolean,
+    suspend fun sendDeferredBillingCharges(
+        params: DeferredBillingParams,
+        charges: List<DeferredBillingCharge>,
     ) {
-        val proto = ServiceToGateProto.newBuilder()
-            .setRecurringBillingCharges(
-                com.mlp.gate.RecurringBillingChargesRequestProto.newBuilder()
-                    .setBillingRequestId(billingRequestId)
-                    .addAllCharges(charges.map {
-                        RecurringBillingChargeRequestProto.newBuilder()
-                            .setChargeId(it.chargeId)
-                            .setAmountInUnits(it.amountInUnits)
-                            .build()
-                    })
-                    .setRemoveBilling(removeBilling)
-                    .build()
-            )
+        val charges = charges.map { charge ->
+            val builder = DeferredBillingChargeProto.newBuilder()
+                .setIdempotencyKey(charge.idempotencyKey)
+                .setAmount(charge.amount)
 
-        taskExecutor.connectorsPool.sendToAnyGate(proto)
+            if (charge.currency != null) {
+                builder.currency = charge.currency
+            }
+
+            if (charge.llmModelName != null) {
+                builder.llmModelName = charge.llmModelName
+            }
+
+            if (charge.billingDetails?.isNotEmpty() == true) {
+                builder.setBillingDetails(charge.billingDetails.asJson)
+            }
+
+            builder.build()
+        }
+
+        val paramsBuilder = DeferredBillingParamsProto.newBuilder()
+
+        if (params.callerAccountId != null) {
+            paramsBuilder.callerAccountId = params.callerAccountId
+        }
+        if (params.apiKeyName != null) {
+            paramsBuilder.apiKeyName = params.apiKeyName
+        }
+        if (params.billingKeyName != null) {
+            paramsBuilder.billingKeyName = params.billingKeyName
+        }
+        if (params.billingAccountId != null) {
+            paramsBuilder.billingAccountId = params.billingAccountId
+        }
+        if (params.billingUserId != null) {
+            paramsBuilder.billingUserId = params.billingUserId
+        }
+
+        taskExecutor.connectorsPool.sendToAnyGate(
+            ServiceToGateProto.newBuilder()
+                .setDeferredBillingCharges(
+                    com.mlp.gate.DeferredBillingChargesProto.newBuilder()
+                        .addAllCharges(charges)
+                        .setParams(paramsBuilder)
+                )
+        )
     }
 
     /**
