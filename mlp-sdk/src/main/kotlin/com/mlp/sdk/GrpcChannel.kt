@@ -111,19 +111,15 @@ class GrpcChannel(
         check(!state.notStarted && !state.shutdown) { "$this: can't send message in state $state" }
 
         grpcMutex.withLock {
-//            storage.setSequenceNumberAndStoreMessage(grpcResponse)
+            val built = grpcResponse.build()
 
-            val grpcResponse = grpcResponse
-//                .setRunningInstanceId(runningInstanceId)
-                .build()
-
-            if (grpcResponse.hasHeartBeat()) {
+            if (built.hasHeartBeat()) {
                 logger.trace("ServiceToGateProto: heartbeat")
             } else {
-                logProto(grpcResponse, prompt = "ServiceToGate", noContentLogging = contentHidden)
+                logProto(built, prompt = "ServiceToGate", noContentLogging = contentHidden)
             }
 
-            stream.onNext(grpcResponse)
+            stream.onNext(built)
         }
     }
 
@@ -233,6 +229,7 @@ class GrpcChannel(
                             .setVersion(SDK_VERSION)
                             .setImage(context.environment["IMAGE_NAME"] ?: "")
                             .setServiceDescriptor(executor.action.getDescriptor())
+                            .setInstanceBootUuid(MlpServiceSDK.processInstanceUuid)
                             .build()
                     )
             )

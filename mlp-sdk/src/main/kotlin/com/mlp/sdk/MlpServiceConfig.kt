@@ -7,6 +7,8 @@ import com.mlp.sdk.MlpServiceConfig.Companion.GRACEFUL_SHUTDOWN_CONNECTOR_REQUES
 import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_CONNECT_TIMEOUT_MS
 import com.mlp.sdk.MlpServiceConfig.Companion.GRPC_SECURE
 import com.mlp.sdk.MlpServiceConfig.Companion.IGNORE_CLUSTER_UPDATES
+import com.mlp.sdk.MlpServiceConfig.Companion.RECONNECT_BUFFER_SIZE
+import com.mlp.sdk.MlpServiceConfig.Companion.RECONNECT_BUFFER_TIMEOUT_MS
 import com.mlp.sdk.utils.ConfigHelper
 
 data class MlpServiceConfig(
@@ -18,7 +20,9 @@ data class MlpServiceConfig(
     val grpcConnectTimeoutMs: Long = GRPC_CONNECT_TIMEOUT_MS,
     val grpcSecure: Boolean = GRPC_SECURE,
     val clientApiAuthToken: String? = null,
-    val ignoreClusterUpdates: Boolean = IGNORE_CLUSTER_UPDATES
+    val ignoreClusterUpdates: Boolean = IGNORE_CLUSTER_UPDATES,
+    val reconnectBufferSize: Int = RECONNECT_BUFFER_SIZE,
+    val reconnectBufferTimeoutMs: Long = RECONNECT_BUFFER_TIMEOUT_MS,
 ) {
     companion object {
         const val DEFAULT_THREAD_POOL_SIZE: Int = 10
@@ -28,6 +32,8 @@ data class MlpServiceConfig(
         const val GRPC_CONNECT_TIMEOUT_MS: Long = 10000
         const val GRPC_SECURE: Boolean = true
         const val IGNORE_CLUSTER_UPDATES: Boolean = false
+        const val RECONNECT_BUFFER_SIZE: Int = 1000
+        const val RECONNECT_BUFFER_TIMEOUT_MS: Long = 20000
     }
 }
 
@@ -60,6 +66,10 @@ fun loadActionConfig(configPath: String? = null, environment: Environment): MlpS
             ?: GRPC_CONNECT_TIMEOUT_MS,
         grpcSecure = props["MLP_GRPC_SECURE"]?.toBoolean() ?: GRPC_SECURE,
         clientApiAuthToken = props["MLP_CLIENT_TOKEN"],
-        ignoreClusterUpdates = props["MLP_IGNORE_CLUSTER_UPDATES"]?.toBoolean() ?: IGNORE_CLUSTER_UPDATES
+        ignoreClusterUpdates = props["MLP_IGNORE_CLUSTER_UPDATES"]?.toBoolean() ?: IGNORE_CLUSTER_UPDATES,
+        reconnectBufferSize = props["MLP_RECONNECT_BUFFER_SIZE"]?.toInt()
+            ?: RECONNECT_BUFFER_SIZE,
+        reconnectBufferTimeoutMs = props["MLP_RECONNECT_BUFFER_TIMEOUT_MS"]?.toLong()
+            ?: RECONNECT_BUFFER_TIMEOUT_MS,
     )
 }

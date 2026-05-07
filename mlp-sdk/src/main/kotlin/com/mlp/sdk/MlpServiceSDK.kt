@@ -282,6 +282,9 @@ class MlpServiceSDK(
     companion object {
         const val SDK_COMPONENT_NAME = "MlpServiceSDK"
         const val STARTUP_PROBE_FILE_PATH = "/tmp/startup-probe"
+
+        /** Process-level UUID, stable for the lifetime of the JVM. Used for reconnect detection in gateway. */
+        val processInstanceUuid: String = java.util.UUID.randomUUID().toString()
     }
 }
 
