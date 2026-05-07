@@ -40,6 +40,7 @@ class Connector(
 
     private val storage = ServiceToGateMessageStorage()
     private val processor = GateToServiceMessageProcessor(this, storage)
+    private val buffer = OutgoingMessageBuffer.create(config)
 
     suspend fun gracefulShutdown() {
         if (state.isShutdownTypeState()) {
@@ -53,6 +54,7 @@ class Connector(
             .onFailure { logger.error("$this: error while keep connection job cancelling", it) }
 
         grpcChannel?.gracefulShutdown()
+        buffer.clear()
 
         state.shutdown()
         logger.debug("{}: ... has been successfully shutdown", this)
@@ -70,6 +72,7 @@ class Connector(
             .onFailure { logger.error("$this: error while keep connection job cancelling", it) }
 
         grpcChannel?.shutdownNow()
+        buffer.clear()
 
         state.shutdown()
         logger.debug("{}: ... has been successfully shutdown", this)
@@ -147,7 +150,19 @@ class Connector(
 
         return runCatching {
             newGrpcChannel.tryConnect()
-            grpcChannelRef.getAndSet(newGrpcChannel)?.shutdownNow()
+
+            val oldChannel = grpcChannelRef.getAndSet(newGrpcChannel)
+            if (oldChannel != null) {
+                logger.info(
+                    "$this: reconnected; tearing down previous grpc channel " +
+                            "(old state=${oldChannel.state}). In-flight tasks are kept running."
+                )
+                oldChannel.shutdownNow()
+            } else {
+                logger.info("$this: connected to grpc channel for the first time")
+            }
+
+            drainBufferTo(newGrpcChannel)
             true
         }.onFailure {
             logger.trace("{}: cannot create new grpc channel", this@Connector, it)
@@ -155,8 +170,67 @@ class Connector(
         }.getOrDefault(false)
     }
 
+    private suspend fun drainBufferTo(channel: GrpcChannel) {
+        val pending = buffer.size()
+        if (pending == 0) {
+            logger.debug("$this: outgoing buffer is empty, nothing to drain to new channel")
+            return
+        }
+
+        logger.info("$this: draining $pending buffered message(s) to the newly connected channel")
+        var sent = 0
+        runCatching {
+            buffer.drainTo { msg ->
+                channel.send(msg)
+                sent++
+            }
+        }.onFailure {
+            logger.error(
+                "$this: failed to drain outgoing buffer to new channel " +
+                        "(sent=$sent of $pending, remaining=${buffer.size()}); remaining messages " +
+                        "stay in the buffer and will be retried on the next reconnect (until TTL).",
+                it
+            )
+            return
+        }
+
+        logger.info(
+            "$this: drained $sent message(s) to new channel; " +
+                    "${buffer.size()} message(s) left in buffer (likely evicted by TTL)"
+        )
+    }
+
     suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto.Builder) {
-        grpcChannel?.send(grpcResponse)
+        val channel = grpcChannel
+        if (channel != null && channel.state.active) {
+            try {
+                channel.send(grpcResponse)
+                return
+            } catch (e: Throwable) {
+                logger.warn(
+                    "$this: send through active grpc channel failed, falling back to outgoing buffer " +
+                            "(buffer size before enqueue=${buffer.size()}, channel state=${channel.state}): ${e.message}"
+                )
+            }
+        } else {
+            logger.info(
+                "$this: no active grpc channel (channel=${channel?.let { "state=${it.state}" } ?: "null"}), " +
+                        "enqueueing message into outgoing buffer for delivery after reconnect " +
+                        "(buffer size before enqueue=${buffer.size()})"
+            )
+        }
+
+        try {
+            buffer.enqueue(grpcResponse)
+        } catch (e: OutgoingMessageBufferFullException) {
+            // Buffer is full — caller gets back-pressure. The buffer logs overflow details itself.
+            logger.error(
+                "$this: outgoing buffer is full, dropping message and propagating the error to caller. " +
+                        "This means the gate has been unreachable for too long or producer outpaces drain.",
+                e
+            )
+            throw e
+        }
     }
 
     internal fun logConnecting(message: String, vararg args: Any) {
