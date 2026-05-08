@@ -16,7 +16,7 @@
 
     <groupId>com.mlp</groupId>
     <artifactId>mlp-java-sdk</artifactId>
-    <version>${revision}</version>
+    <version>AP-2026.2-rc-SNAPSHOT</version>
 
     <name>mlp-java-sdk</name>
     <description>MLP Java SDK</description>
