@@ -10,6 +10,7 @@ import com.mlp.sdk.datatypes.billing.DeferredBillingParams
 import com.mlp.sdk.utils.BILLING_CURRENCY_TYPE_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_DETAILS_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_HEADER
+import com.mlp.sdk.utils.CUSTOM_SELF_COST_HEADER
 import com.mlp.sdk.utils.JSON
 import com.mlp.sdk.utils.JSON.asJson
 import java.io.File
@@ -228,6 +229,7 @@ class MlpServiceSDK(
         price: Long? = null,
         billingDetails: Map<String, Long>? = null,
         billingCurrencyType: String? = null,
+        selfCost: Long? = null,
     ) {
         val payloadProto = when (payload) {
             is Payload -> PayloadProto.newBuilder()
@@ -261,6 +263,7 @@ class MlpServiceSDK(
         if (price != null) builder.putHeaders(CUSTOM_BILLING_HEADER, price.toString())
         if (billingDetails != null) builder.putHeaders(CUSTOM_BILLING_DETAILS_HEADER, JSON.stringify(billingDetails))
         if (billingCurrencyType != null) builder.putHeaders(BILLING_CURRENCY_TYPE_HEADER, billingCurrencyType)
+        if (selfCost != null) builder.putHeaders(CUSTOM_SELF_COST_HEADER, selfCost.toString())
 
         send(connectorId, builder)
     }

@@ -13,14 +13,14 @@ import com.mlp.api.datatypes.chatgpt.ToolCall
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- *
- * @param role
- * @param content
- * @param toolCallId
- * @param name
- * @param toolCalls
- * @param thinking
- * @param reasoning
+ * 
+ * @param role 
+ * @param content 
+ * @param toolCallId 
+ * @param name 
+ * @param toolCalls 
+ * @param thinking 
+ * @param reasoning 
  */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.mlp.api.ChatMessageDeserializer::class)
 open class ChatMessage(
@@ -62,9 +62,9 @@ open class ChatMessage(
     }
 
     override fun hashCode(): Int {
-
+        
         var result = role.hashCode()
-
+        
         result = 31 * result + content.hashCode()
         result = 31 * result + toolCallId.hashCode()
         result = 31 * result + name.hashCode()

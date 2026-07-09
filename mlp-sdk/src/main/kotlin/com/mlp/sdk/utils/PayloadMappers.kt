@@ -132,6 +132,9 @@ private fun flushBillingHeaders(messageHeaders: MutableMap<String, String>) {
     BillingUnitsThreadLocal.getDetailedUnits()?.also {
         messageHeaders += CUSTOM_BILLING_DETAILS_HEADER to JSON.stringify(it)
     }
+    BillingUnitsThreadLocal.getSelfCostUnits()?.also {
+        messageHeaders += CUSTOM_SELF_COST_HEADER to it.toString()
+    }
     // Deferred billing headers
     BillingUnitsThreadLocal.getDeferredBillingRequestId()?.also {
         messageHeaders += DEFERRED_BILLING_ID_HEADER to it

@@ -15,6 +15,10 @@ object BillingUnitsThreadLocal {
 
     private val detailedUnits = ThreadLocal<Map<String, Long>>()
 
+    // Себестоимость (provider self-cost), micro-currency того же масштаба, что units.
+    // Отдельный от клиентской стоимости канал → header Z-custom-self-cost (см. PayloadMappers).
+    private val selfCostUnits = ThreadLocal<Long>()
+
     private val deferredBillingRequestId = ThreadLocal<String>()
 
     private val recurringBillingRequestId = ThreadLocal<String>()
@@ -24,8 +28,13 @@ object BillingUnitsThreadLocal {
     fun clearAll() {
         clearUnits()
         clearDetails()
+        clearSelfCostUnits()
         clearDeferredBillingRequestId()
         clearBillingCurrencyType()
+    }
+
+    fun clearSelfCostUnits() {
+        selfCostUnits.set(null)
     }
 
     fun clearUnits() {
@@ -56,6 +65,10 @@ object BillingUnitsThreadLocal {
         this.detailedUnits.set(map)
     }
 
+    fun setSelfCostUnits(units: Long) {
+        this.selfCostUnits.set(units)
+    }
+
     fun setDeferredBillingRequestId(id: String) {
         this.deferredBillingRequestId.set(id)
     }
@@ -74,6 +87,10 @@ object BillingUnitsThreadLocal {
 
     fun getDetailedUnits(): Map<String, Long>? {
         return detailedUnits.get()
+    }
+
+    fun getSelfCostUnits(): Long? {
+        return selfCostUnits.get()
     }
 
     fun getDeferredBillingRequestId(): String? {

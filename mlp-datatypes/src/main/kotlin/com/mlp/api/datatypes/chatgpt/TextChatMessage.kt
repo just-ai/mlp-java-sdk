@@ -9,14 +9,9 @@ import com.mlp.api.datatypes.chatgpt.ToolCall
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- *
- * @param role
- * @param content
- * @param toolCallId
- * @param name
- * @param toolCalls
- * @param thinking
- * @param reasoning
+ * 
+ * @param role 
+ * @param content 
  */
 data class TextChatMessage(
 

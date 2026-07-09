@@ -12,8 +12,56 @@ class BillingUnitsThreadLocalTest {
         // Clear all ThreadLocal variables after each test
         BillingUnitsThreadLocal.clearUnits()
         BillingUnitsThreadLocal.clearDetails()
+        BillingUnitsThreadLocal.clearSelfCostUnits()
         BillingUnitsThreadLocal.clearDeferredBillingRequestId()
         BillingUnitsThreadLocal.clearBillingCurrencyType()
+    }
+
+    @Test
+    fun `should set and get self-cost units`() {
+        BillingUnitsThreadLocal.setSelfCostUnits(42L)
+        assertEquals(42L, BillingUnitsThreadLocal.getSelfCostUnits())
+    }
+
+    @Test
+    fun `should clear self-cost units`() {
+        BillingUnitsThreadLocal.setSelfCostUnits(42L)
+        BillingUnitsThreadLocal.clearSelfCostUnits()
+        assertNull(BillingUnitsThreadLocal.getSelfCostUnits())
+    }
+
+    @Test
+    fun `clearAll should also clear self-cost units`() {
+        BillingUnitsThreadLocal.setUnits(100L)
+        BillingUnitsThreadLocal.setSelfCostUnits(70L)
+        BillingUnitsThreadLocal.clearAll()
+        assertNull(BillingUnitsThreadLocal.getUnits())
+        assertNull(BillingUnitsThreadLocal.getSelfCostUnits())
+    }
+
+    @Test
+    fun `self-cost units should not affect client units and vice versa`() {
+        BillingUnitsThreadLocal.setUnits(100L)
+        BillingUnitsThreadLocal.setSelfCostUnits(70L)
+        assertEquals(100L, BillingUnitsThreadLocal.getUnits())
+        assertEquals(70L, BillingUnitsThreadLocal.getSelfCostUnits())
+    }
+
+    @Test
+    fun `should maintain thread isolation for self-cost units`() {
+        BillingUnitsThreadLocal.setSelfCostUnits(11L)
+        val threadResults = mutableListOf<Long?>()
+        val thread = Thread {
+            threadResults.add(BillingUnitsThreadLocal.getSelfCostUnits())
+            BillingUnitsThreadLocal.setSelfCostUnits(22L)
+            threadResults.add(BillingUnitsThreadLocal.getSelfCostUnits())
+        }
+        thread.start()
+        thread.join()
+        assertEquals(11L, BillingUnitsThreadLocal.getSelfCostUnits())
+        assertEquals(2, threadResults.size)
+        assertNull(threadResults[0])
+        assertEquals(22L, threadResults[1])
     }
 
     @Test

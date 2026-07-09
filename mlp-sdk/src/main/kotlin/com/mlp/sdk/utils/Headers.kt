@@ -7,6 +7,14 @@ const val SERVER_TIME_HEADER = "Z-Server-Time"
 const val MLP_BILLING_KEY_HEADER = "MLP-BILLING-KEY"
 const val CUSTOM_BILLING_HEADER = "Z-custom-billing"
 const val CUSTOM_BILLING_DETAILS_HEADER = "Z-custom-billing-details"
+
+/**
+ * Себестоимость запроса (provider self-cost), micro-currency того же масштаба, что [CUSTOM_BILLING_HEADER].
+ * Отдельный от клиентской стоимости канал: gateway агрегирует его только для админ-observability
+ * (метрики/лог), клиенту НЕ передаётся. Необязательный — при отсутствии gateway делает BC-fallback
+ * (self-cost = client cost).
+ */
+const val CUSTOM_SELF_COST_HEADER = "Z-custom-self-cost"
 const val DEFERRED_BILLING_ID_HEADER = "Z-deferred-billing-id"
 const val RECURRING_BILLING_ID_HEADER = "Z-recurring-billing-id"
 const val BILLING_CURRENCY_TYPE_HEADER = "Z-billing-currency-type"
