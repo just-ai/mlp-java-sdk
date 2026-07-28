@@ -36,6 +36,9 @@ object BillingUnitsThreadLocal {
         clearSelfCostUnits()
         clearSelfCostCurrency()
         clearDeferredBillingRequestId()
+        // recurringBillingRequestId эмитится flushBillingHeaders'ом, но из clearAll выпадал:
+        // в пуле потоков это утечка id в следующий запрос того же треда.
+        clearRecurringBillingRequestId()
         clearBillingCurrencyType()
     }
 
