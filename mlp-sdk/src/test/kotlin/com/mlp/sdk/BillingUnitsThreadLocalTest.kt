@@ -15,6 +15,7 @@ class BillingUnitsThreadLocalTest {
         BillingUnitsThreadLocal.clearSelfCostUnits()
         BillingUnitsThreadLocal.clearSelfCostCurrency()
         BillingUnitsThreadLocal.clearDeferredBillingRequestId()
+        BillingUnitsThreadLocal.clearRecurringBillingRequestId()
         BillingUnitsThreadLocal.clearBillingCurrencyType()
     }
 
@@ -38,6 +39,15 @@ class BillingUnitsThreadLocalTest {
         BillingUnitsThreadLocal.clearAll()
         assertNull(BillingUnitsThreadLocal.getSelfCostUnits())
         assertNull(BillingUnitsThreadLocal.getSelfCostCurrency())
+    }
+
+    @Test
+    fun `clearAll should also clear the recurring billing request id`() {
+        // clearAll — единственная точка сброса между запросами в переиспользуемом потоке; забытое
+        // поле утекло бы в СЛЕДУЮЩИЙ запрос и привязало бы его к чужой подписке.
+        BillingUnitsThreadLocal.setRecurringBillingRequestId("sub-1")
+        BillingUnitsThreadLocal.clearAll()
+        assertNull(BillingUnitsThreadLocal.getRecurringBillingRequestId())
     }
 
     @Test
