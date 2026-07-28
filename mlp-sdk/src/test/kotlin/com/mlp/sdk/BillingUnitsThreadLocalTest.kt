@@ -13,8 +13,60 @@ class BillingUnitsThreadLocalTest {
         BillingUnitsThreadLocal.clearUnits()
         BillingUnitsThreadLocal.clearDetails()
         BillingUnitsThreadLocal.clearSelfCostUnits()
+        BillingUnitsThreadLocal.clearSelfCostCurrency()
         BillingUnitsThreadLocal.clearDeferredBillingRequestId()
         BillingUnitsThreadLocal.clearBillingCurrencyType()
+    }
+
+    @Test
+    fun `should set and get self-cost currency`() {
+        BillingUnitsThreadLocal.setSelfCostCurrency("USD")
+        assertEquals("USD", BillingUnitsThreadLocal.getSelfCostCurrency())
+    }
+
+    @Test
+    fun `should clear self-cost currency`() {
+        BillingUnitsThreadLocal.setSelfCostCurrency("USD")
+        BillingUnitsThreadLocal.clearSelfCostCurrency()
+        assertNull(BillingUnitsThreadLocal.getSelfCostCurrency())
+    }
+
+    @Test
+    fun `clearAll should also clear self-cost currency`() {
+        BillingUnitsThreadLocal.setSelfCostUnits(70L)
+        BillingUnitsThreadLocal.setSelfCostCurrency("USD")
+        BillingUnitsThreadLocal.clearAll()
+        assertNull(BillingUnitsThreadLocal.getSelfCostUnits())
+        assertNull(BillingUnitsThreadLocal.getSelfCostCurrency())
+    }
+
+    @Test
+    fun `self-cost currency is independent of the client billing currency type`() {
+        // Клиентская стоимость и себестоимость живут в РАЗНЫХ валютах: клиенту считаем в рублях,
+        // вендор тарифицирует нас в своей. Один канал не должен подменять другой.
+        BillingUnitsThreadLocal.setBillingCurrencyType("RUB")
+        BillingUnitsThreadLocal.setSelfCostCurrency("USD")
+
+        assertEquals("RUB", BillingUnitsThreadLocal.getBillingCurrencyType())
+        assertEquals("USD", BillingUnitsThreadLocal.getSelfCostCurrency())
+    }
+
+    @Test
+    fun `should maintain thread isolation for self-cost currency`() {
+        BillingUnitsThreadLocal.setSelfCostCurrency("USD")
+        val threadResults = mutableListOf<String?>()
+        val thread = Thread {
+            threadResults.add(BillingUnitsThreadLocal.getSelfCostCurrency())
+            BillingUnitsThreadLocal.setSelfCostCurrency("RUB")
+            threadResults.add(BillingUnitsThreadLocal.getSelfCostCurrency())
+        }
+        thread.start()
+        thread.join()
+
+        assertEquals("USD", BillingUnitsThreadLocal.getSelfCostCurrency())
+        assertEquals(2, threadResults.size)
+        assertNull(threadResults[0])
+        assertEquals("RUB", threadResults[1])
     }
 
     @Test

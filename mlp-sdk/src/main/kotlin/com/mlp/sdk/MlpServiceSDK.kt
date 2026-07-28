@@ -10,6 +10,7 @@ import com.mlp.sdk.datatypes.billing.DeferredBillingParams
 import com.mlp.sdk.utils.BILLING_CURRENCY_TYPE_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_DETAILS_HEADER
 import com.mlp.sdk.utils.CUSTOM_BILLING_HEADER
+import com.mlp.sdk.utils.CUSTOM_SELF_COST_CURRENCY_HEADER
 import com.mlp.sdk.utils.CUSTOM_SELF_COST_HEADER
 import com.mlp.sdk.utils.JSON
 import com.mlp.sdk.utils.JSON.asJson
@@ -220,6 +221,9 @@ class MlpServiceSDK(
      * @param price Optional billing units for this response
      * @param billingDetails Optional detailed billing breakdown
      * @param billingCurrencyType Optional billing currency type
+     * @param selfCost Optional provider self-cost in micro units of the vendor's native currency
+     * @param selfCostCurrency ISO 4217 of [selfCost]; without it the consumer ignores the amount,
+     *   because micro-USD cannot be told from micro-RUB
      */
     suspend fun sendPartialResponse(
         requestId: Long,
@@ -230,6 +234,7 @@ class MlpServiceSDK(
         billingDetails: Map<String, Long>? = null,
         billingCurrencyType: String? = null,
         selfCost: Long? = null,
+        selfCostCurrency: String? = null,
     ) {
         val payloadProto = when (payload) {
             is Payload -> PayloadProto.newBuilder()
@@ -264,6 +269,7 @@ class MlpServiceSDK(
         if (billingDetails != null) builder.putHeaders(CUSTOM_BILLING_DETAILS_HEADER, JSON.stringify(billingDetails))
         if (billingCurrencyType != null) builder.putHeaders(BILLING_CURRENCY_TYPE_HEADER, billingCurrencyType)
         if (selfCost != null) builder.putHeaders(CUSTOM_SELF_COST_HEADER, selfCost.toString())
+        if (selfCostCurrency != null) builder.putHeaders(CUSTOM_SELF_COST_CURRENCY_HEADER, selfCostCurrency)
 
         send(connectorId, builder)
     }

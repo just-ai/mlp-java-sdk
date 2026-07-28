@@ -9,12 +9,26 @@ const val CUSTOM_BILLING_HEADER = "Z-custom-billing"
 const val CUSTOM_BILLING_DETAILS_HEADER = "Z-custom-billing-details"
 
 /**
- * Себестоимость запроса (provider self-cost), micro-currency того же масштаба, что [CUSTOM_BILLING_HEADER].
- * Отдельный от клиентской стоимости канал: gateway агрегирует его только для админ-observability
- * (метрики/лог), клиенту НЕ передаётся. Необязательный — при отсутствии gateway делает BC-fallback
- * (self-cost = client cost).
+ * Себестоимость запроса (provider self-cost) в micro НАТИВНОЙ валюты вендора — той, в которой он
+ * тарифицирует нас, — а валюта едет в [CUSTOM_SELF_COST_CURRENCY_HEADER].
+ *
+ * ВНИМАНИЕ, единица изменилась (CAILA-6308): раньше здесь было заявлено «micro-currency того же
+ * масштаба, что [CUSTOM_BILLING_HEADER]», то есть валюта платформы. На практике адаптеры отдавали
+ * валюту вендора (veai — USD), потому что вендорский инвойс сверяют в ней, а не в рублях; при этом
+ * потребитель считал значение рублёвым и занижал себестоимость в курс раз. Теперь валюта передаётся
+ * явно, а сумма без валюты потребителем игнорируется.
+ *
+ * Отдельный от клиентской стоимости канал: клиенту НЕ передаётся, только админ-агрегация в биллинге
+ * и метрики. Необязательный: нет header'ов — нет данных о себестоимости (не ноль и не клиентская
+ * цена).
  */
 const val CUSTOM_SELF_COST_HEADER = "Z-custom-self-cost"
+
+/**
+ * ISO 4217 валюты [CUSTOM_SELF_COST_HEADER] (например `USD`, `RUB`). Без неё сумма себестоимости не
+ * интерпретируема — micro-USD не отличить от micro-RUB, — поэтому потребитель такую пару отбрасывает.
+ */
+const val CUSTOM_SELF_COST_CURRENCY_HEADER = "Z-custom-self-cost-currency"
 const val DEFERRED_BILLING_ID_HEADER = "Z-deferred-billing-id"
 const val RECURRING_BILLING_ID_HEADER = "Z-recurring-billing-id"
 const val BILLING_CURRENCY_TYPE_HEADER = "Z-billing-currency-type"

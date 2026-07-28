@@ -15,9 +15,14 @@ object BillingUnitsThreadLocal {
 
     private val detailedUnits = ThreadLocal<Map<String, Long>>()
 
-    // Себестоимость (provider self-cost), micro-currency того же масштаба, что units.
+    // Себестоимость (provider self-cost) в micro НАТИВНОЙ валюты вендора — той, в которой он
+    // тарифицирует нас (у OhMyCode это USD, у Яндекса рубли). Валюта едет рядом, в
+    // selfCostCurrency: без неё сумма не интерпретируема, и потребитель её игнорирует.
     // Отдельный от клиентской стоимости канал → header Z-custom-self-cost (см. PayloadMappers).
     private val selfCostUnits = ThreadLocal<Long>()
+
+    // ISO 4217 валюты selfCostUnits → header Z-custom-self-cost-currency.
+    private val selfCostCurrency = ThreadLocal<String>()
 
     private val deferredBillingRequestId = ThreadLocal<String>()
 
@@ -29,12 +34,17 @@ object BillingUnitsThreadLocal {
         clearUnits()
         clearDetails()
         clearSelfCostUnits()
+        clearSelfCostCurrency()
         clearDeferredBillingRequestId()
         clearBillingCurrencyType()
     }
 
     fun clearSelfCostUnits() {
         selfCostUnits.set(null)
+    }
+
+    fun clearSelfCostCurrency() {
+        selfCostCurrency.set(null)
     }
 
     fun clearUnits() {
@@ -69,6 +79,10 @@ object BillingUnitsThreadLocal {
         this.selfCostUnits.set(units)
     }
 
+    fun setSelfCostCurrency(currency: String) {
+        this.selfCostCurrency.set(currency)
+    }
+
     fun setDeferredBillingRequestId(id: String) {
         this.deferredBillingRequestId.set(id)
     }
@@ -91,6 +105,10 @@ object BillingUnitsThreadLocal {
 
     fun getSelfCostUnits(): Long? {
         return selfCostUnits.get()
+    }
+
+    fun getSelfCostCurrency(): String? {
+        return selfCostCurrency.get()
     }
 
     fun getDeferredBillingRequestId(): String? {
