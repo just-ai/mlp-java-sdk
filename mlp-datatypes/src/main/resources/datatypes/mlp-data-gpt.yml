@@ -666,3 +666,4 @@ components:
         - MODERATIONS
         - COMPLETIONS
         - VIDEO_GENERATION
+        - MUSIC_GENERATION
