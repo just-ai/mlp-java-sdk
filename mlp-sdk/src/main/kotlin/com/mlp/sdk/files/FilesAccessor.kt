@@ -8,6 +8,7 @@ import com.mlp.sdk.getRestTemplateWithFileConverter
 import java.io.File
 import java.io.File.createTempFile
 import java.io.InputStream
+import java.nio.file.Files
 import java.util.UUID
 
 class FilesAccessor(
@@ -68,10 +69,9 @@ class FilesAccessor(
     }
 
     private fun writeByApi(stream: InputStream, key: FileId? = null, options: FileOptions? = null): FileData {
-        val tempFile = createTempFile("mlp", "file")
-        writeToFile(tempFile, stream)
-
-        return writeByApi(tempFile, key, options)
+        return withTemporaryFile(stream) { tempFile ->
+            writeByApi(tempFile, key, options)
+        }
     }
 
     private fun onlyApi() = mountPath == null || backendName == null
@@ -79,12 +79,36 @@ class FilesAccessor(
 
 typealias FileId = String
 
+internal fun <T> withTemporaryFile(stream: InputStream, action: (File) -> T): T {
+    val tempFile = createTempFile("mlp", "file")
+    var primaryFailure: Throwable? = null
+
+    try {
+        writeToFile(tempFile, stream)
+        return action(tempFile)
+    } catch (failure: Throwable) {
+        primaryFailure = failure
+        throw failure
+    } finally {
+        try {
+            Files.deleteIfExists(tempFile.toPath())
+        } catch (cleanupFailure: Throwable) {
+            val failure = primaryFailure
+            if (failure == null) {
+                throw cleanupFailure
+            }
+            failure.addSuppressed(cleanupFailure)
+        }
+    }
+}
+
 private fun writeToFile(tempFile: File, stream: InputStream) {
     if (!tempFile.exists())
         tempFile.createNewFile()
 
-    tempFile.outputStream().use {
-        stream.copyTo(it)
+    stream.use { input ->
+        tempFile.outputStream().use { output ->
+            input.copyTo(output)
+        }
     }
-    stream.close()
 }
