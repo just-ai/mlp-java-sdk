@@ -1,0 +1,16 @@
+# Собственный контур проверок компонента для подключения к mlp-foundation.
+version: 2
+
+phases:
+  pre-commit:
+    - checks/check-secrets.sh
+    - checks/check-build.sh
+
+checks:
+  checks/check-secrets.sh:
+    purpose: В staged-изменениях нет секретов (gitleaks protect --staged).
+    provides: [secrets]
+
+  checks/check-build.sh:
+    purpose: Весь Maven reactor собирается, а JUnit4-тесты legacy-линии реально выполняются тем же Surefire 2.12.4, что и в Jenkins.
+    provides: [build]
