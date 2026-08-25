@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Состав и порядок проверок объявлены в checks/registry.yaml.
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+./checks/check-secrets.sh
+./checks/check-build.sh
