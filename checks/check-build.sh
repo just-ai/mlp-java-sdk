@@ -12,7 +12,9 @@ set -euo pipefail
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
-if git diff --cached --quiet -- +  '*.java' '*.kt' '*.kts' '*pom.xml' '*src/*' +  'Jenkinsfile' 'checks/check-build.sh'; then
+if git diff --cached --quiet -- \
+  '*.java' '*.kt' '*.kts' '*pom.xml' '*src/*' \
+  'Jenkinsfile' 'checks/check-build.sh'; then
   exit 0
 fi
 
