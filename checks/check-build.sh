@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-# Сборка и тесты legacy SDK до коммита.
+# Сборка и тесты JVM SDK до коммита.
 #
-# Jenkins собирает весь reactor и запускает Maven Surefire 2.12.4. В ветке
-# CAILA-5168 есть JUnit5-тесты без JUnit Platform provider: современный локальный
-# Maven подхватывает их другим Surefire и получает известные baseline-падения, а
-# Jenkins исполняет JUnit4-контур. Поэтому проверка явно фиксирует серверный
-# runner: сначала пакетирует весь reactor, затем запускает все обнаруживаемые
-# JUnit4-тесты mlp-sdk на Surefire 2.12.4.
+# Jenkins собирает весь reactor. В POM нет закреплённой современной версии
+# Surefire, поэтому Maven по умолчанию может не увидеть JUnit 5. Проверка сначала
+# пакетирует reactor, затем явно запускает тесты mlp-sdk через JUnit Platform.
 set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
@@ -28,4 +25,4 @@ if ! command -v mvn >/dev/null 2>&1; then
 fi
 
 mvn -B -DskipTests package
-mvn -B -pl mlp-sdk test-compile org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test
+mvn -B -pl mlp-sdk test-compile org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test

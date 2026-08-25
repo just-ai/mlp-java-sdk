@@ -12,5 +12,5 @@ checks:
     provides: [secrets]
 
   checks/check-build.sh:
-    purpose: Весь Maven reactor собирается, а JUnit4-тесты legacy-линии реально выполняются тем же Surefire 2.12.4, что и в Jenkins.
+    purpose: Весь Maven reactor собирается, а JUnit 5-тесты mlp-sdk реально выполняются через JUnit Platform.
     provides: [build]
