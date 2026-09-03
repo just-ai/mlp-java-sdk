@@ -633,9 +633,6 @@ components:
 
     Model:
       properties:
-        object:
-          type: string
-          default: model
         id:
           type: string
         created:
@@ -648,6 +645,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ModelRequestType'
+        object:
+          type: string
+          default: model
       required:
         - id
         - created
