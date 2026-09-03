@@ -8,11 +8,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * 
  * @param &#x60;data&#x60; 
+ * @param &#x60;object&#x60; 
  */
 data class ListModelsResponse(
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("data", required = true) val `data`: kotlin.collections.List<Model>
+    @get:JsonProperty("data", required = true) val `data`: kotlin.collections.List<Model>,
+
+    @Schema(example = "null", description = "")
+    @get:JsonProperty("object") val `object`: kotlin.String? = "list"
 ) {
 
 }

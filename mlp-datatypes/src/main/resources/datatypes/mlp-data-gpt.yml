@@ -621,12 +621,14 @@ components:
     ListModelsResponse:
       type: object
       properties:
+        object:
+          type: string
+          default: list
         data:
           type: array
           items:
             $ref: "#/components/schemas/Model"
       required:
-        - object
         - data
 
     Model:
@@ -643,6 +645,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ModelRequestType'
+        object:
+          type: string
+          default: model
       required:
         - id
         - created
