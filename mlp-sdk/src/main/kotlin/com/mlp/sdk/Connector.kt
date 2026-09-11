@@ -137,6 +137,14 @@ class Connector(
     }
 
     private suspend fun tryGrpcShutdown() {
+        // Канал в состоянии SHUTTING_DOWN уже останавливается по своему сценарию
+        // (stopServing -> дренаж -> half-close) и со своим бюджетом. Добивать его здесь
+        // значит рвать активные запросы ровно в тот момент, ради которого дренаж и заведён.
+        if (grpcChannel?.state?.shuttingDown == true) {
+            logger.debug("{}: grpc channel is shutting down gracefully, not forcing shutdown", this@Connector)
+            return
+        }
+
         runCatching {
             grpcChannelRef.getAndSet(null)
                 ?.shutdownNow()
@@ -202,7 +210,9 @@ class Connector(
 
     suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto.Builder) {
         val channel = grpcChannel
-        if (channel != null && channel.state.active) {
+        // SHUTTING_DOWN — рабочее состояние для ответов: во время дренажа остановки канал ещё жив,
+        // и ответ должен уйти в гейт, а не осесть в буфере реконнекта, которого уже не будет.
+        if (channel != null && channel.isAvailableToSend()) {
             try {
                 channel.send(grpcResponse)
                 return
@@ -242,7 +252,7 @@ class Connector(
         grpcChannel?.state?.active == true
 
     internal fun isAvailableToSendGrpc(): Boolean =
-        isGrpcChannelActive() || grpcChannel?.state?.shuttingDown == true
+        grpcChannel?.isAvailableToSend() == true
 
     internal fun isGrpcChannelShutDownOrNull(): Boolean =
         grpcChannel == null || grpcChannel?.state?.shutdown == true

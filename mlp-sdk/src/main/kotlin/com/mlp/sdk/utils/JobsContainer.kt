@@ -3,6 +3,7 @@ package com.mlp.sdk.utils
 import com.mlp.sdk.MlpServiceConfig
 import com.mlp.sdk.RequestContext
 import java.time.Duration.ofMillis
+import java.time.Instant
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -15,9 +16,26 @@ class JobsContainer(
 
     private val containers = ConcurrentHashMap<Long, ConnectorContainer>()
 
+    /**
+     * Вызывается при (пере)подключении коннектора: контейнер снова принимает задачи.
+     * Сброс флага обязателен — после остановки, инициированной гейтом, тот же connectorId
+     * переподключается, и без сброса он навсегда остался бы закрытым для новых запросов.
+     */
     fun initContainer(connectorId: Long) {
         containers.computeIfAbsent(connectorId) { ConnectorContainer() }
+            .disabledAllNewRequests.set(false)
         logger.info("$this: enable new tasks of connector $connectorId")
+    }
+
+    /**
+     * Закрывает приём новых задач коннектора, не трогая уже выполняющиеся.
+     * Первый шаг остановки: пока идёт дренаж, гейт не должен получить ответ
+     * на запрос, который мы уже не собираемся обрабатывать.
+     */
+    fun disableNewJobs(connectorId: Long) {
+        containers.computeIfAbsent(connectorId) { ConnectorContainer() }
+            .disabledAllNewRequests.set(true)
+        logger.info("$this: disable new tasks of connector $connectorId")
     }
 
     fun canProcessNewJobs(connectorId: Long): Boolean {
@@ -55,21 +73,41 @@ class JobsContainer(
         }
     }
 
-    suspend fun gracefulShutdownByConnector(connectorId: Long) {
+    /**
+     * Ждёт завершения активных задач коннектора до [deadline] и отменяет то, что не успело.
+     *
+     * [deadline] приходит снаружи, потому что бюджет остановки один на весь сценарий
+     * (stopServing → дренаж → half-close), а не на этот вызов.
+     * [abortEarly] прекращает ожидание, когда канал уже закрыт гейтом: ответы всё равно
+     * некуда отдавать, и держать остановку до конца бюджета бессмысленно.
+     */
+    suspend fun gracefulShutdownByConnector(
+        connectorId: Long,
+        deadline: Instant = now() + ofMillis(config.shutdownConfig.actionConnectorMs),
+        abortEarly: () -> Boolean = { false },
+    ) {
         val container = containers[connectorId] ?: return
 
-        val deadline = now() + ofMillis(config.shutdownConfig.actionConnectorMs)
         while (now() < deadline) {
-            val allJobsComplete = container
-                .requestJobMap
-                .isEmpty()
-            if (allJobsComplete) {
+            if (container.requestJobMap.isEmpty()) {
                 logger.info("$this: graceful shutdown all tasks of connector $connectorId")
                 return
             }
-            delay(100)
+            if (abortEarly()) {
+                logger.warn(
+                    "$this: grpc channel of connector $connectorId is already closed, " +
+                            "cancelling ${container.requestJobMap.size} in-flight task(s) without waiting for the deadline"
+                )
+                container.cancelAll()
+                return
+            }
+            delay(50)
         }
 
+        logger.warn(
+            "$this: graceful shutdown budget of connector $connectorId is over, " +
+                    "cancelling ${container.requestJobMap.size} in-flight task(s)"
+        )
         container.cancelAll()
     }
 

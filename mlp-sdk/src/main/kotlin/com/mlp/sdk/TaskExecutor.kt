@@ -2,6 +2,9 @@ package com.mlp.sdk
 
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
+import java.time.Duration.ofMillis
+import java.time.Instant
+import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors.newFixedThreadPool
 import kotlinx.coroutines.CoroutineDispatcher
@@ -90,14 +93,24 @@ class TaskExecutor(
         jobsContainer.initContainer(connectorId)
     }
 
+    fun disableNewJobs(connectorId: Long) {
+        logger.info("$this: disable new requests for connector $connectorId")
+        jobsContainer.disableNewJobs(connectorId)
+    }
+
     fun cancelAll() {
         logger.info("$this: cancel all tasks")
         runCatching { jobsContainer.cancelAllForever() }
     }
 
-    suspend fun gracefulShutdownAll(connectorId: Long) {
+    suspend fun gracefulShutdownAll(
+        connectorId: Long,
+        deadline: Instant = now() + ofMillis(config.shutdownConfig.actionConnectorMs),
+        abortEarly: () -> Boolean = { false },
+    ) {
         logger.info("$this: graceful shutting down all tasks of connector $connectorId ...")
-        runCatching { jobsContainer.gracefulShutdownByConnector(connectorId) }
+        runCatching { jobsContainer.gracefulShutdownByConnector(connectorId, deadline, abortEarly) }
+            .onFailure { logger.error("$this: error while graceful shutting down tasks of connector $connectorId", it) }
         logger.info("$this: graceful shut down all tasks of connector $connectorId")
     }
 

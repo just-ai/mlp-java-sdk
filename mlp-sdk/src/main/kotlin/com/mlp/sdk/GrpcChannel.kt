@@ -18,15 +18,16 @@ import java.io.File
 import java.time.Duration
 import java.time.Duration.between
 import java.time.Duration.ofMillis
+import java.time.Instant
 import java.time.Instant.now
 import java.util.concurrent.TimeUnit.SECONDS
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
 
 class GrpcChannel(
     private val connector: Connector,
@@ -49,6 +50,14 @@ class GrpcChannel(
 
     private val grpcMutex = Mutex()
 
+    /** Half-close делаем ровно один раз, кто бы ни начал остановку — мы или гейт. */
+    private val streamCompleted = AtomicBoolean(false)
+    private val shutdownMutex = Mutex()
+
+    /** Гейт закрыл свою половину стрима: дальше ждать завершения запросов бессмысленно. */
+    @Volatile
+    private var gateStreamClosed = false
+
     init {
         launchHeartbeatJob()
     }
@@ -58,6 +67,7 @@ class GrpcChannel(
     }
 
     override fun onError(e: Throwable) {
+        gateStreamClosed = true
         if (e is StatusRuntimeException && e.status == Status.UNAVAILABLE) {
             // shutdown method has been called
             return
@@ -69,6 +79,7 @@ class GrpcChannel(
     }
 
     override fun onCompleted() {
+        gateStreamClosed = true
         state.shuttingDown()
         logger.info("$this: RECEIVED completed")
 
@@ -111,6 +122,8 @@ class GrpcChannel(
         check(!state.notStarted && !state.shutdown) { "$this: can't send message in state $state" }
 
         grpcMutex.withLock {
+            check(!streamCompleted.get()) { "$this: can't send message, stream is already half-closed" }
+
             val built = grpcResponse.build()
 
             if (built.hasHeartBeat()) {
@@ -136,6 +149,10 @@ class GrpcChannel(
         }
     }
 
+    /** Канал может отправлять: активен или доживает остановку (дренаж до half-close). */
+    fun isAvailableToSend(): Boolean =
+        (state.active || state.shuttingDown) && !streamCompleted.get()
+
     fun updateHeartbeat(intervalMs: Long) {
         lastServerHeartbeat.set(now())
 
@@ -144,51 +161,96 @@ class GrpcChannel(
         }
     }
 
+    /**
+     * Остановка по нашей инициативе (SIGTERM). Порядок обязателен и держится на контракте гейта:
+     * по нашему stopServing гейт перестаёт маршрутизировать новые запросы, а соединение добивает
+     * только по half-close. Поэтому сначала stopServing, потом дренаж активных запросов в пределах
+     * MLP_GRACEFUL_SHUTDOWN_CONNECTOR_MS и лишь затем half-close.
+     * Ответного stopServing от гейта не ждём: ждать надо задачи, а не ack.
+     */
     suspend fun gracefulShutdown() {
-        if (state.isShutdownTypeState())
+        if (state.shutdown)
             return
+
+        val deadline = now() + ofMillis(config.shutdownConfig.actionConnectorMs)
+
+        if (state.shuttingDown) {
+            // Остановку уже ведёт другой сценарий (stopServing от гейта). Не выходим сразу:
+            // иначе пул посчитает коннектор остановленным, и JVM выйдет посреди дренажа.
+            connector.logConnecting("{}: shutdown is already in progress, waiting for it to finish ...", this)
+            awaitShutdown(deadline.plusSeconds(MANAGED_CHANNEL_SHUTDOWN_TIMEOUT_SEC))
+            return
+        }
 
         connector.logConnecting("{}: graceful shutting down grpc channel ...", this)
         state.shuttingDown()
+
+        executor.disableNewJobs(connectorId)
 
         if (!this::stream.isInitialized) {
             connector.logConnecting("{}: ... stream is not initialized, skipping stream completion ...", this)
             return gracefulShutdownManagedChannel()
         }
 
-        runCatching {
-            send(stopServingProto)
-            connector.logConnecting("{}: sent stopServing to gate, waiting for stopServing from gate ...", this)
+        runCatching { send(stopServingProto) }
+            .onFailure { logger.error("$this: can't send stop serving, continue shutdown ...", it) }
+        connector.logConnecting("{}: sent stopServing to gate, draining in-flight requests ...", this)
 
-            withTimeout(config.shutdownConfig.actionConnectorMs) {
-                while (!state.shutdown) {
-                    delay(100)
-                }
-            }
-        }.onFailure { logger.error("$this: can't send stop serving, continue shutdown ...", it) }
-
-        if (!state.shutdown) {
-            shutdownNow()
-        }
+        drainAndCompleteStream(deadline)
     }
 
+    /**
+     * Остановка по инициативе гейта (его stopServing, рестарт гейта, неизвестный токен).
+     * Свою половину стрима закрываем так же — только после дренажа: гейт ждёт наш half-close.
+     */
     fun gracefulShutdownFromGate(reason: String? = null) {
+        if (state.shutdown)
+            return
+
         state.shuttingDown()
+        state.shutdownReason = reason
+
+        val deadline = now() + ofMillis(config.shutdownConfig.actionConnectorMs)
+        executor.disableNewJobs(connectorId)
 
         scope.launch {
-            gracefulShutdownPrivate()
-            state.shutdownReason = reason
+            drainAndCompleteStream(deadline)
         }
     }
 
-    private suspend fun gracefulShutdownPrivate() {
-        connector.logConnecting("{}: completing stream to {} ...", this, connector.targetUrl)
-
-        grpcMutex.withLock {
-            stream.onCompleted()
+    /**
+     * Общий хвост остановки: дождаться активных запросов коннектора до [deadline],
+     * закрыть свою половину стрима и погасить managed channel.
+     * Идемпотентен — параллельные остановки (наша и от гейта) не дублируют half-close.
+     */
+    private suspend fun drainAndCompleteStream(deadline: Instant) {
+        shutdownMutex.withLock {
+            if (!streamCompleted.get()) {
+                executor.gracefulShutdownAll(connectorId, deadline) { gateStreamClosed || state.shutdown }
+                completeStreamOnce()
+            }
         }
 
         gracefulShutdownManagedChannel()
+    }
+
+    private suspend fun awaitShutdown(until: Instant) {
+        while (!state.shutdown && now() < until) {
+            delay(50)
+        }
+    }
+
+    private suspend fun completeStreamOnce() {
+        if (!this::stream.isInitialized)
+            return
+        if (!streamCompleted.compareAndSet(false, true))
+            return
+
+        connector.logConnecting("{}: completing stream to {} ...", this, connector.targetUrl)
+        grpcMutex.withLock {
+            runCatching { stream.onCompleted() }
+                .onFailure { logger.warn("$this: can't complete stream: ${it.message}") }
+        }
     }
 
     suspend fun shutdownNow() {
@@ -207,11 +269,7 @@ class GrpcChannel(
         runCatching { send(stopServingProto) }
             .onFailure { logger.error("$this: can't send stop serving", it) }
 
-        connector.logConnecting("{}: completing stream to {} ...", this, connector.targetUrl)
-
-        grpcMutex.withLock {
-            stream.onCompleted()
-        }
+        completeStreamOnce()
 
         shutdownNowManagedChannel()
     }
@@ -265,7 +323,7 @@ class GrpcChannel(
             managedChannel.shutdown()
             state.shutdown()
 
-            val timeoutSeconds = 10L
+            val timeoutSeconds = MANAGED_CHANNEL_SHUTDOWN_TIMEOUT_SEC
             if (managedChannel.awaitTermination(timeoutSeconds, SECONDS)) {
                 return connector.logConnecting("{}: ... managed channel has been successfully shutdown", this)
             }
@@ -305,7 +363,7 @@ class GrpcChannel(
     private fun launchHeartbeatJob() = scope.launch {
         connector.logConnecting("Connector {}: starting heartbeats with interval {} ms", connectorId, heartbeatInterval)
 
-        while (!state.shutdown) {
+        while (!state.shutdown && !streamCompleted.get()) {
             val interval = heartbeatInterval.get()
 
             if (interval == null) {
@@ -344,6 +402,7 @@ class GrpcChannel(
 
     companion object {
         private const val LIVENESS_PROBE = "/tmp/liveness-probe"
+        private const val MANAGED_CHANNEL_SHUTDOWN_TIMEOUT_SEC = 10L
 
         private val stopServingProto: ServiceToGateProto.Builder =
             ServiceToGateProto.newBuilder().setStopServing(StopServingProto.getDefaultInstance())
