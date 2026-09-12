@@ -137,6 +137,14 @@ class Connector(
     }
 
     private suspend fun tryGrpcShutdown() {
+        // Канал в состоянии SHUTTING_DOWN уже останавливается по своему сценарию
+        // (stopServing -> дренаж -> half-close) и со своим бюджетом. Добивать его здесь
+        // значит рвать активные запросы ровно в тот момент, ради которого дренаж и заведён.
+        if (grpcChannel?.state?.shuttingDown == true) {
+            logger.debug("{}: grpc channel is shutting down gracefully, not forcing shutdown", this@Connector)
+            return
+        }
+
         runCatching {
             grpcChannelRef.getAndSet(null)
                 ?.shutdownNow()
@@ -200,9 +208,41 @@ class Connector(
         )
     }
 
+    /**
+     * Единственная точка выхода сообщений коннектора — здесь же снимается учёт открытого стрима.
+     * Снимаем после попытки отправки (в finally), а не до неё: иначе между «стрим закрыт» и
+     * реальной отправкой финального кадра успел бы пройти дренаж и half-close.
+     */
     suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto.Builder) {
+        try {
+            deliverServiceToGate(grpcResponse)
+        } finally {
+            if (grpcResponse.isStreamTerminal()) {
+                executor.streamFinished(connectorId, grpcResponse.requestId)
+            } else if (grpcResponse.hasPartialPredict() && grpcResponse.requestId != 0L) {
+                executor.streamTouched(connectorId, grpcResponse.requestId)
+            }
+        }
+    }
+
+    /**
+     * Кадр закрывает стрим запроса: финальный partialPredict, обычный ответ predict или ошибка.
+     * startPartialPredict (partialPredict со start=true и finish=false) стрим как раз открывает,
+     * поэтому терминальным не считается.
+     */
+    private fun ServiceToGateProto.Builder.isStreamTerminal(): Boolean = when {
+        requestId == 0L -> false
+        hasPartialPredict() -> partialPredict.finish
+        hasPredict() -> true
+        hasError() -> true
+        else -> false
+    }
+
+    private suspend fun deliverServiceToGate(grpcResponse: ServiceToGateProto.Builder) {
         val channel = grpcChannel
-        if (channel != null && channel.state.active) {
+        // SHUTTING_DOWN — рабочее состояние для ответов: во время дренажа остановки канал ещё жив,
+        // и ответ должен уйти в гейт, а не осесть в буфере реконнекта, которого уже не будет.
+        if (channel != null && channel.isAvailableToSend()) {
             try {
                 channel.send(grpcResponse)
                 return
@@ -242,7 +282,7 @@ class Connector(
         grpcChannel?.state?.active == true
 
     internal fun isAvailableToSendGrpc(): Boolean =
-        isGrpcChannelActive() || grpcChannel?.state?.shuttingDown == true
+        grpcChannel?.isAvailableToSend() == true
 
     internal fun isGrpcChannelShutDownOrNull(): Boolean =
         grpcChannel == null || grpcChannel?.state?.shutdown == true

@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -54,9 +55,17 @@ class ConnectorsPool(
             state.shuttingDown()
             logger.info("$this: graceful shutting down connectors pool ...")
 
-            connectors.values.forEach {
-                scope.launch { it.gracefulShutdown() }
-            }
+            // Дожидаемся коннекторов: пул считается остановленным только когда каждый из них
+            // отправил stopServing, слил активные запросы и закрыл стрим. Fire-and-forget здесь
+            // означал бы выход JVM раньше, чем гейт получил ответы.
+            connectors.values
+                .map { connector ->
+                    scope.launch {
+                        runCatching { connector.gracefulShutdown() }
+                            .onFailure { logger.error("$this: error while graceful shutting down $connector", it) }
+                    }
+                }
+                .joinAll()
 
             state.shutdown()
             logger.info("$this: ... connectors pool is shut down")

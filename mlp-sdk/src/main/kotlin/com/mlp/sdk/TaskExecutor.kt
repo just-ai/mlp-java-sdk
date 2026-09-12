@@ -2,6 +2,9 @@ package com.mlp.sdk
 
 import com.mlp.sdk.State.Condition.ACTIVE
 import com.mlp.sdk.utils.JobsContainer
+import java.time.Duration.ofMillis
+import java.time.Instant
+import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors.newFixedThreadPool
 import kotlinx.coroutines.CoroutineDispatcher
@@ -85,9 +88,32 @@ class TaskExecutor(
         jobsContainer.cancelRequest(connectorId, requestId)
     }
 
+    /**
+     * Запрос открыл стрим: кадры уйдут вне его job (predict отдал MlpPartialBinaryResponse).
+     * До финального кадра такой запрос считается активным при дренаже остановки.
+     */
+    fun streamOpened(connectorId: Long, requestId: Long) {
+        jobsContainer.streamOpened(connectorId, requestId)
+    }
+
+    /** Стрим запроса завершён: ушёл финальный кадр, обычный ответ или ошибка. */
+    fun streamFinished(connectorId: Long, requestId: Long) {
+        jobsContainer.streamFinished(connectorId, requestId)
+    }
+
+    /** По стриму ушёл очередной кадр: запись считается живой, а не брошенной. */
+    fun streamTouched(connectorId: Long, requestId: Long) {
+        jobsContainer.streamTouched(connectorId, requestId)
+    }
+
     fun initContainer(connectorId: Long) {
         logger.info("$this: enable new requests for connector $connectorId")
         jobsContainer.initContainer(connectorId)
+    }
+
+    fun disableNewJobs(connectorId: Long) {
+        logger.info("$this: disable new requests for connector $connectorId")
+        jobsContainer.disableNewJobs(connectorId)
     }
 
     fun cancelAll() {
@@ -95,9 +121,14 @@ class TaskExecutor(
         runCatching { jobsContainer.cancelAllForever() }
     }
 
-    suspend fun gracefulShutdownAll(connectorId: Long) {
+    suspend fun gracefulShutdownAll(
+        connectorId: Long,
+        deadline: Instant = now() + ofMillis(config.shutdownConfig.actionConnectorMs),
+        abortEarly: () -> Boolean = { false },
+    ) {
         logger.info("$this: graceful shutting down all tasks of connector $connectorId ...")
-        runCatching { jobsContainer.gracefulShutdownByConnector(connectorId) }
+        runCatching { jobsContainer.gracefulShutdownByConnector(connectorId, deadline, abortEarly) }
+            .onFailure { logger.error("$this: error while graceful shutting down tasks of connector $connectorId", it) }
         logger.info("$this: graceful shut down all tasks of connector $connectorId")
     }
 

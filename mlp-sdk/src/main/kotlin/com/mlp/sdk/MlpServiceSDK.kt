@@ -100,6 +100,9 @@ class MlpServiceSDK(
 
         state.shuttingDown()
 
+        // Пул возвращает управление только после дренажа всех коннекторов, поэтому cancelAll
+        // здесь — страховка от задач, которые не привязаны к живому коннектору, а не способ
+        // остановки: отменять активные запросы до отправки ответов нельзя.
         runBlocking {
             taskExecutor.connectorsPool
                 .gracefulShutdown()
@@ -282,8 +285,12 @@ class MlpServiceSDK(
     }
 
     private fun startupProbe() {
-        File(STARTUP_PROBE_FILE_PATH)
-            .writeText("${currentTimeMillis() / 1000}")
+        // Probe-файл нужен только оркестратору в контейнере; там, где каталога нет
+        // (локальный запуск, тесты, не-Linux), это не повод ронять старт сервиса.
+        runCatching {
+            File(STARTUP_PROBE_FILE_PATH)
+                .writeText("${currentTimeMillis() / 1000}")
+        }.onFailure { logger.error("Can't write startup probe file $STARTUP_PROBE_FILE_PATH: ${it.message}") }
     }
 
     override fun toString() = SDK_COMPONENT_NAME

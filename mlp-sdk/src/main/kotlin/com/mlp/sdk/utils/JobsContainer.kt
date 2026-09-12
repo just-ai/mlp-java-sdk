@@ -3,6 +3,7 @@ package com.mlp.sdk.utils
 import com.mlp.sdk.MlpServiceConfig
 import com.mlp.sdk.RequestContext
 import java.time.Duration.ofMillis
+import java.time.Instant
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -15,14 +16,80 @@ class JobsContainer(
 
     private val containers = ConcurrentHashMap<Long, ConnectorContainer>()
 
+    /**
+     * Вызывается при (пере)подключении коннектора: контейнер снова принимает задачи.
+     * Сброс флага обязателен — после остановки, инициированной гейтом, тот же connectorId
+     * переподключается, и без сброса он навсегда остался бы закрытым для новых запросов.
+     */
     fun initContainer(connectorId: Long) {
         containers.computeIfAbsent(connectorId) { ConnectorContainer() }
+            .disabledAllNewRequests.set(false)
         logger.info("$this: enable new tasks of connector $connectorId")
+    }
+
+    /**
+     * Закрывает приём новых задач коннектора, не трогая уже выполняющиеся.
+     * Первый шаг остановки: пока идёт дренаж, гейт не должен получить ответ
+     * на запрос, который мы уже не собираемся обрабатывать.
+     */
+    fun disableNewJobs(connectorId: Long) {
+        containers.computeIfAbsent(connectorId) { ConnectorContainer() }
+            .disabledAllNewRequests.set(true)
+        logger.info("$this: disable new tasks of connector $connectorId")
     }
 
     fun canProcessNewJobs(connectorId: Long): Boolean {
         val container = containers[connectorId] ?: return true
         return !container.disabledAllNewRequests.get()
+    }
+
+    /**
+     * Отмечает, что по запросу открыт стрим, кадры которого сервис шлёт сам — вне job запроса
+     * (predict вернул MlpPartialBinaryResponse). Для такого запроса завершение job ничего не
+     * говорит о завершении работы, поэтому дренаж остановки обязан ждать ещё и финальный кадр.
+     */
+    fun streamOpened(connectorId: Long, requestId: Long) {
+        if (requestId == 0L) return
+        val openStreams = containers.computeIfAbsent(connectorId) { ConnectorContainer() }.openStreams
+        if (openStreams.size >= STALE_STREAMS_PRUNE_THRESHOLD) {
+            pruneStaleStreams(openStreams, connectorId)
+        }
+        openStreams[requestId] = now()
+    }
+
+    /** Кадр стрима обновляет метку записи: протухание считается от последнего кадра, а не от открытия. */
+    fun streamTouched(connectorId: Long, requestId: Long) {
+        containers[connectorId]
+            ?.openStreams
+            ?.computeIfPresent(requestId) { _, _ -> now() }
+    }
+
+    /** Финальный кадр стрима ушёл (или запрос завершён иначе) — запрос больше не держит остановку. */
+    fun streamFinished(connectorId: Long, requestId: Long) {
+        containers[connectorId]
+            ?.openStreams
+            ?.remove(requestId)
+    }
+
+    /**
+     * Стрим без единого кадра дольше бюджета остановки считается брошенным:
+     * сервис мог упасть до первого кадра (стартеры кадр в этом случае не шлют) или отправка
+     * оборвалась до [Connector.sendServiceToGate]. Иначе одна такая запись заставляла бы каждую
+     * следующую остановку ждать весь бюджет.
+     */
+    private fun pruneStaleStreams(openStreams: ConcurrentHashMap<Long, Instant>, connectorId: Long) {
+        val staleBefore = now() - ofMillis(config.shutdownConfig.actionConnectorMs)
+        val stale = openStreams.entries.map { it.key to it.value }.filter { it.second < staleBefore }
+        if (stale.isEmpty()) return
+        // Удаляем условно: кадр, пришедший между выборкой и удалением, обновил метку — такую запись не трогаем.
+        stale.forEach { (requestId, openedAt) -> openStreams.remove(requestId, openedAt) }
+        logger.warn("$this: dropped ${stale.size} stale stream record(s) of connector $connectorId (no frame within the shutdown budget)")
+    }
+
+    private fun ConnectorContainer.hasLiveStreams(connectorId: Long): Boolean {
+        if (openStreams.isEmpty()) return false
+        pruneStaleStreams(openStreams, connectorId)
+        return openStreams.isNotEmpty()
     }
 
     fun put(requestContext: RequestContext, job: Job): Boolean {
@@ -41,10 +108,9 @@ class JobsContainer(
     }
 
     fun cancelRequest(connectorId: Long, requestId: Long) {
-        val requestsMap = containers[connectorId]
-            ?.requestJobMap
-            ?: return
-        val job = requestsMap.remove(requestId) ?: return
+        val container = containers[connectorId] ?: return
+        container.openStreams.remove(requestId)
+        val job = container.requestJobMap.remove(requestId) ?: return
         job.cancel()
     }
 
@@ -55,31 +121,66 @@ class JobsContainer(
         }
     }
 
-    suspend fun gracefulShutdownByConnector(connectorId: Long) {
+    /**
+     * Ждёт завершения активных задач коннектора до [deadline] и отменяет то, что не успело.
+     *
+     * Ждать приходится двух вещей: job запросов и открытых стримов. Стрим учитывается отдельно,
+     * потому что сервис может отдать из predict MlpPartialBinaryResponse и досылать кадры из своей
+     * корутины: job такого запроса завершается сразу, и по одному requestJobMap дренаж закончился бы
+     * мгновенно, оборвав стрим half-close'ом на середине.
+     *
+     * [deadline] приходит снаружи, потому что бюджет остановки один на весь сценарий
+     * (stopServing → дренаж → half-close), а не на этот вызов.
+     * [abortEarly] прекращает ожидание, когда канал уже закрыт гейтом: ответы всё равно
+     * некуда отдавать, и держать остановку до конца бюджета бессмысленно.
+     */
+    suspend fun gracefulShutdownByConnector(
+        connectorId: Long,
+        deadline: Instant = now() + ofMillis(config.shutdownConfig.actionConnectorMs),
+        abortEarly: () -> Boolean = { false },
+    ) {
         val container = containers[connectorId] ?: return
 
-        val deadline = now() + ofMillis(config.shutdownConfig.actionConnectorMs)
         while (now() < deadline) {
-            val allJobsComplete = container
-                .requestJobMap
-                .isEmpty()
-            if (allJobsComplete) {
+            if (container.requestJobMap.isEmpty() && !container.hasLiveStreams(connectorId)) {
                 logger.info("$this: graceful shutdown all tasks of connector $connectorId")
                 return
             }
-            delay(100)
+            if (abortEarly()) {
+                logger.warn(
+                    "$this: grpc channel of connector $connectorId is already closed, " +
+                            "cancelling ${container.requestJobMap.size} in-flight task(s) and dropping " +
+                            "${container.openStreams.size} unfinished stream(s) without waiting for the deadline"
+                )
+                container.cancelAll()
+                return
+            }
+            delay(50)
         }
 
+        logger.warn(
+            "$this: graceful shutdown budget of connector $connectorId is over, " +
+                    "cancelling ${container.requestJobMap.size} in-flight task(s) and dropping " +
+                    "${container.openStreams.size} unfinished stream(s)"
+        )
         container.cancelAll()
     }
 
-    private fun ConnectorContainer.cancelAll() = requestJobMap
-        .values
-        .forEach(Job::cancel)
+    private fun ConnectorContainer.cancelAll() {
+        requestJobMap.values.forEach(Job::cancel)
+        // Стрим отменить нечем — его ведёт корутина сервиса. Снимаем с учёта, чтобы остановка
+        // не ждала кадр, которого уже никто не отправит.
+        openStreams.clear()
+    }
 
     companion object {
+        /** С этого размера streamOpened попутно чистит протухшие записи. */
+        private const val STALE_STREAMS_PRUNE_THRESHOLD = 64
+
         private data class ConnectorContainer(
             val requestJobMap: ConcurrentHashMap<Long, Job> = ConcurrentHashMap(),
+            /** gateRequestId запросов, чьи кадры сервис досылает сам, вне job → момент открытия. */
+            val openStreams: ConcurrentHashMap<Long, Instant> = ConcurrentHashMap(),
             val disabledAllNewRequests: AtomicBoolean = AtomicBoolean(false)
         )
     }
