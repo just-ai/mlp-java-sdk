@@ -14,7 +14,9 @@
 - **fit(request: FitRequestProto, requestId: Long, connectorId: Long)**: Обрабатывает запрос на обучение модели.
 - **ext(request: ExtendedRequestProto, requestId: Long, connectorId: Long)**: Обрабатывает расширенный запрос.
 - **batch(request: BatchRequestProto, requestId: Long, connectorId: Long)**: Обрабатывает пакетный запрос.
-- **enableNewTasks(id: Long)**: Включает обработку новых задач для коннектора с указанным идентификатором.
+- **initContainer(connectorId: Long)**: Включает обработку новых задач для коннектора с указанным идентификатором (в том числе после остановки, инициированной гейтом).
+- **disableNewJobs(connectorId: Long)**: Закрывает приём новых задач коннектора, не трогая выполняющиеся (первый шаг остановки).
+- **streamOpened / streamTouched / streamFinished(connectorId: Long, requestId: Long)**: Учёт открытых стримов, которые сервис досылает сам после `MlpPartialBinaryResponse`; проброс в `JobsContainer`.
 - **cancelAll()**: Отменяет все активные задачи.
 - **cancelAll(connectorId: Long)**: Отменяет все задачи конкретного коннектора.
 - **gracefulShutdownAll(connectorId: Long, deadline: Instant = now() + actionConnectorMs, abortEarly: () -> Boolean = { false })**: Дожидается активных задач коннектора до общего дедлайна остановки и отменяет то, что не успело; `abortEarly` прекращает ожидание, когда канал уже закрыт гейтом.

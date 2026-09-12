@@ -216,7 +216,7 @@ class GracefulShutdownTest {
      */
     @Test
     fun `live detached stream older than the budget is still drained`() {
-        val frames = 6
+        val frames = 4 // финальный кадр на ~t800 при дедлайне t1200: запас 400 мс на дрейф раннера
         val service = TestService { context ->
             CoroutineScope(Dispatchers.Default).launch {
                 repeat(frames) { i ->

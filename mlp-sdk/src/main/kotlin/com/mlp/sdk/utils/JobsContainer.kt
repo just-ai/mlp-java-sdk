@@ -57,7 +57,6 @@ class JobsContainer(
         openStreams[requestId] = now()
     }
 
-    /** Финальный кадр стрима ушёл (или запрос завершён иначе) — запрос больше не держит остановку. */
     /** Кадр стрима обновляет метку записи: протухание считается от последнего кадра, а не от открытия. */
     fun streamTouched(connectorId: Long, requestId: Long) {
         containers[connectorId]
@@ -65,6 +64,7 @@ class JobsContainer(
             ?.computeIfPresent(requestId) { _, _ -> now() }
     }
 
+    /** Финальный кадр стрима ушёл (или запрос завершён иначе) — запрос больше не держит остановку. */
     fun streamFinished(connectorId: Long, requestId: Long) {
         containers[connectorId]
             ?.openStreams
@@ -79,9 +79,10 @@ class JobsContainer(
      */
     private fun pruneStaleStreams(openStreams: ConcurrentHashMap<Long, Instant>, connectorId: Long) {
         val staleBefore = now() - ofMillis(config.shutdownConfig.actionConnectorMs)
-        val stale = openStreams.entries.filter { it.value < staleBefore }.map { it.key }
+        val stale = openStreams.entries.map { it.key to it.value }.filter { it.second < staleBefore }
         if (stale.isEmpty()) return
-        stale.forEach { openStreams.remove(it) }
+        // Удаляем условно: кадр, пришедший между выборкой и удалением, обновил метку — такую запись не трогаем.
+        stale.forEach { (requestId, openedAt) -> openStreams.remove(requestId, openedAt) }
         logger.warn("$this: dropped ${stale.size} stale stream record(s) of connector $connectorId (no frame within the shutdown budget)")
     }
 
