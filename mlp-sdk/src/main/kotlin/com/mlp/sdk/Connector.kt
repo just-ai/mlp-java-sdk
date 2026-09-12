@@ -219,6 +219,8 @@ class Connector(
         } finally {
             if (grpcResponse.isStreamTerminal()) {
                 executor.streamFinished(connectorId, grpcResponse.requestId)
+            } else if (grpcResponse.hasPartialPredict() && grpcResponse.requestId != 0L) {
+                executor.streamTouched(connectorId, grpcResponse.requestId)
             }
         }
     }

@@ -188,7 +188,6 @@ class GracefulShutdownTest {
         }
     }
 
-    /** Критерий 3: без активных запросов остановка не ждёт бюджет. */
     /**
      * Брошенный стрим (predict вернул MlpPartialBinaryResponse, а кадров так и не прислал — у стартеров
      * так выглядит сбой до первого чанка) не должен заставлять каждую следующую остановку ждать весь
@@ -211,6 +210,48 @@ class GracefulShutdownTest {
         }
     }
 
+    /**
+     * Живой стрим старше бюджета — не брошенный: каждый кадр обновляет метку записи, поэтому
+     * остановка дожидается его финального кадра, а не срезает как протухший.
+     */
+    @Test
+    fun `live detached stream older than the budget is still drained`() {
+        val frames = 6
+        val service = TestService { context ->
+            CoroutineScope(Dispatchers.Default).launch {
+                repeat(frames) { i ->
+                    delay(200)
+                    sdk.sendPartialResponse(
+                        requestId = context.gateRequestId,
+                        connectorId = context.connectorId,
+                        payload = Payload("application/json", """{"chunk":${i + 1}}"""),
+                        isLast = i == frames - 1,
+                    )
+                }
+            }
+            MlpPartialBinaryResponse()
+        }
+
+        harness(service, actionConnectorMs = 500).use { h ->
+            val stream = h.gate.stream(0)
+            stream.sendPredict(requestId = 1)
+            h.awaitTrue("predict is started") { service.started.isNotEmpty() }
+            Thread.sleep(700) // стрим старше бюджета, но кадры продолжают идти
+
+            h.sdk.gracefulShutdown()
+            h.awaitTrue("gate has received half-close") { stream.indexOfClientCompleted() >= 0 }
+
+            val partials = stream.messages().filter { it.hasPartialPredict() && it.requestId == 1L }
+            assertEquals(frames, partials.size, "all frames must reach the gate: ${stream.describe()}")
+            assertTrue(partials.last().partialPredict.finish, "last frame must be final: ${stream.describe()}")
+            assertTrue(
+                stream.indexOfLastPartial(requestId = 1) < stream.indexOfClientCompleted(),
+                "final frame must be sent before half-close: ${stream.describe()}"
+            )
+        }
+    }
+
+    /** Критерий 3: без активных запросов остановка не ждёт бюджет. */
     @Test
     fun `shutdown without in-flight requests returns immediately`() {
         val service = TestService { _ -> Payload("application/json", "{}") }
@@ -402,6 +443,9 @@ private class FakeGateStream(private val responseObserver: StreamObserver<GateTo
         events.indexOfFirst { it is GateEvent.Message && it.proto.hasPredict() && it.proto.requestId == requestId }
 
     fun indexOfClientCompleted() = events.indexOfFirst { it is GateEvent.ClientCompleted }
+
+    fun indexOfLastPartial(requestId: Long) =
+        events.indexOfLast { it is GateEvent.Message && it.proto.hasPartialPredict() && it.proto.requestId == requestId }
 
     fun describe() = events.joinToString(prefix = "[", postfix = "]") {
         when (it) {

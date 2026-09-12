@@ -58,6 +58,13 @@ class JobsContainer(
     }
 
     /** Финальный кадр стрима ушёл (или запрос завершён иначе) — запрос больше не держит остановку. */
+    /** Кадр стрима обновляет метку записи: протухание считается от последнего кадра, а не от открытия. */
+    fun streamTouched(connectorId: Long, requestId: Long) {
+        containers[connectorId]
+            ?.openStreams
+            ?.computeIfPresent(requestId) { _, _ -> now() }
+    }
+
     fun streamFinished(connectorId: Long, requestId: Long) {
         containers[connectorId]
             ?.openStreams
@@ -65,7 +72,7 @@ class JobsContainer(
     }
 
     /**
-     * Стрим, не закрытый терминальным кадром дольше бюджета остановки, считается брошенным:
+     * Стрим без единого кадра дольше бюджета остановки считается брошенным:
      * сервис мог упасть до первого кадра (стартеры кадр в этом случае не шлют) или отправка
      * оборвалась до [Connector.sendServiceToGate]. Иначе одна такая запись заставляла бы каждую
      * следующую остановку ждать весь бюджет.
@@ -75,7 +82,7 @@ class JobsContainer(
         val stale = openStreams.entries.filter { it.value < staleBefore }.map { it.key }
         if (stale.isEmpty()) return
         stale.forEach { openStreams.remove(it) }
-        logger.warn("$this: dropped ${stale.size} stale stream record(s) of connector $connectorId (no terminal frame within the shutdown budget)")
+        logger.warn("$this: dropped ${stale.size} stale stream record(s) of connector $connectorId (no frame within the shutdown budget)")
     }
 
     private fun ConnectorContainer.hasLiveStreams(connectorId: Long): Boolean {

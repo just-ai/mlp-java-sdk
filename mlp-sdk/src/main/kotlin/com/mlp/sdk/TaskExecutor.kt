@@ -101,6 +101,11 @@ class TaskExecutor(
         jobsContainer.streamFinished(connectorId, requestId)
     }
 
+    /** По стриму ушёл очередной кадр: запись считается живой, а не брошенной. */
+    fun streamTouched(connectorId: Long, requestId: Long) {
+        jobsContainer.streamTouched(connectorId, requestId)
+    }
+
     fun initContainer(connectorId: Long) {
         logger.info("$this: enable new requests for connector $connectorId")
         jobsContainer.initContainer(connectorId)
