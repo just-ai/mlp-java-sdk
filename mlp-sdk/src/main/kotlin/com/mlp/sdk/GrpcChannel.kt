@@ -178,7 +178,7 @@ class GrpcChannel(
             // Остановку уже ведёт другой сценарий (stopServing от гейта). Не выходим сразу:
             // иначе пул посчитает коннектор остановленным, и JVM выйдет посреди дренажа.
             connector.logConnecting("{}: shutdown is already in progress, waiting for it to finish ...", this)
-            awaitShutdown(deadline.plusSeconds(MANAGED_CHANNEL_SHUTDOWN_TIMEOUT_SEC))
+            awaitShutdown(deadline)
             return
         }
 

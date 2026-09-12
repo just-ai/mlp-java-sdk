@@ -49,9 +49,12 @@ class JobsContainer(
      * говорит о завершении работы, поэтому дренаж остановки обязан ждать ещё и финальный кадр.
      */
     fun streamOpened(connectorId: Long, requestId: Long) {
-        containers.computeIfAbsent(connectorId) { ConnectorContainer() }
-            .openStreams
-            .add(requestId)
+        if (requestId == 0L) return
+        val openStreams = containers.computeIfAbsent(connectorId) { ConnectorContainer() }.openStreams
+        if (openStreams.size >= STALE_STREAMS_PRUNE_THRESHOLD) {
+            pruneStaleStreams(openStreams, connectorId)
+        }
+        openStreams[requestId] = now()
     }
 
     /** Финальный кадр стрима ушёл (или запрос завершён иначе) — запрос больше не держит остановку. */
@@ -59,6 +62,26 @@ class JobsContainer(
         containers[connectorId]
             ?.openStreams
             ?.remove(requestId)
+    }
+
+    /**
+     * Стрим, не закрытый терминальным кадром дольше бюджета остановки, считается брошенным:
+     * сервис мог упасть до первого кадра (стартеры кадр в этом случае не шлют) или отправка
+     * оборвалась до [Connector.sendServiceToGate]. Иначе одна такая запись заставляла бы каждую
+     * следующую остановку ждать весь бюджет.
+     */
+    private fun pruneStaleStreams(openStreams: ConcurrentHashMap<Long, Instant>, connectorId: Long) {
+        val staleBefore = now() - ofMillis(config.shutdownConfig.actionConnectorMs)
+        val stale = openStreams.entries.filter { it.value < staleBefore }.map { it.key }
+        if (stale.isEmpty()) return
+        stale.forEach { openStreams.remove(it) }
+        logger.warn("$this: dropped ${stale.size} stale stream record(s) of connector $connectorId (no terminal frame within the shutdown budget)")
+    }
+
+    private fun ConnectorContainer.hasLiveStreams(connectorId: Long): Boolean {
+        if (openStreams.isEmpty()) return false
+        pruneStaleStreams(openStreams, connectorId)
+        return openStreams.isNotEmpty()
     }
 
     fun put(requestContext: RequestContext, job: Job): Boolean {
@@ -111,7 +134,7 @@ class JobsContainer(
         val container = containers[connectorId] ?: return
 
         while (now() < deadline) {
-            if (container.requestJobMap.isEmpty() && container.openStreams.isEmpty()) {
+            if (container.requestJobMap.isEmpty() && !container.hasLiveStreams(connectorId)) {
                 logger.info("$this: graceful shutdown all tasks of connector $connectorId")
                 return
             }
@@ -143,10 +166,13 @@ class JobsContainer(
     }
 
     companion object {
+        /** С этого размера streamOpened попутно чистит протухшие записи. */
+        private const val STALE_STREAMS_PRUNE_THRESHOLD = 64
+
         private data class ConnectorContainer(
             val requestJobMap: ConcurrentHashMap<Long, Job> = ConcurrentHashMap(),
-            /** gateRequestId запросов, чьи кадры сервис досылает сам, вне job. */
-            val openStreams: MutableSet<Long> = ConcurrentHashMap.newKeySet(),
+            /** gateRequestId запросов, чьи кадры сервис досылает сам, вне job → момент открытия. */
+            val openStreams: ConcurrentHashMap<Long, Instant> = ConcurrentHashMap(),
             val disabledAllNewRequests: AtomicBoolean = AtomicBoolean(false)
         )
     }

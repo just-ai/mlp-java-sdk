@@ -290,7 +290,7 @@ class MlpServiceSDK(
         runCatching {
             File(STARTUP_PROBE_FILE_PATH)
                 .writeText("${currentTimeMillis() / 1000}")
-        }.onFailure { logger.warn("Can't write startup probe file $STARTUP_PROBE_FILE_PATH: ${it.message}") }
+        }.onFailure { logger.error("Can't write startup probe file $STARTUP_PROBE_FILE_PATH: ${it.message}") }
     }
 
     override fun toString() = SDK_COMPONENT_NAME

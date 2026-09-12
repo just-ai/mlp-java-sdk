@@ -189,6 +189,28 @@ class GracefulShutdownTest {
     }
 
     /** Критерий 3: без активных запросов остановка не ждёт бюджет. */
+    /**
+     * Брошенный стрим (predict вернул MlpPartialBinaryResponse, а кадров так и не прислал — у стартеров
+     * так выглядит сбой до первого чанка) не должен заставлять каждую следующую остановку ждать весь
+     * бюджет: запись старше бюджета считается протухшей.
+     */
+    @Test
+    fun `stale detached stream record does not delay a later shutdown`() {
+        val service = TestService { _ -> MlpPartialBinaryResponse() }
+
+        harness(service, actionConnectorMs = 500).use { h ->
+            val stream = h.gate.stream(0)
+            stream.sendPredict(requestId = 1)
+            h.awaitTrue("predict is started") { service.started.isNotEmpty() }
+            Thread.sleep(700) // запись стрима старше бюджета
+
+            val elapsed = measure { h.sdk.gracefulShutdown() }
+            h.awaitTrue("gate has received half-close") { stream.indexOfClientCompleted() >= 0 }
+
+            assertTrue(elapsed < 400L, "stale stream record must not hold the shutdown, took $elapsed ms: ${stream.describe()}")
+        }
+    }
+
     @Test
     fun `shutdown without in-flight requests returns immediately`() {
         val service = TestService { _ -> Payload("application/json", "{}") }
