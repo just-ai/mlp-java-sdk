@@ -270,6 +270,12 @@ class GateToServiceMessageProcessor(
         }
     }
 
+    /**
+     * Стриминговый запрос от гейта. Отдельного учёта стрима здесь не нужно: все кадры уходят внутри
+     * job, который собирает flow сервиса (`collect`), и job живёт до конца этого flow. Отвязанного
+     * окна, как у MlpPartialBinaryResponse, тут нет — дренаж по requestJobMap ждёт ровно столько,
+     * сколько идёт стрим.
+     */
     private fun processPartialPredict(request: PartialPredictRequestProto, context: RequestContext) {
         val requestId = context.gateRequestId
         val connectorId = context.connectorId
@@ -318,6 +324,14 @@ class GateToServiceMessageProcessor(
 
     private fun processPredict(request: PredictRequestProto, tracker: TimeTracker, context: RequestContext) {
         executor.runAsync(context) { action ->
+            // Стрим открываем до вызова predict, а не после разбора ответа: сервис вправе отдать
+            // MlpPartialBinaryResponse и начать слать кадры из своей корутины ещё до того, как мы
+            // увидим её тип, — иначе между завершением job и первым кадром остаётся окно, в котором
+            // дренаж остановки считает запрос завершённым. Закроет стрим терминальный кадр
+            // (predict, error или partialPredict с finish=true) в Connector.sendServiceToGate,
+            // так что обычный predict от этого учёта ничего не теряет.
+            executor.streamOpened(connectorId, context.gateRequestId)
+
             val dataPayload = requireNotNull(request.data.getAsPayload(context.noContentLogging)) { "Payload data" }
             val configPayload = request.config.getAsPayload(context.noContentLogging)
 

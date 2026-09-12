@@ -43,6 +43,24 @@ class JobsContainer(
         return !container.disabledAllNewRequests.get()
     }
 
+    /**
+     * Отмечает, что по запросу открыт стрим, кадры которого сервис шлёт сам — вне job запроса
+     * (predict вернул MlpPartialBinaryResponse). Для такого запроса завершение job ничего не
+     * говорит о завершении работы, поэтому дренаж остановки обязан ждать ещё и финальный кадр.
+     */
+    fun streamOpened(connectorId: Long, requestId: Long) {
+        containers.computeIfAbsent(connectorId) { ConnectorContainer() }
+            .openStreams
+            .add(requestId)
+    }
+
+    /** Финальный кадр стрима ушёл (или запрос завершён иначе) — запрос больше не держит остановку. */
+    fun streamFinished(connectorId: Long, requestId: Long) {
+        containers[connectorId]
+            ?.openStreams
+            ?.remove(requestId)
+    }
+
     fun put(requestContext: RequestContext, job: Job): Boolean {
         val connectorContainer = containers.computeIfAbsent(requestContext.connectorId) { ConnectorContainer() }
 
@@ -59,10 +77,9 @@ class JobsContainer(
     }
 
     fun cancelRequest(connectorId: Long, requestId: Long) {
-        val requestsMap = containers[connectorId]
-            ?.requestJobMap
-            ?: return
-        val job = requestsMap.remove(requestId) ?: return
+        val container = containers[connectorId] ?: return
+        container.openStreams.remove(requestId)
+        val job = container.requestJobMap.remove(requestId) ?: return
         job.cancel()
     }
 
@@ -75,6 +92,11 @@ class JobsContainer(
 
     /**
      * Ждёт завершения активных задач коннектора до [deadline] и отменяет то, что не успело.
+     *
+     * Ждать приходится двух вещей: job запросов и открытых стримов. Стрим учитывается отдельно,
+     * потому что сервис может отдать из predict MlpPartialBinaryResponse и досылать кадры из своей
+     * корутины: job такого запроса завершается сразу, и по одному requestJobMap дренаж закончился бы
+     * мгновенно, оборвав стрим half-close'ом на середине.
      *
      * [deadline] приходит снаружи, потому что бюджет остановки один на весь сценарий
      * (stopServing → дренаж → half-close), а не на этот вызов.
@@ -89,14 +111,15 @@ class JobsContainer(
         val container = containers[connectorId] ?: return
 
         while (now() < deadline) {
-            if (container.requestJobMap.isEmpty()) {
+            if (container.requestJobMap.isEmpty() && container.openStreams.isEmpty()) {
                 logger.info("$this: graceful shutdown all tasks of connector $connectorId")
                 return
             }
             if (abortEarly()) {
                 logger.warn(
                     "$this: grpc channel of connector $connectorId is already closed, " +
-                            "cancelling ${container.requestJobMap.size} in-flight task(s) without waiting for the deadline"
+                            "cancelling ${container.requestJobMap.size} in-flight task(s) and dropping " +
+                            "${container.openStreams.size} unfinished stream(s) without waiting for the deadline"
                 )
                 container.cancelAll()
                 return
@@ -106,18 +129,24 @@ class JobsContainer(
 
         logger.warn(
             "$this: graceful shutdown budget of connector $connectorId is over, " +
-                    "cancelling ${container.requestJobMap.size} in-flight task(s)"
+                    "cancelling ${container.requestJobMap.size} in-flight task(s) and dropping " +
+                    "${container.openStreams.size} unfinished stream(s)"
         )
         container.cancelAll()
     }
 
-    private fun ConnectorContainer.cancelAll() = requestJobMap
-        .values
-        .forEach(Job::cancel)
+    private fun ConnectorContainer.cancelAll() {
+        requestJobMap.values.forEach(Job::cancel)
+        // Стрим отменить нечем — его ведёт корутина сервиса. Снимаем с учёта, чтобы остановка
+        // не ждала кадр, которого уже никто не отправит.
+        openStreams.clear()
+    }
 
     companion object {
         private data class ConnectorContainer(
             val requestJobMap: ConcurrentHashMap<Long, Job> = ConcurrentHashMap(),
+            /** gateRequestId запросов, чьи кадры сервис досылает сам, вне job. */
+            val openStreams: MutableSet<Long> = ConcurrentHashMap.newKeySet(),
             val disabledAllNewRequests: AtomicBoolean = AtomicBoolean(false)
         )
     }

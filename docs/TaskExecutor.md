@@ -17,7 +17,7 @@
 - **enableNewTasks(id: Long)**: Включает обработку новых задач для коннектора с указанным идентификатором.
 - **cancelAll()**: Отменяет все активные задачи.
 - **cancelAll(connectorId: Long)**: Отменяет все задачи конкретного коннектора.
-- **gracefulShutdownAll(connectorId: Long)**: Осуществляет плавное завершение всех задач конкретного коннектора.
+- **gracefulShutdownAll(connectorId: Long, deadline: Instant = now() + actionConnectorMs, abortEarly: () -> Boolean = { false })**: Дожидается активных задач коннектора до общего дедлайна остановки и отменяет то, что не успело; `abortEarly` прекращает ожидание, когда канал уже закрыт гейтом.
 
 #### Вспомогательные методы класса `TaskExecutor`
 

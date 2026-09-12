@@ -16,13 +16,16 @@
 
 - **cancelAll()**: Отменяет все задания для всех коннекторов.
 
-- **gracefulShutdownByConnector(connectorId: Long)**: Осуществляет корректное завершение всех заданий для указанного коннектора.
+- **gracefulShutdownByConnector(connectorId: Long, deadline: Instant = now() + actionConnectorMs, abortEarly: () -> Boolean = { false })**: Ждёт завершения активных заданий коннектора **и его открытых стримов** до дедлайна (один бюджет на весь сценарий остановки) и отменяет оставшиеся; `abortEarly` обрывает ожидание, если канал уже закрыт.
 
-- **enableNewOnes(connectorId: Long)**: Включает возможность обработки новых заданий для указанного коннектора.
+- **streamOpened(connectorId: Long, requestId: Long)** / **streamFinished(connectorId: Long, requestId: Long)**: Учёт «отвязанных» стримов — запросов, чьи кадры сервис шлёт из своей корутины (predict вернул `MlpPartialBinaryResponse`). Job такого запроса завершается сразу, поэтому без отдельного учёта дренаж заканчивался бы мгновенно и обрывал стрим half-close'ом. Стрим открывает `processPredict` до вызова `predict`, закрывает терминальный кадр (`partialPredict` с `finish=true`, `predict`, `error`) в `Connector.sendServiceToGate`, а также `CANCEL` от гейта; по дедлайну остаток стримов сбрасывается с warn-логом.
+
+- **disableNewJobs(connectorId: Long)**: Закрывает приём новых заданий коннектора, не трогая выполняющиеся (первый шаг остановки).
+- **initContainer(connectorId: Long)**: Снова разрешает задания коннектора при (пере)подключении.
 
 #### Вспомогательные структуры данных
 
-- **ConnectorContainer**: Структура данных, содержащая карту запросов и флаг, указывающий на возможность обработки новых заданий коннектором.
+- **ConnectorContainer**: Структура данных, содержащая карту запросов, множество открытых стримов (`gateRequestId`) и флаг, указывающий на возможность обработки новых заданий коннектором.
 
 ### Использование
 
@@ -49,7 +52,7 @@ jobsContainer.cancelAll()
 jobsContainer.gracefulShutdownByConnector(connectorId)
 
 // Включение возможности обработки новых заданий для конкретного коннектора
-jobsContainer.enableNewOnes(connectorId)
+jobsContainer.initContainer(connectorId)
 ```
 
 ### Итог

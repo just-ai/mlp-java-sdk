@@ -88,6 +88,19 @@ class TaskExecutor(
         jobsContainer.cancelRequest(connectorId, requestId)
     }
 
+    /**
+     * Запрос открыл стрим: кадры уйдут вне его job (predict отдал MlpPartialBinaryResponse).
+     * До финального кадра такой запрос считается активным при дренаже остановки.
+     */
+    fun streamOpened(connectorId: Long, requestId: Long) {
+        jobsContainer.streamOpened(connectorId, requestId)
+    }
+
+    /** Стрим запроса завершён: ушёл финальный кадр, обычный ответ или ошибка. */
+    fun streamFinished(connectorId: Long, requestId: Long) {
+        jobsContainer.streamFinished(connectorId, requestId)
+    }
+
     fun initContainer(connectorId: Long) {
         logger.info("$this: enable new requests for connector $connectorId")
         jobsContainer.initContainer(connectorId)

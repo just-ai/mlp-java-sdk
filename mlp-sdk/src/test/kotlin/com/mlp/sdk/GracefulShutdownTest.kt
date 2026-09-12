@@ -13,8 +13,10 @@ import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit.SECONDS
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -98,6 +100,90 @@ class GracefulShutdownTest {
             assertTrue(
                 stream.indexOfStopServing() in 0 until lastFrame,
                 "stopServing must be sent before the remaining frames: ${stream.describe()}"
+            )
+        }
+    }
+
+    /**
+     * Критерий 2 для «отвязанного» стрима: predict возвращает MlpPartialBinaryResponse сразу,
+     * а кадры сервис шлёт из своей корутины. Для job такой запрос завершён мгновенно, и без учёта
+     * открытых стримов half-close обрывал бы стрим на середине (на живом гейте — 3 кадра из 10).
+     */
+    @Test
+    fun `detached stream frames are delivered before the stream is half-closed`() {
+        val frames = 5
+        val service = TestService { context ->
+            CoroutineScope(Dispatchers.Default).launch {
+                repeat(frames) { i ->
+                    delay(200)
+                    sdk.sendPartialResponse(
+                        requestId = context.gateRequestId,
+                        connectorId = context.connectorId,
+                        payload = Payload("application/json", """{"chunk":${i + 1}}"""),
+                        isLast = i == frames - 1,
+                    )
+                }
+            }
+            MlpPartialBinaryResponse()
+        }
+
+        harness(service, actionConnectorMs = 10_000).use { h ->
+            val stream = h.gate.stream(0)
+            stream.sendPredict(requestId = 1)
+            h.awaitTrue("predict is started") { service.started.isNotEmpty() }
+            Thread.sleep(300)
+
+            h.sdk.gracefulShutdown()
+            h.awaitTrue("gate has received half-close") { stream.indexOfClientCompleted() >= 0 }
+
+            val partials = stream.messages().filter { it.hasPartialPredict() && it.requestId == 1L }
+            assertEquals(frames, partials.size, "not all detached stream frames reached the gate: ${stream.describe()}")
+            assertTrue(partials.last().partialPredict.finish, "last frame must be final: ${stream.describe()}")
+
+            val halfClose = stream.indexOfClientCompleted()
+            val lastFrame = stream.events.indexOfLast { it is GateEvent.Message && it.proto.hasPartialPredict() }
+            assertTrue(lastFrame < halfClose, "frames must be sent before half-close: ${stream.describe()}")
+            assertTrue(
+                stream.indexOfStopServing() in 0 until lastFrame,
+                "stopServing must be sent before the remaining frames: ${stream.describe()}"
+            )
+        }
+    }
+
+    /** Критерий 4 для «отвязанного» стрима: без финального кадра остановка укладывается в бюджет. */
+    @Test
+    fun `unfinished detached stream does not hold the shutdown longer than the budget`() {
+        val service = TestService { context ->
+            CoroutineScope(Dispatchers.Default).launch {
+                repeat(2) { i ->
+                    delay(100)
+                    // финального кадра нет: стрим так и остаётся открытым
+                    sdk.sendPartialResponse(
+                        requestId = context.gateRequestId,
+                        connectorId = context.connectorId,
+                        payload = Payload("application/json", """{"chunk":${i + 1}}"""),
+                        isLast = false,
+                    )
+                }
+            }
+            MlpPartialBinaryResponse()
+        }
+
+        harness(service, actionConnectorMs = 500).use { h ->
+            val stream = h.gate.stream(0)
+            stream.sendPredict(requestId = 1)
+            h.awaitTrue("predict is started") { service.started.isNotEmpty() }
+
+            val elapsed = measure { h.sdk.gracefulShutdown() }
+            h.awaitTrue("gate has received half-close") { stream.indexOfClientCompleted() >= 0 }
+
+            assertTrue(elapsed in 400L..2000L, "shutdown with 500 ms budget took $elapsed ms: ${stream.describe()}")
+
+            val partials = stream.messages().filter { it.hasPartialPredict() && it.requestId == 1L }
+            assertTrue(partials.none { it.partialPredict.finish }, "stream must stay unfinished: ${stream.describe()}")
+            assertTrue(
+                stream.indexOfStopServing() in 0 until stream.indexOfClientCompleted(),
+                "stopServing must be sent before half-close: ${stream.describe()}"
             )
         }
     }

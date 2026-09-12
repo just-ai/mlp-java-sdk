@@ -208,7 +208,35 @@ class Connector(
         )
     }
 
+    /**
+     * Единственная точка выхода сообщений коннектора — здесь же снимается учёт открытого стрима.
+     * Снимаем после попытки отправки (в finally), а не до неё: иначе между «стрим закрыт» и
+     * реальной отправкой финального кадра успел бы пройти дренаж и half-close.
+     */
     suspend fun sendServiceToGate(grpcResponse: ServiceToGateProto.Builder) {
+        try {
+            deliverServiceToGate(grpcResponse)
+        } finally {
+            if (grpcResponse.isStreamTerminal()) {
+                executor.streamFinished(connectorId, grpcResponse.requestId)
+            }
+        }
+    }
+
+    /**
+     * Кадр закрывает стрим запроса: финальный partialPredict, обычный ответ predict или ошибка.
+     * startPartialPredict (partialPredict со start=true и finish=false) стрим как раз открывает,
+     * поэтому терминальным не считается.
+     */
+    private fun ServiceToGateProto.Builder.isStreamTerminal(): Boolean = when {
+        requestId == 0L -> false
+        hasPartialPredict() -> partialPredict.finish
+        hasPredict() -> true
+        hasError() -> true
+        else -> false
+    }
+
+    private suspend fun deliverServiceToGate(grpcResponse: ServiceToGateProto.Builder) {
         val channel = grpcChannel
         // SHUTTING_DOWN — рабочее состояние для ответов: во время дренажа остановки канал ещё жив,
         // и ответ должен уйти в гейт, а не осесть в буфере реконнекта, которого уже не будет.
