@@ -57,9 +57,9 @@ class DeferredBilling(
      * Optionally, you can provide detailed breakdown of billing units.
      * Final details are sent in the charge payload, independently of the coroutine thread.
      *
-     * @param amountInUnits Amount in billing units (must be > 0)
+     * @param amountInUnits Amount in billing units (must be >= 0)
      * @param billingDetails Optional detailed breakdown of billing units (e.g., {"tokens": 1000, "requests": 500})
-     * @throws IllegalArgumentException if amountInUnits <= 0
+     * @throws IllegalArgumentException if amountInUnits < 0
      */
     suspend fun charge(
         amountInUnits: Long,

@@ -33,6 +33,50 @@ import org.junit.jupiter.api.fail
 class GracefulShutdownTest {
 
     @Test
+    fun `deferred callback survives removal of the gate that handled submit`() {
+        val replacement = FakeGate()
+        val replacementServer = ServerBuilder.forPort(0).addService(replacement).build().start()
+        lateinit var deferred: DeferredBilling
+        val service = TestService {
+            deferred = DeferredBilling("response-failover", sdk)
+            Payload("application/json", """{"id":"response-failover","status":"queued"}""")
+        }
+        try {
+            Harness(service, 1000, ignoreClusterUpdates = false).use { h ->
+                val original = h.gate.stream(0)
+                original.sendPredict(7142)
+                h.awaitTrue("submit completed") { original.indexOfPredictResponse(7142) >= 0 }
+                val submit = original.messages().single { it.hasPredict() && it.requestId == 7142L }
+                assertEquals("true", submit.headersMap["Z-deferred-final-details"])
+                original.send(GateToServiceProto.newBuilder().setCluster(
+                    com.mlp.gate.ClusterUpdateProto.newBuilder()
+                        .setCurrentServer("localhost:${h.server.port}")
+                        .addServers("localhost:${replacementServer.port}")
+                ).build())
+                h.awaitTrue("old connector removed and replacement connected") {
+                    original.indexOfClientCompleted() >= 0 && replacement.streams.any {
+                        it.messages().any { message -> message.hasStartServing() }
+                    }
+                }
+
+                kotlinx.coroutines.runBlocking {
+                    deferred.charge(18, mapOf("INPUT_TEXT_TOKENS" to 13, "OUTPUT_TEXT_TOKENS" to 5))
+                }
+                h.awaitTrue("replacement receives deferred callback") {
+                    replacement.streams.any { it.messages().any { message -> message.hasDeferredBillingCharge() } }
+                }
+                assertFalse(original.messages().any { it.hasDeferredBillingCharge() })
+                val charge = replacement.streams.flatMap { it.messages() }.single { it.hasDeferredBillingCharge() }
+                assertEquals("response-failover", charge.deferredBillingCharge.billingRequestId)
+                assertTrue(charge.deferredBillingCharge.hasBillingDetails())
+            }
+        } finally {
+            replacementServer.shutdownNow()
+            replacementServer.awaitTermination(5, SECONDS)
+        }
+    }
+
+    @Test
     fun `deferred usage travels with charge after predict has returned`() {
         val service = TestService { Payload("application/json", "{}") }
         harness(service, actionConnectorMs = 1000).use { h ->
@@ -409,7 +453,7 @@ class GracefulShutdownTest {
 
     private fun harness(service: TestService, actionConnectorMs: Long) = Harness(service, actionConnectorMs)
 
-    private class Harness(service: TestService, actionConnectorMs: Long) : AutoCloseable {
+    private class Harness(service: TestService, actionConnectorMs: Long, ignoreClusterUpdates: Boolean = true) : AutoCloseable {
         val gate = FakeGate()
         val server: Server = ServerBuilder.forPort(0).addService(gate).build().start()
         val sdk: MlpServiceSDK
@@ -421,7 +465,7 @@ class GracefulShutdownTest {
                 threadPoolSize = 4,
                 shutdownConfig = ActionShutdownConfig(actionConnectorMs = actionConnectorMs),
                 grpcSecure = false,
-                ignoreClusterUpdates = true,
+                ignoreClusterUpdates = ignoreClusterUpdates,
             )
             sdk = MlpServiceSDK(service, config, Dispatchers.IO)
             service.sdk = sdk
