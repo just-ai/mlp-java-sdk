@@ -69,4 +69,6 @@ data class RequestContext(
 
     val billingAccountId: Long? = null,
     val billingUserId: String? = null,
+    val originAccountId: Long? = null,
+    val originApiToken: String? = null,
 )

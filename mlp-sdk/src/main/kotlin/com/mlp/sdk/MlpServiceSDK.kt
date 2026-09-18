@@ -140,21 +140,29 @@ class MlpServiceSDK(
      * appropriate headers in the first response (via BillingUnitsThreadLocal or DeferredBilling).
      *
      * @param billingRequestId Unique request ID that was set during initialization
-     * @param amountInUnits Amount to charge in billing units (must be > 0)
-     * @throws IllegalArgumentException if amountInUnits <= 0
+     * @param amountInUnits Amount to charge in billing units (must be >= 0)
+     * @throws IllegalArgumentException if amountInUnits < 0
      */
     @Deprecated("Replace with sendDeferredBillingCharges", ReplaceWith("sendDeferredBillingCharges"))
     suspend fun sendDeferredBillingCharge(
         billingRequestId: String,
         amountInUnits: Long
+    ) = sendDeferredBillingCharge(billingRequestId, amountInUnits, null)
+
+    @Deprecated("Replace with sendDeferredBillingCharges", ReplaceWith("sendDeferredBillingCharges"))
+    suspend fun sendDeferredBillingCharge(
+        billingRequestId: String,
+        amountInUnits: Long,
+        billingDetails: Map<String, Long>?,
     ) {
-        require(amountInUnits > 0) { "Amount must be positive, got: $amountInUnits" }
+        require(amountInUnits >= 0) { "Amount must be non-negative, got: $amountInUnits" }
 
         val proto = ServiceToGateProto.newBuilder()
             .setDeferredBillingCharge(
                 com.mlp.gate.DeferredBillingChargeRequestProto.newBuilder()
                     .setBillingRequestId(billingRequestId)
                     .setAmountInUnits(amountInUnits)
+                    .apply { if (billingDetails != null) setBillingDetails(billingDetails.asJson) }
                     .build()
             )
 
@@ -181,6 +189,10 @@ class MlpServiceSDK(
             if (charge.billingDetails?.isNotEmpty() == true) {
                 builder.setBillingDetails(charge.billingDetails.asJson)
             }
+            charge.calls?.let {
+                require(it >= 0) { "Call count must be non-negative" }
+                builder.calls = it
+            }
 
             builder.build()
         }
@@ -202,6 +214,8 @@ class MlpServiceSDK(
         if (params.billingUserId != null) {
             paramsBuilder.billingUserId = params.billingUserId
         }
+        params.originAccountId?.let { paramsBuilder.originAccountId = it }
+        params.originApiToken?.let { paramsBuilder.originApiToken = it }
 
         taskExecutor.connectorsPool.sendToAnyGate(
             ServiceToGateProto.newBuilder()

@@ -32,6 +32,61 @@ import org.junit.jupiter.api.fail
  */
 class GracefulShutdownTest {
 
+    @Test
+    fun `deferred usage travels with charge after predict has returned`() {
+        val service = TestService { Payload("application/json", "{}") }
+        harness(service, actionConnectorMs = 1000).use { h ->
+            val stream = h.gate.stream(0)
+            val details = mapOf("input_tokens" to 13L, "output_tokens" to 5L)
+            kotlinx.coroutines.runBlocking {
+                kotlinx.coroutines.withContext(Dispatchers.Default) {
+                    DeferredBilling("response-7142", h.sdk).charge(0, details)
+                    assertEquals(null, BillingUnitsThreadLocal.getDetailedUnits())
+                    BillingUnitsThreadLocal.clearAll()
+                }
+            }
+            h.awaitTrue("final deferred charge") { stream.messages().any { it.hasDeferredBillingCharge() } }
+            val charge = stream.messages().single { it.hasDeferredBillingCharge() }.deferredBillingCharge
+            assertEquals("response-7142", charge.billingRequestId)
+            assertEquals(0L, charge.amountInUnits)
+            val received = com.fasterxml.jackson.databind.ObjectMapper().readTree(charge.billingDetails)
+            assertEquals(13L, received["input_tokens"].asLong())
+            assertEquals(5L, received["output_tokens"].asLong())
+        }
+    }
+
+    @Test
+    fun `origin from gateway context reaches recurring callback with zero calls`() {
+        val service = TestService { context ->
+            sdk.sendDeferredBillingCharges(
+                com.mlp.sdk.datatypes.billing.DeferredBillingParams(
+                    context.callerAccountId, context.apiKeyName, context.billingKeyName,
+                    context.billingAccountId, context.billingUserId, context.originAccountId, context.originApiToken,
+                ),
+                listOf(com.mlp.sdk.datatypes.billing.DeferredBillingCharge("response-7142", 12, "RUB", "gpt-5.4", calls = 0)),
+            )
+            Payload("application/json", "{}")
+        }
+        harness(service, actionConnectorMs = 1000).use { h ->
+            val stream = h.gate.stream(0)
+            stream.send(GateToServiceProto.newBuilder().setRequestId(7142)
+                .putHeaders("Z-callerAccountId", "1000214050")
+                .putHeaders("MLP-ORIGIN-ACCOUNT-ID", "1000214050")
+                .putHeaders("MLP-ORIGIN-API-KEY-NAME", "client-key-name")
+                .putHeaders("MLP-BILLING-ACCOUNT-ID", "1000062767")
+                .putHeaders("MLP-BILLING-KEY-NAME", "route-key-name")
+                .setPredict(PredictRequestProto.newBuilder().setData(PayloadProto.newBuilder()
+                    .setJson("{}").setDataType("application/json"))).build())
+            h.awaitTrue("recurring charge") { stream.messages().any { it.hasDeferredBillingCharges() } }
+            val callback = stream.messages().single { it.hasDeferredBillingCharges() }.deferredBillingCharges
+            assertEquals(1000214050L, callback.params.originAccountId)
+            assertEquals("client-key-name", callback.params.originApiToken)
+            assertEquals(1000062767L, callback.params.billingAccountId)
+            assertTrue(callback.chargesList.single().hasCalls())
+            assertEquals(0, callback.chargesList.single().calls)
+        }
+    }
+
     /** Критерии 1 и 5: обычный predict досылает ответ, stopServing уходит раньше half-close. */
     @Test
     fun `in-flight predict is answered before the stream is half-closed`() {

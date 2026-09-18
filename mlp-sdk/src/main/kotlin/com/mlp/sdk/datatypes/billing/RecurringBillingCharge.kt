@@ -6,6 +6,7 @@ data class DeferredBillingCharge(
     val currency: String?,
     val llmModelName: String?,
     val billingDetails: Map<String, Long>? = emptyMap(),
+    val calls: Int? = null,
 )
 
 data class DeferredBillingParams(
@@ -14,4 +15,6 @@ data class DeferredBillingParams(
     val billingKeyName: String?,
     val billingAccountId: Long?,
     val billingUserId: String?,
+    val originAccountId: Long? = null,
+    val originApiToken: String? = null,
 )

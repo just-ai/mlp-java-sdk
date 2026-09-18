@@ -55,8 +55,7 @@ class DeferredBilling(
      * Sends a charge request for the specified amount.
      *
      * Optionally, you can provide detailed breakdown of billing units.
-     * The details will be sent via Z-custom-billing-details header for monitoring purposes,
-     * while the total amount will be charged.
+     * Final details are sent in the charge payload, independently of the coroutine thread.
      *
      * @param amountInUnits Amount in billing units (must be > 0)
      * @param billingDetails Optional detailed breakdown of billing units (e.g., {"tokens": 1000, "requests": 500})
@@ -69,8 +68,6 @@ class DeferredBilling(
         require(amountInUnits >= 0) { "Amount must be positive or zero, got: $amountInUnits" }
         logger.debug("Charging deferred billing: requestId={}, amount={}", requestId, amountInUnits)
 
-        billingDetails?.also { BillingUnitsThreadLocal.setDetailedUnits(it) }
-
-        sdk.sendDeferredBillingCharge(requestId, amountInUnits)
+        sdk.sendDeferredBillingCharge(requestId, amountInUnits, billingDetails)
     }
 }
