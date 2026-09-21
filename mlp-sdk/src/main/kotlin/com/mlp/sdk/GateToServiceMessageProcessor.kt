@@ -23,6 +23,8 @@ import com.mlp.sdk.utils.MLP_BILLING_KEY_HEADER
 import com.mlp.sdk.utils.MLP_BILLING_KEY_MDC_PARAM
 import com.mlp.sdk.utils.MLP_BILLING_KEY_NAME_HEADER
 import com.mlp.sdk.utils.MLP_BILLING_USER_ID_HEADER
+import com.mlp.sdk.utils.MLP_ORIGIN_ACCOUNT_ID_HEADER
+import com.mlp.sdk.utils.MLP_ORIGIN_API_KEY_NAME_HEADER
 import com.mlp.sdk.utils.REQUEST_ID_HEADER
 import com.mlp.sdk.utils.REQUEST_ID_MDC_PARAM
 import com.mlp.sdk.utils.SERVER_TIME_HEADER
@@ -386,7 +388,9 @@ class GateToServiceMessageProcessor(
             apiKeyName = request.getHeadersOrDefault(MLP_API_KEY_NAME_HEADER, null),
             billingKeyName = request.getHeadersOrDefault(MLP_BILLING_KEY_NAME_HEADER, null),
             billingAccountId = request.getHeadersOrDefault(MLP_BILLING_ACCOUNT_ID_HEADER, null)?.toLongOrNull(),
-            billingUserId = request.getHeadersOrDefault(MLP_BILLING_USER_ID_HEADER, null)
+            billingUserId = request.getHeadersOrDefault(MLP_BILLING_USER_ID_HEADER, null),
+            originAccountId = request.getHeadersOrDefault(MLP_ORIGIN_ACCOUNT_ID_HEADER, null)?.toLongOrNull(),
+            originApiToken = request.getHeadersOrDefault(MLP_ORIGIN_API_KEY_NAME_HEADER, null),
         )
     }
 }

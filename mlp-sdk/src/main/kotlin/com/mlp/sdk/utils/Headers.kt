@@ -30,6 +30,7 @@ const val CUSTOM_SELF_COST_HEADER = "Z-custom-self-cost"
  */
 const val CUSTOM_SELF_COST_CURRENCY_HEADER = "Z-custom-self-cost-currency"
 const val DEFERRED_BILLING_ID_HEADER = "Z-deferred-billing-id"
+const val DEFERRED_FINAL_DETAILS_HEADER = "Z-deferred-final-details"
 const val RECURRING_BILLING_ID_HEADER = "Z-recurring-billing-id"
 const val BILLING_CURRENCY_TYPE_HEADER = "Z-billing-currency-type"
 
@@ -37,3 +38,5 @@ const val MLP_API_KEY_NAME_HEADER = "MLP-API-KEY-NAME"
 const val MLP_BILLING_KEY_NAME_HEADER = "MLP-BILLING-KEY-NAME"
 const val MLP_BILLING_ACCOUNT_ID_HEADER = "MLP-BILLING-ACCOUNT-ID"
 const val MLP_BILLING_USER_ID_HEADER = "MLP-BILLING-USER-ID"
+const val MLP_ORIGIN_ACCOUNT_ID_HEADER = "MLP-ORIGIN-ACCOUNT-ID"
+const val MLP_ORIGIN_API_KEY_NAME_HEADER = "MLP-ORIGIN-API-KEY-NAME"
