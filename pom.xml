@@ -22,7 +22,7 @@
     <description>MLP Java SDK</description>
 
     <properties>
-        <revision>2.3.8</revision>
+        <revision>2.3.9</revision>
 
         <branch.name.lower>local</branch.name.lower>
         <branch.name.python>local</branch.name.python>
