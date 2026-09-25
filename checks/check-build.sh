@@ -4,6 +4,7 @@
 # Jenkins собирает весь reactor. В POM нет закреплённой современной версии
 # Surefire, поэтому Maven по умолчанию может не увидеть JUnit 5. Проверка сначала
 # пакетирует reactor, затем явно запускает тесты mlp-sdk через JUnit Platform.
+# -am: mlp-datatypes новой revision берётся из reactor, в Nexus её ещё нет.
 set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
@@ -25,4 +26,4 @@ if ! command -v mvn >/dev/null 2>&1; then
 fi
 
 mvn -B -DskipTests package
-mvn -B -pl mlp-sdk test-compile org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test
+mvn -B -pl mlp-sdk -am test-compile org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test
