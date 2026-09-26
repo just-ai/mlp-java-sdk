@@ -5,6 +5,7 @@ import com.mlp.gate.DeferredBillingParamsProto
 import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.gate.SpendingReservationProto
 import com.mlp.sdk.datatypes.billing.DeferredBillingCharge
 import com.mlp.sdk.datatypes.billing.DeferredBillingParams
 import com.mlp.sdk.utils.BILLING_CURRENCY_TYPE_HEADER
@@ -130,6 +131,27 @@ class MlpServiceSDK(
 
     suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto.Builder) {
         taskExecutor.connectorsPool.send(connectorId, toGateProto)
+    }
+
+    /**
+     * Reserves the upper estimate of the request cost in the caller's spending limits.
+     *
+     * Send it only when [RequestContext.spendingReservationRequested] is true, before calling the upstream;
+     * the gateway without that contract would treat the message as the final response.
+     * It is not part of the response or the stream and does not replace the final billing.
+     *
+     * @param requestId The gate request ID ([RequestContext.gateRequestId])
+     * @param connectorId The connector that received the request ([RequestContext.connectorId])
+     * @param amountInUnits Estimate in the same units as the final Z-custom-billing (must be >= 0)
+     */
+    suspend fun sendSpendingReservation(requestId: Long, connectorId: Long, amountInUnits: Long) {
+        require(amountInUnits >= 0) { "Amount must be non-negative, got: $amountInUnits" }
+        send(
+            connectorId,
+            ServiceToGateProto.newBuilder()
+                .setRequestId(requestId)
+                .setSpendingReservation(SpendingReservationProto.newBuilder().setAmountInUnits(amountInUnits))
+        )
     }
 
     /**
