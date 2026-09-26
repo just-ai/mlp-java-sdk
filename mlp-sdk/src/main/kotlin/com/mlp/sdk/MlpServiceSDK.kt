@@ -133,17 +133,7 @@ class MlpServiceSDK(
         taskExecutor.connectorsPool.send(connectorId, toGateProto)
     }
 
-    /**
-     * Reserves the upper estimate of the request cost in the caller's spending limits.
-     *
-     * Send it only when [RequestContext.spendingReservationRequested] is true, before calling the upstream;
-     * the gateway without that contract would treat the message as the final response.
-     * It is not part of the response or the stream and does not replace the final billing.
-     *
-     * @param requestId The gate request ID ([RequestContext.gateRequestId])
-     * @param connectorId The connector that received the request ([RequestContext.connectorId])
-     * @param amountInUnits Estimate in the same units as the final Z-custom-billing (must be >= 0)
-     */
+    /** Only when [RequestContext.spendingReservationRequested] and before the upstream call. */
     suspend fun sendSpendingReservation(requestId: Long, connectorId: Long, amountInUnits: Long) {
         require(amountInUnits >= 0) { "Amount must be non-negative, got: $amountInUnits" }
         send(
