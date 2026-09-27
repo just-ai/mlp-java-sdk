@@ -292,7 +292,7 @@ class GateToServiceMessageProcessor(
                     logger.info("requestId: $requestId Finish processing stream flow")
                     channel.close(it)
                 }.catch {
-                    logRequestFailure(logger, "stream predict", it)
+                    logRequestFailure(logger, "stream predict", it, requestId)
                     val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                         .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
                     responseBuilder.setError(it.asErrorProto)

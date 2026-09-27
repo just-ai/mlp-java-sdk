@@ -45,6 +45,17 @@ class RequestFailureLoggingTest {
     }
 
     @Test
+    fun `request id is kept in the message when known`() {
+        val logger = LoggerFactory.getLogger("test-request-failure-id-${System.nanoTime()}") as Logger
+        val appender = ListAppender<ILoggingEvent>().apply { start() }
+        logger.addAppender(appender)
+        logRequestFailure(logger, "stream predict", IllegalStateException("boom"), 42L)
+        logger.detachAppender(appender)
+
+        assertEquals("Error while processing stream predict request 42", appender.list.single().formattedMessage)
+    }
+
+    @Test
     fun `server error status stays an error`() {
         val events = capture(mlpException(SimpleStatusProto.INTERNAL_SERVER_ERROR))
 
