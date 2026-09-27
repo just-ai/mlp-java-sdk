@@ -198,7 +198,7 @@ class GateToServiceMessageProcessor(
                 val responses = action.batch(payloadData, request.config.getAsPayload(context.noContentLogging))
                 responseBuilder.setBatch(responses, requestsIdes)
             }.onFailure {
-                logger.error("Error while processing batch request", it)
+                logRequestFailure(logger, "batch", it)
                 responseBuilder.setError(it.asErrorProto)
             }
 
@@ -228,7 +228,7 @@ class GateToServiceMessageProcessor(
                     is MlpPartialBinaryResponse -> throw NotImplementedError()
                 }
             }.onFailure {
-                logger.error("Error while processing ext request", it)
+                logRequestFailure(logger, "ext", it)
                 responseBuilder.setError(it.asErrorProto)
             }
 
@@ -265,7 +265,7 @@ class GateToServiceMessageProcessor(
                 )
                 responseBuilder.setFit()
             }.onFailure {
-                logger.error("Error while processing fit request", it)
+                logRequestFailure(logger, "fit", it)
                 responseBuilder.setError(it.asErrorProto)
             }
 
@@ -292,7 +292,7 @@ class GateToServiceMessageProcessor(
                     logger.info("requestId: $requestId Finish processing stream flow")
                     channel.close(it)
                 }.catch {
-                    logger.error("requestId: $requestId Error while processing stream predict request", it)
+                    logRequestFailure(logger, "stream predict", it)
                     val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                         .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
                     responseBuilder.setError(it.asErrorProto)
@@ -306,7 +306,7 @@ class GateToServiceMessageProcessor(
                         .onFailure { logger.error("Error while sending predict response", it) }
                 }
             }.onFailure {
-                logger.error("Error while processing predict request", it)
+                logRequestFailure(logger, "predict", it)
                 channel.close(it)
                 val responseBuilder = ServiceToGateProto.newBuilder().setRequestId(requestId)
                     .putHeaders(CONTENT_HIDDEN_HEADER, context.noContentLogging.toString())
@@ -361,7 +361,7 @@ class GateToServiceMessageProcessor(
                     // если partialResponse, то просто ничего не делаем. Респонзы будет отправлять сам сервис.
                 }
             }.onFailure {
-                logger.error("Error while processing predict request", it)
+                logRequestFailure(logger, "predict", it)
                 responseBuilder.setError(it.asErrorProto)
             }
 
