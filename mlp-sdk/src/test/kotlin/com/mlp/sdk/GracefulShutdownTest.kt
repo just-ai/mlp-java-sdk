@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
@@ -130,6 +131,64 @@ class GracefulShutdownTest {
             assertEquals(0, callback.chargesList.single().calls)
         }
     }
+
+    @Test
+    fun `requested spending reservation reaches the connector of the request before the response`() {
+        val service = TestService { context ->
+            if (context.spendingReservationRequested) {
+                sdk.sendSpendingReservation(context.gateRequestId, context.connectorId, 4200)
+            }
+            Payload("application/json", "{}")
+        }
+        harness(service, actionConnectorMs = 1000).use { h ->
+            val stream = h.gate.stream(0)
+            stream.send(predictRequest(7142).putHeaders("Z-spending-reservation", "Requested").build())
+            h.awaitTrue("predict response") { stream.indexOfPredictResponse(7142) >= 0 }
+
+            val reservationIndex = stream.events.indexOfFirst {
+                it is GateEvent.Message && it.proto.hasSpendingReservation()
+            }
+            assertTrue(reservationIndex in 0 until stream.indexOfPredictResponse(7142), stream.describe())
+            val reservation = stream.messages().single { it.hasSpendingReservation() }
+            assertEquals(7142L, reservation.requestId)
+            assertEquals(4200L, reservation.spendingReservation.amountInUnits)
+        }
+    }
+
+    @Test
+    fun `spending reservation is not requested without the gateway header`() {
+        val flags = CopyOnWriteArrayList<Boolean>()
+        val service = TestService { context ->
+            flags += context.spendingReservationRequested
+            Payload("application/json", "{}")
+        }
+        harness(service, actionConnectorMs = 1000).use { h ->
+            val stream = h.gate.stream(0)
+            stream.send(predictRequest(7143).build())
+            stream.send(predictRequest(7144).putHeaders("Z-spending-reservation", "none").build())
+            h.awaitTrue("predict responses") {
+                stream.indexOfPredictResponse(7143) >= 0 && stream.indexOfPredictResponse(7144) >= 0
+            }
+            assertEquals(listOf(false, false), flags.toList())
+        }
+    }
+
+    @Test
+    fun `negative spending reservation is rejected`() {
+        val service = TestService { Payload("application/json", "{}") }
+        harness(service, actionConnectorMs = 1000).use { h ->
+            assertThrows(IllegalArgumentException::class.java) {
+                kotlinx.coroutines.runBlocking { h.sdk.sendSpendingReservation(1, 0, -1) }
+            }
+        }
+    }
+
+    private fun predictRequest(requestId: Long) = GateToServiceProto.newBuilder()
+        .setRequestId(requestId)
+        .setPredict(
+            PredictRequestProto.newBuilder()
+                .setData(PayloadProto.newBuilder().setJson("{}").setDataType("application/json"))
+        )
 
     /** Критерии 1 и 5: обычный predict досылает ответ, stopServing уходит раньше half-close. */
     @Test

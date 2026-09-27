@@ -28,6 +28,8 @@ import com.mlp.sdk.utils.MLP_ORIGIN_API_KEY_NAME_HEADER
 import com.mlp.sdk.utils.REQUEST_ID_HEADER
 import com.mlp.sdk.utils.REQUEST_ID_MDC_PARAM
 import com.mlp.sdk.utils.SERVER_TIME_HEADER
+import com.mlp.sdk.utils.SPENDING_RESERVATION_HEADER
+import com.mlp.sdk.utils.SPENDING_RESERVATION_REQUESTED
 import com.mlp.sdk.utils.WithLogger
 import com.mlp.sdk.utils.asErrorProto
 import com.mlp.sdk.utils.getAsPayload
@@ -391,6 +393,9 @@ class GateToServiceMessageProcessor(
             billingUserId = request.getHeadersOrDefault(MLP_BILLING_USER_ID_HEADER, null),
             originAccountId = request.getHeadersOrDefault(MLP_ORIGIN_ACCOUNT_ID_HEADER, null)?.toLongOrNull(),
             originApiToken = request.getHeadersOrDefault(MLP_ORIGIN_API_KEY_NAME_HEADER, null),
+            spendingReservationRequested = SPENDING_RESERVATION_REQUESTED.equals(
+                request.getHeadersOrDefault(SPENDING_RESERVATION_HEADER, null), ignoreCase = true
+            ),
         )
     }
 }

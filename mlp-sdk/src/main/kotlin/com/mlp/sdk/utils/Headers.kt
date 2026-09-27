@@ -33,6 +33,8 @@ const val DEFERRED_BILLING_ID_HEADER = "Z-deferred-billing-id"
 const val DEFERRED_FINAL_DETAILS_HEADER = "Z-deferred-final-details"
 const val RECURRING_BILLING_ID_HEADER = "Z-recurring-billing-id"
 const val BILLING_CURRENCY_TYPE_HEADER = "Z-billing-currency-type"
+const val SPENDING_RESERVATION_HEADER = "Z-spending-reservation"
+const val SPENDING_RESERVATION_REQUESTED = "requested"
 
 const val MLP_API_KEY_NAME_HEADER = "MLP-API-KEY-NAME"
 const val MLP_BILLING_KEY_NAME_HEADER = "MLP-BILLING-KEY-NAME"

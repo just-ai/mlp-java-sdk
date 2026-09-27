@@ -71,4 +71,6 @@ data class RequestContext(
     val billingUserId: String? = null,
     val originAccountId: Long? = null,
     val originApiToken: String? = null,
+
+    val spendingReservationRequested: Boolean = false,
 )

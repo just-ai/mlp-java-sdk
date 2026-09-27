@@ -46,6 +46,7 @@ class ServiceToGateMessageStorage {
         ServiceToGateProto.BodyCase.STOPSERVING,
         ServiceToGateProto.BodyCase.STATUS,
         ServiceToGateProto.BodyCase.FITSTATUS,
+        ServiceToGateProto.BodyCase.SPENDINGRESERVATION,
         ServiceToGateProto.BodyCase.BODY_NOT_SET -> false
 
         null -> false

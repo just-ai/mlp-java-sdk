@@ -5,6 +5,7 @@ import com.mlp.gate.DeferredBillingParamsProto
 import com.mlp.gate.PartialPredictResponseProto
 import com.mlp.gate.PayloadProto
 import com.mlp.gate.ServiceToGateProto
+import com.mlp.gate.SpendingReservationProto
 import com.mlp.sdk.datatypes.billing.DeferredBillingCharge
 import com.mlp.sdk.datatypes.billing.DeferredBillingParams
 import com.mlp.sdk.utils.BILLING_CURRENCY_TYPE_HEADER
@@ -130,6 +131,17 @@ class MlpServiceSDK(
 
     suspend fun send(connectorId: Long, toGateProto: ServiceToGateProto.Builder) {
         taskExecutor.connectorsPool.send(connectorId, toGateProto)
+    }
+
+    /** Only when [RequestContext.spendingReservationRequested] and before the upstream call. */
+    suspend fun sendSpendingReservation(requestId: Long, connectorId: Long, amountInUnits: Long) {
+        require(amountInUnits >= 0) { "Amount must be non-negative, got: $amountInUnits" }
+        send(
+            connectorId,
+            ServiceToGateProto.newBuilder()
+                .setRequestId(requestId)
+                .setSpendingReservation(SpendingReservationProto.newBuilder().setAmountInUnits(amountInUnits))
+        )
     }
 
     /**
