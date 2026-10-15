@@ -5,6 +5,7 @@ import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.State.Condition.ACTIVE
 import java.time.Duration.ofMillis
 import java.time.Instant.now
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.min
@@ -31,7 +32,7 @@ class Connector(
     val connectorId = lastConnectorId.getAndIncrement()
     private var gatewayPermanentlyUnavailable = true
 
-    private val keepConnectionJob: Job = launchKeepConnectionJob()
+    private val rejectedTokenAttempts = AtomicInteger()
 
     private val grpcChannelRef = AtomicReference<GrpcChannel?>(null)
 
@@ -41,6 +42,9 @@ class Connector(
     private val storage = ServiceToGateMessageStorage()
     private val processor = GateToServiceMessageProcessor(this, storage)
     private val buffer = OutgoingMessageBuffer.create(config)
+
+    // Launched last: the job runs on another thread and reads every field above.
+    private val keepConnectionJob: Job = launchKeepConnectionJob()
 
     suspend fun gracefulShutdown() {
         if (state.isShutdownTypeState()) {
@@ -85,9 +89,8 @@ class Connector(
         var progressiveDelay = 100L
         runCatching {
             while (isActive) {
-                throttleIfUnknownConnectionToken()
-
                 if (isGrpcChannelShutDownOrNull()) {
+                    backOffAfterRejectedToken()
                     val connected = tryConnectOrShutdown()
                     if (connected) {
                         lastActiveTime = now()
@@ -130,9 +133,20 @@ class Connector(
         logger.debug("{}: ... keep connection job has been stopped", this@Connector)
     }
 
-    private suspend fun throttleIfUnknownConnectionToken() {
-        if (grpcChannel?.state?.shutdownReason == "instance_by_token_not_found") {
-            delay(1_000L)
+    /** Gateway accepted startServing or keeps the registered stream alive (serviceInfo, heartbeat). */
+    internal fun gatewayContacted() {
+        rejectedTokenAttempts.set(0)
+        pool.gatewayContacted(now())
+    }
+
+    internal fun tokenRejectedBackoffMs(): Long =
+        rejectedTokenBackoffMs(rejectedTokenAttempts.incrementAndGet())
+
+    // Reconnecting with a token the gateway does not know cannot succeed until someone fixes the instance.
+    private suspend fun backOffAfterRejectedToken() {
+        val attempts = rejectedTokenAttempts.get()
+        if (attempts > 0) {
+            delay(rejectedTokenBackoffMs(attempts))
         }
     }
 
@@ -291,5 +305,12 @@ class Connector(
 
     companion object {
         private val lastConnectorId = AtomicLong()
+
+        private const val REJECTED_TOKEN_INITIAL_BACKOFF_MS = 1_000L
+        internal const val REJECTED_TOKEN_MAX_BACKOFF_MS = 30_000L
+
+        internal fun rejectedTokenBackoffMs(attempts: Int): Long =
+            (REJECTED_TOKEN_INITIAL_BACKOFF_MS shl (attempts - 1).coerceIn(0, 5))
+                .coerceAtMost(REJECTED_TOKEN_MAX_BACKOFF_MS)
     }
 }

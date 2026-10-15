@@ -2,7 +2,9 @@ package com.mlp.sdk
 
 import com.mlp.gate.ServiceToGateProto
 import com.mlp.sdk.State.Condition.ACTIVE
+import java.time.Duration
 import java.time.Duration.ofSeconds
+import java.time.Instant
 import java.time.Instant.now
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +25,11 @@ class ConnectorsPool(
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val clusterMutex = Mutex()
+
+    private val createdAt = now()
+
+    @Volatile
+    private var lastGatewayContact: Instant? = null
 
     private var connectors = config.initialGateUrls
         .map { Connector(it, this, executor, config, scope, context) }
@@ -88,6 +95,14 @@ class ConnectorsPool(
         }
     }
 
+    internal fun gatewayContacted(at: Instant) {
+        lastGatewayContact = at
+    }
+
+    /** Time since any gateway last confirmed this instance, or since pool creation if none did yet. */
+    fun timeSinceGatewayContact(): Duration =
+        Duration.between(lastGatewayContact ?: createdAt, now())
+
     internal suspend fun updateConnectors(urls: List<String>) {
         val connectorsToShutdown: Collection<Connector>
         clusterMutex.withLock {
@@ -96,7 +111,7 @@ class ConnectorsPool(
             check(state.active) { "Pool state must be active to update connectors, but it is $state" }
 
             val connectorsMap = connectors.map { it.value.targetUrl to it.value }.toMap()
-            if (connectorsMap.keys == urls) {
+            if (connectorsMap.keys == urls.toSet()) {
                 logger.debug("$this: ... connectors are up to date")
                 return
             }

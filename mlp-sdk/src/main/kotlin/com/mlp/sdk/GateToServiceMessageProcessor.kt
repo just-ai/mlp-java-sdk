@@ -50,6 +50,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.slf4j.MDC
 
+// Older gateways used the mlp.gate prefix; the current one sends mlp.gateway.
+private val TOKEN_NOT_FOUND_CODES = setOf(
+    "mlp.gate.instance_by_token_not_found",
+    "mlp.gateway.instance_by_token_not_found",
+)
+
 class GateToServiceMessageProcessor(
     private val connector: Connector,
     private val storage: ServiceToGateMessageStorage,
@@ -113,6 +119,7 @@ class GateToServiceMessageProcessor(
 
     private fun processServiceInfo(serviceInfo: ServiceInfoProto) {
         connector.serviceInfo = serviceInfo
+        connector.gatewayContacted()
         logger.info("Connector $connectorId: service info updated: modelId=${serviceInfo.modelId}, accountId=${serviceInfo.accountId}")
     }
 
@@ -135,21 +142,26 @@ class GateToServiceMessageProcessor(
 
     private fun processError(error: ApiErrorProto) {
         when (error.code) {
-            "mlp.gate.instance_by_token_not_found" ->
-                processTokenNotFound()
+            in TOKEN_NOT_FOUND_CODES ->
+                processTokenNotFound(error)
 
             else ->
                 logger.error("Connector $connectorId: error ${error.message}")
         }
     }
 
-    private fun processTokenNotFound() {
-        logger.warn("Connector $connectorId: Receive instance_by_token_not_found error, so shutdown grpc channel")
+    private fun processTokenNotFound(error: ApiErrorProto) {
+        val backoffMs = connector.tokenRejectedBackoffMs()
+        logger.error(
+            "Connector $connectorId: gateway ${connector.targetUrl} rejected the connection token " +
+                    "(${error.code}: ${error.message}); the instance is not served, reconnecting in $backoffMs ms"
+        )
         connector.grpcChannel?.gracefulShutdownFromGate(reason = "instance_by_token_not_found")
     }
 
     private fun processHeartbeat(heartBeat: HeartBeatProto) {
         logger.info("Connector $connectorId: received heartbeat: $heartBeat")
+        connector.gatewayContacted()
         connector.grpcChannel?.updateHeartbeat(heartBeat.interval.toLong())
     }
 

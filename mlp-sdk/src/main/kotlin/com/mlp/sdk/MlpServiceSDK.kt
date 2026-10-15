@@ -18,6 +18,7 @@ import com.mlp.sdk.utils.JSON.asJson
 import java.io.File
 import java.lang.Runtime.getRuntime
 import java.lang.System.currentTimeMillis
+import java.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 
@@ -85,6 +86,15 @@ class MlpServiceSDK(
 
     fun getConnectorsPoolState() =
         taskExecutor.connectorsPool.state
+
+    /**
+     * How long no gateway has confirmed the instance registration (serviceInfo or heartbeat).
+     * A growing value means requests are not delivered: unknown token, deleted instance or unreachable gateway.
+     */
+    fun timeSinceGatewayContact(): Duration {
+        check(!state.notStarted) { "SDK is not started" }
+        return taskExecutor.connectorsPool.timeSinceGatewayContact()
+    }
 
     fun startConnectorsPool() {
         check(state.active) { "Action is not started" }
