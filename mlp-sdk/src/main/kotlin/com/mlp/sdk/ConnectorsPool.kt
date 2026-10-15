@@ -111,7 +111,7 @@ class ConnectorsPool(
             check(state.active) { "Pool state must be active to update connectors, but it is $state" }
 
             val connectorsMap = connectors.map { it.value.targetUrl to it.value }.toMap()
-            if (connectorsMap.keys == urls) {
+            if (connectorsMap.keys == urls.toSet()) {
                 logger.debug("$this: ... connectors are up to date")
                 return
             }

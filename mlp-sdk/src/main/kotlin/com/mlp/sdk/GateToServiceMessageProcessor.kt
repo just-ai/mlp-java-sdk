@@ -151,7 +151,7 @@ class GateToServiceMessageProcessor(
     }
 
     private fun processTokenNotFound(error: ApiErrorProto) {
-        val backoffMs = connector.tokenRejected()
+        val backoffMs = connector.tokenRejectedBackoffMs()
         logger.error(
             "Connector $connectorId: gateway ${connector.targetUrl} rejected the connection token " +
                     "(${error.code}: ${error.message}); the instance is not served, reconnecting in $backoffMs ms"

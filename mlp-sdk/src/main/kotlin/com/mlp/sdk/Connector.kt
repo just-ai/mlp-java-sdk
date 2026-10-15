@@ -139,8 +139,7 @@ class Connector(
         pool.gatewayContacted(now())
     }
 
-    /** @return delay before the next reconnect, ms */
-    internal fun tokenRejected(): Long =
+    internal fun tokenRejectedBackoffMs(): Long =
         rejectedTokenBackoffMs(rejectedTokenAttempts.incrementAndGet())
 
     // Reconnecting with a token the gateway does not know cannot succeed until someone fixes the instance.

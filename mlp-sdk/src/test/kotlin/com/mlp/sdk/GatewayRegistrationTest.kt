@@ -7,7 +7,6 @@ import com.mlp.gate.HeartBeatProto
 import com.mlp.gate.ServiceDescriptorProto
 import com.mlp.gate.ServiceInfoProto
 import com.mlp.gate.ServiceToGateProto
-import com.mlp.gate.StopServingProto
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
@@ -106,7 +105,7 @@ class GatewayRegistrationTest {
         }
     }
 
-    /** Mirrors the gateway handshake: unknown token gets error, stopServing and a closed stream. */
+    /** Mirrors UnauthorizedConnectionHandler: unknown token gets an error and a completed stream. */
     private class RegistrationGate(
         private val acceptToken: Boolean,
         private val errorCode: String = "mlp.gateway.instance_by_token_not_found",
@@ -143,7 +142,6 @@ class GatewayRegistrationTest {
                                 .setError(ApiErrorProto.newBuilder().setCode(errorCode).setMessage("Instance was not found"))
                                 .build()
                         )
-                        stream.send(GateToServiceProto.newBuilder().setStopServing(StopServingProto.getDefaultInstance()).build())
                         stream.complete()
                     }
                 }
