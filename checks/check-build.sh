@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # Сборка и тесты JVM SDK до коммита.
 #
-# Jenkins собирает весь reactor. Surefire закреплён в корневом POM, поэтому JUnit 5
-# видят и Jenkins, и эта проверка. Проверка сначала пакетирует reactor, затем
-# запускает тесты mlp-sdk.
+# Surefire закреплён в корневом POM, поэтому JUnit 5 видят и Jenkins, и эта проверка.
 # -am: mlp-datatypes новой revision берётся из reactor, в Nexus её ещё нет.
 set -euo pipefail
 
