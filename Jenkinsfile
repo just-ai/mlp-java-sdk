@@ -69,23 +69,14 @@ pipeline {
                     "build mlp-cloud-dalle-service" : {
                         build job: "mlp-cloud-dalle-service-build/${env.BRANCH_NAME}", wait: false
                     },
-                    "build mlp-cloud-whisper-service" : {
-                        build job: "mlp-cloud-whisper-service-build/${env.BRANCH_NAME}", wait: false
-                    },
                     "build mlp-cross-validation-service" : {
                         build job: "mlp-cross-validation-service-build/${env.BRANCH_NAME}", wait: false
                     },
                     "build mlp-faq-service" : {
                         build job: "mlp-faq-service-build/${env.BRANCH_NAME}", wait: false
                     },
-                    "build mlp-gpt-mock" : {
-                        build job: "mlp-gpt-mock-build/${env.BRANCH_NAME}", wait: false
-                    },
                     "build mlp-intents" : {
                         build job: "mlp-intents-build/${env.BRANCH_NAME}", wait: false
-                    },
-                    "build mlp-justgpt-facade" : {
-                        build job: "mlp-justgpt-facade-build/${env.BRANCH_NAME}", wait: false
                     },
                     "build mlp-kaldi-asr-service" : {
                         build job: "mlp-kaldi-asr-service-build/${env.BRANCH_NAME}", wait: false
