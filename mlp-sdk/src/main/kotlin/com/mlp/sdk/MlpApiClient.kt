@@ -58,12 +58,12 @@ internal class FileHttpMessageConverter :
         MediaType.APPLICATION_OCTET_STREAM
 
     override fun readInternal(clazz: Class<out File>, inputMessage: HttpInputMessage): File {
-        val fileName = inputMessage.headers[CONTENT_DISPOSITION]
+        inputMessage.headers[CONTENT_DISPOSITION]
             ?.firstOrNull()
             ?.split("=")?.getOrNull(1)
             ?: throw IllegalArgumentException("Header $CONTENT_DISPOSITION not found")
 
-        val destination = File(FileUtils.getTempDirectoryPath(), fileName)
+        val destination = File.createTempFile("mlp-download-", ".tmp")
         destination.deleteOnExit()
         FileUtils.copyInputStreamToFile(inputMessage.body, destination)
         return destination
