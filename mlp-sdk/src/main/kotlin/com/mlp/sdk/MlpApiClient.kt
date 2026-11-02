@@ -4,6 +4,7 @@ import com.justai.caila.core.api.ApiClient
 import com.mlp.sdk.utils.JSON
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.nio.file.Files
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.http.HttpHeaders.CONTENT_DISPOSITION
@@ -63,7 +64,7 @@ internal class FileHttpMessageConverter :
             ?.split("=")?.getOrNull(1)
             ?: throw IllegalArgumentException("Header $CONTENT_DISPOSITION not found")
 
-        val destination = File.createTempFile("mlp-download-", ".tmp")
+        val destination = Files.createTempFile("mlp-download-", ".tmp").toFile()
         destination.deleteOnExit()
         FileUtils.copyInputStreamToFile(inputMessage.body, destination)
         return destination

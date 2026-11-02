@@ -66,9 +66,14 @@ class FileHttpMessageConverterTest {
         server.start()
         try {
             val accessor = FilesAccessor("http://127.0.0.1:${server.address.port}", "synthetic-token")
+            val downloadsBefore = downloadedTempFiles()
             val uploaded = accessor.read("synthetic-file").use { it.readBytes() }
             assertArrayEquals(payload, uploaded)
+            assertEquals(downloadsBefore, downloadedTempFiles())
             assertEquals("synthetic-token", requestToken)
         } finally { server.stop(0) }
     }
+
+    private fun downloadedTempFiles(): Set<String> =
+        FileUtils.getTempDirectory().list { _, name -> name.startsWith("mlp-download-") }.orEmpty().toSet()
 }
