@@ -61,7 +61,11 @@ class FilesAccessor(
     }
 
     private fun readByApi(fileId: FileId, version: Int?): InputStream {
-        return filesApi.getFileContent(fileId, version).inputStream()
+        val downloaded = filesApi.getFileContent(fileId, version)
+        val stream = downloaded.inputStream()
+        // Unlinked file stays readable through the open stream; otherwise every read leaks a temp file until JVM exit.
+        downloaded.delete()
+        return stream
     }
 
     private fun writeByApi(file: File, key: FileId? = null, options: FileOptions? = null): FileData {
