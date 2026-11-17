@@ -22,6 +22,7 @@ import com.mlp.sdk.utils.REQUEST_ID_MDC_PARAM
 import io.grpc.ConnectivityState.READY
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.grpc.Metadata
 import io.grpc.StatusException
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.CoroutineScope
@@ -235,7 +236,7 @@ class MlpClientSDK(
         val clientRequestFlow = stream.map {
             buildPartialPredict(account, model, it.payload, it.config, timeout, authToken)
         }
-        return sendStream(clientRequestFlow)
+        return sendStream(clientRequestFlow, authToken)
     }
 
     fun asrPredict(
@@ -250,7 +251,7 @@ class MlpClientSDK(
             val config = it.config?.let { conf -> Payload(JSON.stringify(conf)) }
             buildPartialPredict(account, model, data, config, timeout, authToken)
         }
-        return sendStream(clientRequestFlow).map {
+        return sendStream(clientRequestFlow, authToken).map {
             when (it) {
                 is Payload -> JSON.parseOrThrowBadRequestMlpException(it.data, AsrResponse::class.java)
                 is RawPayload -> JSON.parseOrThrowBadRequestMlpException(it.data, AsrResponse::class.java)
@@ -274,7 +275,7 @@ class MlpClientSDK(
                 .setAsr(it)
                 .build()
         }
-        return stub.processRecognition(clientAsrRequestFlow)
+        return stub.processRecognition(clientAsrRequestFlow, apiKeyHeaders(authToken))
     }
 
     fun extBlocking(
@@ -297,6 +298,10 @@ class MlpClientSDK(
     ) =
         sendRequest(buildExtRequest(account, model, methodName, timeout, authToken, params), timeout)
 
+    private fun apiKeyHeaders(authToken: String) = Metadata().apply {
+        if (authToken.isNotEmpty()) put(API_KEY_HEADER, authToken)
+    }
+
     private fun ensureDefaultToken() = requireNotNull(connectionToken) {
         "Set authToken in environment variables, or in init method, or directly in predict method"
     }
@@ -305,11 +310,11 @@ class MlpClientSDK(
         request: ClientRequestProto,
         timeout: Duration? = null
     ): Flow<ClientResponseProto> {
-        return stub.processResponseStream(request)
+        return stub.processResponseStream(request, apiKeyHeaders(request.authToken))
     }
 
-    private fun sendStream(requests: Flow<ClientRequestProto>): Flow<PayloadInterface> {
-        val flow = stub.processStream(requests)
+    private fun sendStream(requests: Flow<ClientRequestProto>, authToken: String): Flow<PayloadInterface> {
+        val flow = stub.processStream(requests, apiKeyHeaders(authToken))
         return flow.map { response ->
             when {
                 response.hasPredict() -> {
@@ -402,7 +407,7 @@ class MlpClientSDK(
     }
 
     private suspend fun executePredictRequest(request: ClientRequestProto) = try {
-        stub.process(request)
+        stub.process(request, apiKeyHeaders(request.authToken))
     } catch (t: Throwable) {
         processResultFailure(t)
     }
@@ -630,5 +635,8 @@ class MlpClientSDK(
 
         val reconnectErrorCodes: List<String> =
             listOf("mlp.gate.gate_is_shut_down")
+
+        // gateway checks this key before receiving the body; authToken in the body stays for old gateways
+        val API_KEY_HEADER: Metadata.Key<String> = Metadata.Key.of("mlp-api-key", Metadata.ASCII_STRING_MARSHALLER)
     }
 }
